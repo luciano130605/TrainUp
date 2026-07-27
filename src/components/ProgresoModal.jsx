@@ -1,62 +1,11 @@
 import React, { useMemo } from 'react';
-import { X, Flame } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import './progreso.css';
 
-const MESES_ABR = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-const HEATMAP_WEEKS = 18;
 const MUSCLE_BASE_RECOVERY_HOURS = 48;
 const MUSCLE_MAX_RECOVERY_HOURS = 120;
 
 function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
-
-function buildHeatmapGrid(history, weeks) {
-    const totalDays = weeks * 7;
-    const today = startOfDay(new Date());
-    const todayDow = today.getDay();
-    const end = new Date(today.getTime() + (6 - todayDow) * 86400000);
-    const start = new Date(end.getTime() - (totalDays - 1) * 86400000);
-
-    const volByDay = new Map();
-    history.forEach(e => {
-        const key = startOfDay(new Date(e.date)).getTime();
-        volByDay.set(key, (volByDay.get(key) || 0) + (e.totalVolume || 0));
-    });
-    const maxVol = Math.max(1, ...volByDay.values());
-
-    const grid = [];
-    let col = [];
-    for (let i = 0; i < totalDays; i++) {
-        const d = new Date(start.getTime() + i * 86400000);
-        const key = d.getTime();
-        const vol = volByDay.get(key) || 0;
-        const isFuture = d.getTime() > today.getTime();
-        let level = 0;
-        if (!isFuture && vol > 0) {
-            const ratio = vol / maxVol;
-            level = ratio > 0.75 ? 4 : ratio > 0.5 ? 3 : ratio > 0.25 ? 2 : 1;
-        }
-        col.push({ date: d, vol, level, isFuture });
-        if (d.getDay() === 6) { grid.push(col); col = []; }
-    }
-    if (col.length) grid.push(col);
-    return { grid, maxVol };
-}
-
-function monthLabelsFor(grid) {
-    const labels = [];
-    let lastMonth = null;
-    grid.forEach((week, i) => {
-        const firstDay = week[0]?.date;
-        if (firstDay) {
-            const m = firstDay.getMonth();
-            if (m !== lastMonth) {
-                labels.push({ index: i, label: MESES_ABR[m] });
-                lastMonth = m;
-            }
-        }
-    });
-    return labels;
-}
 
 function buildMuscleRecovery(history) {
     const byMuscleDay = new Map();
@@ -93,11 +42,10 @@ function buildMuscleRecovery(history) {
 }
 
 export default function ProgresoModal({ history, onClose }) {
-    const { grid, maxVol } = useMemo(() => buildHeatmapGrid(history, HEATMAP_WEEKS), [history]);
-    const monthLabels = useMemo(() => monthLabelsFor(grid), [grid]);
     const recovery = useMemo(() => buildMuscleRecovery(history), [history]);
 
-    const colWidth = 14; // 11px celda + 3px gap
+    const pending = recovery.filter(r => !r.recovered);
+    const recovered = recovery.filter(r => r.recovered);
 
     return (
         <div className="modal-overlay" onClick={onClose}>
@@ -110,33 +58,43 @@ export default function ProgresoModal({ history, onClose }) {
                 {history.length === 0 ? (
                     <p className="header-sub">Entrená al menos una vez para ver tu progreso acá.</p>
                 ) : (
-                    <>
+                    <div className="progreso-body">
+                        <p className="header-sub progreso-disclaimer">
+                            Estimado según cuánto entrenaste cada músculo la última vez, comparado con tu propio historial. No es un dato médico.
+                        </p>
 
-                        <div className="progreso-seccion">
-                            <p className="header-sub" style={{ marginBottom: 10 }}>
-                                Estimado según cuánto entrenaste cada músculo la última vez, comparado con tu propio historial. No es un dato médico.
-                            </p>
-                            {recovery.map(r => (
-                                <div key={r.muscle} className="musc-recovery-card">
-                                    <div className="musc-recovery-top">
-                                        <span className="musc-recovery-nombre">{r.muscle}</span>
-                                        <span className={`musc-recovery-estado ${r.recovered ? 'ok' : ''}`}>
-                                            {r.recovered ? 'Recuperado' : `${r.pct}%`}
-                                        </span>
+                        {pending.length > 0 && (
+                            <div className="progreso-seccion">
+                                {pending.map(r => (
+                                    <div key={r.muscle} className="musc-recovery-card">
+                                        <div className="musc-recovery-ring" style={{ '--pct': r.pct }}>
+                                            <span>{r.pct}%</span>
+                                        </div>
+                                        <div className="musc-recovery-info">
+                                            <span className="musc-recovery-nombre">{r.muscle}</span>
+                                            <span className="musc-recovery-sub">
+                                                {r.daysSince === 0 ? 'Entrenado hoy' : `Hace ${r.daysSince} día${r.daysSince !== 1 ? 's' : ''}`}
+                                            </span>
+                                        </div>
                                     </div>
-                                    <div className="musc-recovery-bar">
-                                        <div
-                                            className="musc-recovery-fill"
-                                            style={{ width: `${r.pct}%`, background: r.recovered ? 'var(--acento)' : undefined }}
-                                        />
-                                    </div>
-                                    <div className="musc-recovery-sub">
-                                        {r.daysSince === 0 ? 'Entrenado hoy' : `Hace ${r.daysSince} día${r.daysSince !== 1 ? 's' : ''}`}
-                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {recovered.length > 0 && (
+                            <div className="progreso-recuperados-seccion">
+                                <div className="progreso-subtitulo">Recuperados</div>
+                                <div className="musc-chip-grid">
+                                    {recovered.map(r => (
+                                        <div key={r.muscle} className="musc-chip">
+                                            <Check size={12} className="musc-chip-check" />
+                                            <span>{r.muscle}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
-                    </>
+                            </div>
+                        )}
+                    </div>
                 )}
             </div>
         </div>
