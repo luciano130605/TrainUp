@@ -1,41 +1,164 @@
 import React, { useMemo } from 'react';
 import { X, Check } from 'lucide-react';
 import './progreso.css';
+// ⚠️ Ajustá este import a la ruta real donde tengas tu catálogo de ejercicios
+import ejerciciosLocal from '../data/ejerciciosData';
 
-const MUSCLE_BASE_RECOVERY_HOURS = 48;
-const MUSCLE_MAX_RECOVERY_HOURS = 120;
+// Tiempo base de recuperación (horas) según qué tan grande / qué tan rápido
+// se recupera cada grupo muscular. Basado en heurísticas generales de
+// entrenamiento, no en un dato médico.
+const MUSCLE_BASE_HOURS = {
+    pecho: 48,
+    espalda: 60,
+    cuadriceps: 72,
+    isquiotibiales: 66,
+    gemelos: 30,
+    gluteos: 66,
+    adductores: 40,
+    abductores: 40,
+    hombros: 40,
+    biceps: 36,
+    triceps: 36,
+    antebrazos: 26,
+    abdominales: 24,
+    trapecio: 40,
+};
+
+// Nombres que aparecen como submúsculo en la data pero no son una categoría
+// propia en parteDelCuerpo: se funden con la categoría real para no duplicar.
+const MUSCLE_ALIASES = {
+    dorsales: 'espalda',
+    antebrazo: 'antebrazos',
+};
+
+// Cuánto "cuenta" el trabajo indirecto (submúsculos) vs. el músculo principal.
+const SECONDARY_FACTOR = 0.35;
+
+const DEFAULT_BASE_HOURS = 48;
+const MIN_RECOVERY_HOURS = 20;
+const MAX_RECOVERY_HOURS = 130;
+const WEEK_MS = 7 * 86400000;
 
 function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 
+function normalizeMuscleName(m) {
+    return m.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+// Clave canónica con la que se agrupa un músculo (aplica alias)
+function resolveKey(rawName) {
+    const norm = normalizeMuscleName(rawName);
+    return MUSCLE_ALIASES[norm] || norm;
+}
+
+function getBaseHours(key) {
+    if (MUSCLE_BASE_HOURS[key] != null) return MUSCLE_BASE_HOURS[key];
+    for (const [k, v] of Object.entries(MUSCLE_BASE_HOURS)) {
+        if (key.includes(k) || k.includes(key)) return v;
+    }
+    return DEFAULT_BASE_HOURS;
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+// --- Catálogo de ejercicios: fallback para cuando el historial no guarda
+// subMusculos propios en cada entrada (solo el catálogo los tiene) ---
+const exerciseById = new Map(ejerciciosLocal.map(e => [e.id, e]));
+const exerciseByName = new Map(
+    ejerciciosLocal.map(e => [normalizeMuscleName(e.nombre), e])
+);
+
+function getSubMusculos(ex) {
+    if (Array.isArray(ex.subMusculos) && ex.subMusculos.length > 0) {
+        return ex.subMusculos.filter(Boolean);
+    }
+    const ref =
+        exerciseById.get(ex.exerciseId ?? ex.id) ??
+        exerciseByName.get(normalizeMuscleName(ex.nombre ?? ex.name ?? ''));
+    return (ref?.subMusculos || []).filter(Boolean);
+}
+
+function addFatigue(byMuscleDay, key, dayKey, vol, sets) {
+    if (!byMuscleDay.has(key)) byMuscleDay.set(key, new Map());
+    const dayMap = byMuscleDay.get(key);
+    const prev = dayMap.get(dayKey) || { vol: 0, sets: 0 };
+    dayMap.set(dayKey, { vol: prev.vol + vol, sets: prev.sets + sets });
+}
+
 function buildMuscleRecovery(history) {
+    // Por músculo (clave canónica), por día: volumen total y cantidad de series
     const byMuscleDay = new Map();
+    // Guarda el nombre "lindo" para mostrar, la primera vez que se ve cada clave
+    const labelByKey = new Map();
+
     history.forEach(entry => {
         const dayKey = startOfDay(new Date(entry.date)).getTime();
         entry.exercises.forEach(ex => {
-            const muscle = ex.parteDelCuerpo ?? ex.muscle;
-            if (!muscle) return;
+            const primaryRaw =
+                ex.parteDelCuerpo ??
+                ex.muscle ??
+                exerciseById.get(ex.exerciseId ?? ex.id)?.parteDelCuerpo ??
+                exerciseByName.get(normalizeMuscleName(ex.nombre ?? ex.name ?? ''))?.parteDelCuerpo;
+            if (!primaryRaw) return;
             const vol = ex.sets.reduce((a, s) => a + (+s.weight || 0) * (+s.reps || 0), 0);
-            if (!byMuscleDay.has(muscle)) byMuscleDay.set(muscle, new Map());
-            const dayMap = byMuscleDay.get(muscle);
-            dayMap.set(dayKey, (dayMap.get(dayKey) || 0) + vol);
+            const setsCount = ex.sets.length;
+
+            const primaryKey = resolveKey(primaryRaw);
+            if (!labelByKey.has(primaryKey)) labelByKey.set(primaryKey, capitalize(primaryRaw));
+            addFatigue(byMuscleDay, primaryKey, dayKey, vol, setsCount);
+
+            // Submúsculos: trabajo indirecto, cuenta parcial y no duplica al principal
+            const subs = getSubMusculos(ex);
+            subs.forEach(subRaw => {
+                const subKey = resolveKey(subRaw);
+                if (subKey === primaryKey) return;
+                if (!labelByKey.has(subKey)) labelByKey.set(subKey, capitalize(subRaw));
+                addFatigue(byMuscleDay, subKey, dayKey, vol * SECONDARY_FACTOR, setsCount * SECONDARY_FACTOR);
+            });
         });
     });
 
     const now = Date.now();
     const results = [];
-    byMuscleDay.forEach((dayMap, muscle) => {
+
+    byMuscleDay.forEach((dayMap, muscleKey) => {
+        const muscle = labelByKey.get(muscleKey) || capitalize(muscleKey);
         const days = [...dayMap.keys()].sort((a, b) => b - a);
         const lastDay = days[0];
-        const lastVol = dayMap.get(lastDay);
-        const maxVolEver = Math.max(...dayMap.values());
-        const intensityRatio = maxVolEver > 0 ? lastVol / maxVolEver : 0;
-        const recoveryHours = MUSCLE_BASE_RECOVERY_HOURS + intensityRatio * (MUSCLE_MAX_RECOVERY_HOURS - MUSCLE_BASE_RECOVERY_HOURS);
+        const lastData = dayMap.get(lastDay);
+
+        // Volumen promedio histórico de ESE músculo (propio historial, no absoluto)
+        const allVols = [...dayMap.values()].map(d => d.vol);
+        const avgVol = allVols.reduce((a, b) => a + b, 0) / allVols.length;
+        const intensityRatio = avgVol > 0 ? clamp(lastData.vol / avgVol, 0.4, 2) : 1;
+
+        // Cuántas veces se entrenó este músculo en los 7 días previos a la última sesión
+        const weeklyFreq = days.filter(d => d <= lastDay && d > lastDay - WEEK_MS).length;
+        const frequencyFactor = clamp((weeklyFreq - 1) / 4, 0, 1);
+
+        // Series de la última sesión (más series, más fatiga acumulada)
+        const setsFactor = clamp(lastData.sets / 15, 0, 1);
+
+        const baseHours = getBaseHours(muscleKey);
+        let recoveryHours = baseHours
+            * (1 + 0.35 * (intensityRatio - 1))
+            * (1 + 0.15 * setsFactor)
+            * (1 + 0.25 * frequencyFactor);
+        recoveryHours = clamp(recoveryHours, MIN_RECOVERY_HOURS, MAX_RECOVERY_HOURS);
 
         const hoursSince = (now - lastDay) / 3600000;
         const pct = Math.min(100, Math.round((hoursSince / recoveryHours) * 100));
         const daysSince = Math.floor(hoursSince / 24);
 
-        results.push({ muscle, daysSince, pct, recovered: pct >= 100 });
+        // Tags cortos para explicar por qué tarda más de lo base
+        const tags = [];
+        if (intensityRatio > 1.15) tags.push('sesión intensa');
+        if (weeklyFreq >= 3) tags.push(`${weeklyFreq}x esta semana`);
+        if (lastData.sets >= 12) tags.push(`${lastData.sets} series`);
+
+        results.push({ muscle, daysSince, pct, recovered: pct >= 100, tags });
     });
 
     return results.sort((a, b) => a.pct - b.pct);
@@ -74,6 +197,7 @@ export default function ProgresoModal({ history, onClose }) {
                                             <span className="musc-recovery-nombre">{r.muscle}</span>
                                             <span className="musc-recovery-sub">
                                                 {r.daysSince === 0 ? 'Entrenado hoy' : `Hace ${r.daysSince} día${r.daysSince !== 1 ? 's' : ''}`}
+                                                {r.tags.length > 0 && ` · ${r.tags.join(' · ')}`}
                                             </span>
                                         </div>
                                     </div>
