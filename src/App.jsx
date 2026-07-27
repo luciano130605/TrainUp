@@ -21,6 +21,7 @@ import Ajustes from './components/ajustes';
 import ProximamentePage from './components/proximamente';
 import { openDescansoToast } from './components/descansoToastModal';
 import openTiempoDescansoToast, { resetDescansoState } from './components/TiempoDescansoToast';
+import MiniSesionBar from './components/MiniSesionBar';
 
 export default function App() {
   const [screen, setScreen] = useState('routines');
@@ -30,7 +31,7 @@ export default function App() {
   const [restDefault, setRestDefault] = useState(90);
   const [loaded, setLoaded] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(true);
-
+  const [autoOpenResumen, setAutoOpenResumen] = useState(false);
   const [backupModal, setBackupModal] = useState(null);
   const [pendingImport, setPendingImport] = useState(null);
 
@@ -627,6 +628,14 @@ export default function App() {
     const r = routines.find(x => x.id === routineId);
     if (!r) return;
 
+    if (session) {
+      if (session.routineId === routineId) {
+        setScreen('session'); // ya está en curso esta misma rutina -> la reabrimos
+        return;
+      }
+      showToast('Ya tenés una rutina en curso. Finalizala o cancelala antes de empezar otra.', 'error');
+      return;
+    }
 
     setSession({
       routineId: r.id,
@@ -650,6 +659,17 @@ export default function App() {
     });
     setRestTimer(null);
     setScreen('session');
+  }
+
+  function minimizeSession() {
+    if (!session) return;
+    setScreen('routines');
+  }
+
+  function quickFinishFromBar() {
+    if (!session) return;
+    setScreen('session');
+    setAutoOpenResumen(true);
   }
 
   function toggleSessionPause() {
@@ -734,51 +754,51 @@ export default function App() {
     });
   }
 
-function finishSession({ guardarEnHistorial = true } = {}) {
-  const s = session;
-  const completedExercises = s.exercises
-    .map(ex => ({
-      name: ex.name,
-      muscle: ex.muscle || '',
-      notes: ex.notes || '',
-      sets: ex.sets.filter(st => st.done)
-    }))
-    .filter(ex => ex.sets.length > 0);
+  function finishSession({ guardarEnHistorial = true } = {}) {
+    const s = session;
+    const completedExercises = s.exercises
+      .map(ex => ({
+        name: ex.name,
+        muscle: ex.muscle || '',
+        notes: ex.notes || '',
+        sets: ex.sets.filter(st => st.done)
+      }))
+      .filter(ex => ex.sets.length > 0);
 
-  const totalVolume = completedExercises.reduce((sum, ex) => sum + ex.sets.reduce((a, st) => a + ((+st.weight || 0) * (+st.reps || 0)), 0), 0);
-  const totalSets = completedExercises.reduce((a, ex) => a + ex.sets.length, 0);
+    const totalVolume = completedExercises.reduce((sum, ex) => sum + ex.sets.reduce((a, st) => a + ((+st.weight || 0) * (+st.reps || 0)), 0), 0);
+    const totalSets = completedExercises.reduce((a, ex) => a + ex.sets.length, 0);
 
-  const debeGuardar = guardarEnHistorial && completedExercises.length > 0;
+    const debeGuardar = guardarEnHistorial && completedExercises.length > 0;
 
-  if (debeGuardar) {
-    const pausedMs = s.paused ? (s.pausedMs || 0) + (Date.now() - s.pausedAt) : (s.pausedMs || 0);
-    setHistory(h => [{
-      id: uid(), routineId: s.routineId, routineName: s.routineName, date: Date.now(),
-      durationSec: Math.floor((Date.now() - s.startedAt - pausedMs) / 1000),
-      exercises: completedExercises, totalVolume, totalSets
-    }, ...h]);
+    if (debeGuardar) {
+      const pausedMs = s.paused ? (s.pausedMs || 0) + (Date.now() - s.pausedAt) : (s.pausedMs || 0);
+      setHistory(h => [{
+        id: uid(), routineId: s.routineId, routineName: s.routineName, date: Date.now(),
+        durationSec: Math.floor((Date.now() - s.startedAt - pausedMs) / 1000),
+        exercises: completedExercises, totalVolume, totalSets
+      }, ...h]);
 
-    setRoutines(rs => rs.map(r => {
-      if (r.id !== s.routineId) return r;
-      const rCopy = JSON.parse(JSON.stringify(r));
-      s.exercises.forEach(sEx => {
-        const rEx = rCopy.exercises.find(e => e.name === sEx.name);
-        if (rEx) {
-          sEx.sets.forEach((st, i) => {
-            if (rEx.sets[i] && st.weight !== '') rEx.sets[i].weight = st.weight;
-            if (rEx.sets[i] && st.reps !== '') rEx.sets[i].reps = st.reps;
-          });
-        }
-      });
-      return rCopy;
-    }));
+      setRoutines(rs => rs.map(r => {
+        if (r.id !== s.routineId) return r;
+        const rCopy = JSON.parse(JSON.stringify(r));
+        s.exercises.forEach(sEx => {
+          const rEx = rCopy.exercises.find(e => e.name === sEx.name);
+          if (rEx) {
+            sEx.sets.forEach((st, i) => {
+              if (rEx.sets[i] && st.weight !== '') rEx.sets[i].weight = st.weight;
+              if (rEx.sets[i] && st.reps !== '') rEx.sets[i].reps = st.reps;
+            });
+          }
+        });
+        return rCopy;
+      }));
+    }
+
+    setRestTimer(null);
+    setSession(null);
+    setScreen('routines');
+    showToast(debeGuardar ? 'Rutina guardada' : 'Rutina descartada');
   }
-
-  setRestTimer(null);
-  setSession(null);
-  setScreen('routines');
-  showToast(debeGuardar ? 'Rutina guardada' : 'Rutina descartada');
-}
   function cancelSession() {
     const toastId = sileo.action({
       title: "¿Salir sin guardar el entrenamiento?",
@@ -1451,10 +1471,13 @@ function finishSession({ guardarEnHistorial = true } = {}) {
           <RutinaCurso
             session={session}
             history={history}
-            routineName={session?.routineName} 
+            routineName={session?.routineName}
             restTimer={restTimer}
             restDefault={restDefault}
             onCancel={cancelSession}
+            onMinimize={minimizeSession}
+            autoOpenResumen={autoOpenResumen}
+            onAutoResumenHandled={() => setAutoOpenResumen(false)}
             onToggleSet={toggleSet}
             onUpdateNotes={updateExerciseNotes}
             onUpdateField={updateLiveField}
@@ -1502,6 +1525,16 @@ function finishSession({ guardarEnHistorial = true } = {}) {
             entry={activeHistoryEntry}
             onBack={() => setScreen('history')}
             onDelete={() => deleteHistoryEntry(activeHistoryEntry.id)}
+          />
+        )}
+
+        {session && screen !== 'session' && (
+          <MiniSesionBar
+            session={session}
+            raised={showTabs}
+            onExpand={() => setScreen('session')}
+            onTogglePause={toggleSessionPause}
+            onFinish={quickFinishFromBar}
           />
         )}
 

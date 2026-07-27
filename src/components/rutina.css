@@ -1764,3 +1764,85 @@
     text-overflow: ellipsis;
     max-width: 240px;
 }
+
+
+.mini-sesion-bar {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    z-index: 40;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    animation: mini-sesion-in .25s ease;
+}
+
+.mini-sesion-bar.raised {
+    bottom: 70px;
+}
+
+@keyframes mini-sesion-in {
+    from {
+        transform: translateY(12px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.mini-sesion-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+}
+
+.mini-sesion-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--borde);
+    flex-shrink: 0;
+}
+
+.mini-sesion-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.mini-sesion-nombre {
+    font-size: 1rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    color: var(--texto);
+    text-overflow: ellipsis;
+}
+
+.mini-sesion-sub {
+    font-size: .7rem;
+    color: var(--texto-gris);
+}
+
+.mini-sesion-acciones {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.mini-sesion-acciones .mini-btn.acento {
+    background: var(--acento);
+    color: var(--txt-btn);
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, Eye, CheckCircle2 } from 'lucide-react';
+import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, Eye, CheckCircle2, ChevronDown } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
 import EjercicioModal from './ejercicioModal';
 import ResumenRutina from './ResumenRutina';
@@ -23,6 +23,7 @@ export default function RutinaCurso({
   onSetRestDefault, onAdjustRest, onTogglePause, onDismissRest,
   onDuplicateLastSet, onOpenPicker, onToggleSessionPause, onEditExercise,
   onUpdateNotes,
+  onMinimize, autoOpenResumen, onAutoResumenHandled,
   pickerOpen, allExercises, pickerQuery, onPickerQueryChange, pickerSelection,
   onTogglePick, onCreateCustomExercise, onConfirmPicker, onClosePicker
 }) {
@@ -41,6 +42,13 @@ export default function RutinaCurso({
     const id = setInterval(() => forceTick(t => t + 1), 1000);
     return () => clearInterval(id);
   }, [s?.paused]);
+
+  React.useEffect(() => {
+    if (autoOpenResumen) {
+      setResumenOpen(true);
+      onAutoResumenHandled?.();
+    }
+  }, [autoOpenResumen]);
 
   React.useEffect(() => {
     return () => {
@@ -196,7 +204,11 @@ export default function RutinaCurso({
     <>
       <DescansoBotonFlotante />
       <div className="header-cont">
-        <div className="btn" onClick={onCancel}><X size={18} /></div>
+        <div style={{ display: 'flex', gap: 6 }}>
+
+          <div className="btn" onClick={onCancel}><X size={18} /></div>
+          <div className="btn" title="Achicar y ver rutinas" onClick={onMinimize}><ChevronDown size={18} /></div>
+        </div>
         <div>
           <div className="tiempo" style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
             {formatElapsedFull(elapsedMs)}
