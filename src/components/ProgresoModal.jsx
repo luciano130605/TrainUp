@@ -1,12 +1,9 @@
 import React, { useMemo } from 'react';
 import { X, Check } from 'lucide-react';
 import './progreso.css';
-// ⚠️ Ajustá este import a la ruta real donde tengas tu catálogo de ejercicios
 import ejerciciosLocal from '../data/ejerciciosData';
 
-// Tiempo base de recuperación (horas) según qué tan grande / qué tan rápido
-// se recupera cada grupo muscular. Basado en heurísticas generales de
-// entrenamiento, no en un dato médico.
+
 const MUSCLE_BASE_HOURS = {
     pecho: 48,
     espalda: 60,
@@ -24,14 +21,12 @@ const MUSCLE_BASE_HOURS = {
     trapecio: 40,
 };
 
-// Nombres que aparecen como submúsculo en la data pero no son una categoría
-// propia en parteDelCuerpo: se funden con la categoría real para no duplicar.
+
 const MUSCLE_ALIASES = {
     dorsales: 'espalda',
     antebrazo: 'antebrazos',
 };
 
-// Cuánto "cuenta" el trabajo indirecto (submúsculos) vs. el músculo principal.
 const SECONDARY_FACTOR = 0.35;
 
 const DEFAULT_BASE_HOURS = 48;
@@ -47,7 +42,6 @@ function normalizeMuscleName(m) {
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-// Clave canónica con la que se agrupa un músculo (aplica alias)
 function resolveKey(rawName) {
     const norm = normalizeMuscleName(rawName);
     return MUSCLE_ALIASES[norm] || norm;
@@ -152,11 +146,7 @@ function buildMuscleRecovery(history) {
         const pct = Math.min(100, Math.round((hoursSince / recoveryHours) * 100));
         const daysSince = Math.floor(hoursSince / 24);
 
-        // Tags cortos para explicar por qué tarda más de lo base
         const tags = [];
-        if (intensityRatio > 1.15) tags.push('sesión intensa');
-        if (weeklyFreq >= 3) tags.push(`${weeklyFreq}x esta semana`);
-        if (lastData.sets >= 12) tags.push(`${lastData.sets} series`);
 
         results.push({ muscle, daysSince, pct, recovered: pct >= 100, tags });
     });
