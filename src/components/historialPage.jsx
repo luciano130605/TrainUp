@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Trash2, Calendar, ArrowUpDown, X, ChevronLeft, ChevronRight, Flame, Download, Upload, BicepsFlexed } from 'lucide-react';
+import { Search, Trash2, Calendar, ArrowUpDown, X, ChevronLeft, ChevronRight, Flame, Download, Upload, BicepsFlexed, SlidersHorizontal, Check, Filter, BrushCleaning } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
 import "./historial.css"
 import "./rutina.css"
@@ -9,11 +9,25 @@ import ProgresoModal from './ProgresoModal';
 const DIAS = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
+const SORT_OPTIONS = [
+  { value: 'recent', label: 'Más recientes' },
+  { value: 'volume', label: 'Mayor volumen' },
+  { value: 'duration', label: 'Mayor duración' },
+];
+
 function startOfDay(d) { const x = new Date(d); x.setHours(0, 0, 0, 0); return x; }
 function endOfDay(d) { const x = new Date(d); x.setHours(23, 59, 59, 999); return x; }
 function sameDay(a, b) { return a && b && startOfDay(a).getTime() === startOfDay(b).getTime(); }
 function fmtShort(d) { return d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: '2-digit' }); }
 
+// Lunes como inicio de semana (getDay(): 0=Domingo ... 6=Sábado)
+function startOfWeek(d) {
+  const x = startOfDay(d);
+  const day = x.getDay();
+  const diff = day === 0 ? 6 : day - 1; // días transcurridos desde el lunes
+  x.setDate(x.getDate() - diff);
+  return x;
+}
 
 function calcStreak(history) {
   if (history.length === 0) return 0;
@@ -22,7 +36,7 @@ function calcStreak(history) {
   const oneDay = 86400000;
   let streak = 0;
   let cursor = today;
-  // si no entrenó hoy, el streak arranca a contar desde ayer (no se rompe por "hoy" aún no jugado)
+
   if (days[0] !== today) cursor = today - oneDay;
   for (const d of days) {
     if (d === cursor) { streak++; cursor -= oneDay; }
@@ -39,6 +53,7 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
   const [dateTo, setDateTo] = useState(null);
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [sortBy, setSortBy] = useState('recent'); // recent | volume | duration
+  const [sortOpen, setSortOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   const allMuscles = useMemo(() => {
@@ -75,17 +90,27 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
   }, [history, query, selectedMuscles, dateFrom, dateTo, sortBy]);
 
   const streak = useMemo(() => calcStreak(history), [history]);
+
+  // Semana calendario: lunes 00:00 -> ahora
   const weekly = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 86400000;
-    const entries = history.filter(e => e.date >= weekAgo);
+    const weekStart = startOfWeek(new Date()).getTime();
+    const entries = history.filter(e => e.date >= weekStart);
+    const trainedDays = new Set(entries.map(e => startOfDay(new Date(e.date)).getTime()));
     return {
-      count: entries.length,
+      days: trainedDays.size,
       volume: Math.round(entries.reduce((a, e) => a + e.totalVolume, 0)),
       sets: entries.reduce((a, e) => a + e.totalSets, 0)
     };
   }, [history]);
 
   const activeFilterCount = (selectedMuscles.size > 0 ? 1 : 0) + (dateFrom || dateTo ? 1 : 0);
+  const currentSortLabel = SORT_OPTIONS.find(o => o.value === sortBy)?.label ?? 'Ordenar';
+
+  const clearAllFilters = () => {
+    setSelectedMuscles(new Set());
+    setDateFrom(null);
+    setDateTo(null);
+  };
 
   return (
     <>
@@ -113,10 +138,15 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
           <>
             <div className="stats-cont">
               <div className="stats-cont-item">
-                <div><b>{streak}</b><span>racha (días)</span></div>
+                <div>
+                  <b>
+                    {streak}
+                  </b>
+                  <span>racha (días)</span>
+                </div>
               </div>
               <div className="stats-cont-item">
-                <div><b>{weekly.count}</b><span>esta semana</span></div>
+                <div><b>{weekly.days}/7</b><span>días esta semana</span></div>
               </div>
               <div className="stats-cont-item">
                 <div><b>{weekly.volume}kg</b><span>volumen semanal</span></div>
@@ -125,7 +155,6 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
                 <div><b>{weekly.sets}</b><span>series semanales</span></div>
               </div>
             </div>
-
 
             <div className="hist-search-row">
               <div className="hist-search-input">
@@ -138,10 +167,37 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
                 />
                 {query && <X size={14} onClick={() => setQuery('')} style={{ cursor: 'pointer' }} />}
               </div>
+
+              <div style={{ position: 'relative' }}>
+                <button className="mini-btn" title="Ordenar por" onClick={() => setSortOpen(v => !v)}>
+                  <ArrowUpDown size={16} />
+                </button>
+                {sortOpen && (
+                  <>
+                    <div className='mini-drop-cont' onClick={() => setSortOpen(false)} />
+                    <div className='mini-drop'>
+                      {SORT_OPTIONS.map(opt => (
+                        <div
+                          key={opt.value}
+                          onClick={() => {
+                            setSortBy(opt.value);
+                            setSortOpen(false);
+                          }}
+                          className={`mini-drop-item ${sortBy === opt.value ? "activo" : ""}`}
+                        >
+                          {opt.label}
+                          {sortBy === opt.value && <Check size={14} />}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+             
               <button className={`mini-btn`} title="Filtrar por fecha" onClick={() => setCalendarOpen(true)}>
                 <Calendar size={16} />
               </button>
-
             </div>
 
             {(dateFrom || dateTo) && (
@@ -149,7 +205,6 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
                 {fmtShort(dateFrom)} → {fmtShort(dateTo)}
               </div>
             )}
-
 
           </>
         )}
@@ -167,6 +222,9 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
           <div className="page-sin">
             <h3>Sin resultados</h3>
             <p>Probá cambiar la búsqueda o los filtros.</p>
+            {activeFilterCount > 0 && (
+              <button className="mini-btn" onClick={clearAllFilters} style={{ marginTop: 8 }}><BrushCleaning size={16} style={{position:"relative", top:6}} /></button>
+            )}
           </div>
         ) : filtered.map(entry => {
           const dt = new Date(entry.date);

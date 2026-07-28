@@ -22,6 +22,7 @@ import ProximamentePage from './components/proximamente';
 import { openDescansoToast } from './components/descansoToastModal';
 import openTiempoDescansoToast, { resetDescansoState } from './components/TiempoDescansoToast';
 import MiniSesionBar from './components/MiniSesionBar';
+import PageSkeleton from './components/PageSkeleton';
 
 export default function App() {
   const [screen, setScreen] = useState('routines');
@@ -1390,15 +1391,13 @@ export default function App() {
       <div>
 
         {screen === 'routines' && (
-          <>
-            <RutinaPage
-              routines={routines}
-              onNewRoutine={() => openEditor(null)}
-              onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
-              onExport={() => setBackupModal({ mode: 'export', kind: 'routines' })}
-              onImport={() => setBackupModal({ mode: 'import', kind: 'routines' })}
-            />
-          </>
+          <RutinaPage
+            routines={routines}
+            onNewRoutine={() => openEditor(null)}
+            onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
+            onExport={() => setBackupModal({ mode: 'export', kind: 'routines' })}
+            onImport={() => setBackupModal({ mode: 'import', kind: 'routines' })}
+          />
         )}
         {screen === 'settings' && (
           <Ajustes

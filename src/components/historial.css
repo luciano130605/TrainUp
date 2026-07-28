@@ -100,9 +100,8 @@
     margin-bottom: 1rem;
     color: var(--texto-gris);
     border: 1px solid var(--borde);
-    width: 10%;
-    position: absolute;
-    left: 80%;
+    width: 30%;
+    z-index: 1000;
     border-radius: 8px;
     backdrop-filter: blur(12px);
     background: var(--componente-transp);
@@ -119,7 +118,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    width: 75%;
+    width: 90%;
     position: relative;
     justify-content: space-between;
     gap: 8px;
@@ -146,4 +145,43 @@
     font-family: 'JetBrains Mono', monospace;
     color: var(--texto-gris);
     flex-wrap: wrap;
+}
+
+.mini-drop-cont {
+    position: fixed;
+    inset: 0;
+    z-index: 9;
+}
+
+.mini-drop {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    z-index: 10;
+    background: var(--componente);
+    border-radius: 8px;
+    padding: 6px;
+    min-width: 130px;
+    border: 1px solid var(--borde);
+}
+
+.mini-drop-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--texto);
+    font-size: .8rem;
+}
+
+.mini-drop-item:hover {
+    color: var(--acento);
+}
+
+.mini-drop-item.activo {
+    background: var(--fondo-transp);
+    font-weight: 600;
+    color: var(--acento);
 }
