@@ -161,7 +161,7 @@
     background: var(--componente);
     border-radius: 8px;
     padding: 6px;
-    min-width: 130px;
+    min-width: 150px;
     border: 1px solid var(--borde);
 }
 
