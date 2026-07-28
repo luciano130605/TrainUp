@@ -100,7 +100,7 @@
     margin-bottom: 1rem;
     color: var(--texto-gris);
     border: 1px solid var(--borde);
-    width: 30%;
+    width: 50%;
     z-index: 1000;
     border-radius: 8px;
     backdrop-filter: blur(12px);
