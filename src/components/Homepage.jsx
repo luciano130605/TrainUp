@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Dumbbell, History, User, ChevronRight, Play, Flame, Plus, Clock, CircleArrowOutUpRight } from 'lucide-react';
 import ProgresoModal, { buildMuscleRecovery } from './ProgresoModal';
-import "./homePage.css";
+import "./homepage.css";
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
