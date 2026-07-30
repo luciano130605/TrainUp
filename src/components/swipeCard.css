@@ -1,0 +1,90 @@
+.swipe-card-wrap {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    margin-top: 12px;
+}
+
+.swipe-card-wrap .rutina-card {
+    margin-bottom: 0;
+    margin-top: 0;
+}
+
+.swipe-card-content {
+    position: relative;
+    z-index: 2;
+    touch-action: pan-y;
+    background: var(--componente);
+}
+
+.swipe-action {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+    overflow: hidden;
+    transition: opacity .1s ease;
+}
+
+/* Posición de la franja de color: fija en el borde exterior */
+.swipe-action.pos-right { right: 0; }
+.swipe-action.pos-left  { left: 0; }
+
+/* El ícono se ancla al borde que "sigue" a la card mientras la arrastrás,
+   no al centro de la franja completa (así no queda pegado al borde de la pantalla). */
+.swipe-action.pos-right {
+    justify-content: flex-start; /* el borde izquierdo de esta franja es el que toca la card */
+    padding-left: 22px;
+}
+
+.swipe-action.pos-left {
+    justify-content: flex-end; /* el borde derecho de esta franja es el que toca la card */
+    padding-right: 22px;
+}
+
+/* Color/estilo: independiente de la posición */
+.swipe-action.style-danger {
+    background: var(--rojo);
+}
+
+.swipe-action.style-neutral {
+    background: var(--acento-transp);
+}
+
+.swipe-action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: transform .18s cubic-bezier(.34, 1.56, .64, 1), background .15s ease, color .15s ease;
+}
+
+.style-danger .swipe-action-icon {
+    background: rgba(255, 255, 255, .18);
+    color: #fff;
+}
+
+.style-neutral .swipe-action-icon {
+    background: var(--acento-transp);
+    color: var(--acento);
+}
+
+.swipe-action.ready .swipe-action-icon {
+    transform: scale(1.18);
+}
+
+.style-danger.ready .swipe-action-icon {
+    background: rgba(255, 255, 255, .28);
+}
+
+.style-neutral.ready .swipe-action-icon {
+    background: var(--acento);
+    color: var(--txt-btn);
+}

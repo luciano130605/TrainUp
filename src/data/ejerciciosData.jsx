@@ -35,6 +35,7 @@ const ejerciciosLocal = [
     { id: "0021", nombre: "Extension (Maquina)", gif: "/gifs/extension-pierna.gif", parteDelCuerpo: "Cuadriceps", subMusculos: [], equipamiento: "Maquinas" },
     { id: "0022", nombre: "Peso muerto smith (Maquina)", gif: "/gifs/peso-muerto-smith.jpg", parteDelCuerpo: "Cuadriceps", subMusculos: ["Gluteos", "Isquiotibiales", "Espalda", "Dorsales", "Trapecio"], equipamiento: "Maquinas" },
     { id: "0023", nombre: "Peso muerto libre (Barra)", gif: "/gifs/peso-muerto.gif", parteDelCuerpo: "Cuadriceps", equipamiento: "Barra", subMusculos: ["Gluteos", "Isquiotibiales", "Espalda", "Dorsales", "Trapecio"], },
+    { id: "0061", nombre: "Estocadas (Mancuernas)", gif: "/gifs/estocadas.gif", parteDelCuerpo: "Cuadriceps", equipamiento: "Mancuernas", subMusculos: ["Gluteos", "Isquiotibiales"], },
 
 
     /* isquiotibiales */
@@ -85,7 +86,7 @@ const ejerciciosLocal = [
     /* abdominales */
     { id: "0052", nombre: "Elevacion de piernas", gif: "/gifs/elevacion-piernas.gif", parteDelCuerpo: "Abdominales", equipamiento: "P. corporal", subMusculos: [""] },
     { id: "0053", nombre: "Adbominales cortos (Peso)", gif: "/gifs/abd-cortos-p.jpg", parteDelCuerpo: "Abdominales", equipamiento: "Mancuernas", subMusculos: [""] },
-    { id: "0054", nombre: "Plancha", gif: "/gifs/plancha.jpg", parteDelCuerpo: "Abdominales", equipamiento: "P. corporal", subMusculos: [""] },
+    { id: "0054", nombre: "Plancha", gif: "/gifs/plancha.jpg", parteDelCuerpo: "Abdominales", equipamiento: "P. corporal", subMusculos: [""], esTiempo: true },
     { id: "0059", nombre: "Rueda abdominal", gif: "/gifs/rueda-abd.mp4", parteDelCuerpo: "Abdominales", equipamiento: "P. corporal", subMusculos: ["Hombros"] },
 
 

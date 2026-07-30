@@ -3,21 +3,12 @@ import { Wrench, BarChart3, Users, Watch, Bell, Check, User } from 'lucide-react
 import './proximamente.css';
 
 const FEATURES = [
-    {
-        icon: BarChart3,
-        title: 'Estadísticas avanzadas',
-        desc: 'Gráficos de progreso por músculo y por ejercicio, comparando mes a mes.',
-    },
+
     {
         icon: User,
         title: 'Perfil',
         desc: 'Guardá tu progreso y accedé a tu historial desde cualquier dispositivo.',
-    },
-    {
-        icon: Watch,
-        title: 'Conectá tu reloj',
-        desc: 'Sincronizá tu wearable para registrar frecuencia cardíaca en cada serie.',
-    },
+    }
 
 ];
 

@@ -1,0 +1,355 @@
+.home-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--fondo-transp);
+    backdrop-filter: blur(12px);
+    padding: 22px 18px 14px;
+    border-bottom: 1px solid var(--borde);
+}
+
+.home-cont-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.home-cont {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding-top: 16px;
+}
+
+.home-hoy-card {
+    background: var(--componente);
+    border: 1px solid var(--borde-hover);
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.home-hoy-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.home-hoy-tag {
+    font-family: 'Oswald', sans-serif;
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--acento);
+}
+
+
+.home-hoy-vacio {
+    text-align: center;
+}
+
+.home-hoy-vacio p {
+    color: var(--texto-gris);
+    font-size: .85rem;
+    margin: 0 0 12px;
+}
+
+.home-hoy-btn {
+    display: inline-flex;
+    width: auto;
+    padding: 10px 18px;
+}
+
+.home-hoy-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.home-hoy-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: var(--fondo-transp);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 10px 10px 10px 12px;
+}
+
+.home-hoy-item-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    cursor: pointer;
+    flex: 1;
+}
+
+.home-hoy-item-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--componente-transp);
+    color: var(--acento);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-hoy-item-nombre {
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-hoy-item-sub {
+    color: var(--texto-gris-oscuro);
+    font-size: .65rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.home-hoy-play {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--acento);
+    color: var(--txt-btn);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: transform .15s ease;
+}
+
+
+.home-stats-row {
+    display: flex;
+    gap: 10px;
+}
+
+.home-stat {
+    flex: 1;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 12px 8px;
+    text-align: center;
+}
+
+.home-stat-num {
+    font-size: 1rem;
+    color: var(--texto);
+    line-height: 1;
+}
+
+.home-stat-label {
+    margin-top: 4px;
+    font-size: .6rem;
+    color: var(--texto-gris);
+}
+
+.home-section-titulo {
+    font-size: .75rem;
+    letter-spacing: 0.06em;
+    color: var(--texto-gris);
+    margin-bottom: -8px;
+}
+
+.home-quick-grid {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+}
+
+.home-quick-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 13px 14px;
+    cursor: pointer;
+    transition: border-color .2s ease;
+}
+
+.home-quick-item:hover {
+    border-color: var(--borde-hover);
+}
+
+.home-quick-item span {
+    flex: 1;
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.home-quick-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--fondo-transp);
+    color: var(--acento);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-quick-chev {
+    color: var(--texto-gris);
+    flex-shrink: 0;
+}
+
+.home-ultimo-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 13px 14px;
+    cursor: pointer;
+    transition: border-color .2s ease;
+}
+
+.home-ultimo-card:hover {
+    border-color: var(--borde-hover);
+}
+
+.home-ultimo-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--fondo-transp);
+    color: var(--acento);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.home-ultimo-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.home-ultimo-nombre {
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-ultimo-sub {
+    color: var(--texto-gris-oscuro);
+    font-size: .65rem;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+}
+
+.cont-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.home-logo {
+    font-family: 'Oswald', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--texto);
+    text-transform: uppercase;
+}
+
+.home-logo-acento {
+    color: var(--acento);
+}
+
+.home-recup-card {
+    background: var(--componente);
+    border: 1px solid var(--borde-hover);
+    border-radius: 8px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+.home-recup-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.home-recup-vacio {
+    color: var(--texto-gris);
+    font-size: .85rem;
+    margin: 0;
+}
+
+.home-recup-lista {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+.home-recup-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    width: 64px;
+}
+
+.home-recup-ring {
+    --size: 46px;
+    width: var(--size);
+    height: var(--size);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+    background: var(--borde);
+}
+
+.home-recup-ring::before {
+    content: "";
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--borde);
+}
+
+.home-recup-ring span {
+    position: relative;
+    font-size: .7rem;
+    font-weight: 700;
+    color: var(--texto);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.home-recup-nombre {
+    font-size: .65rem;
+    color: var(--texto-gris);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 64px;
+}

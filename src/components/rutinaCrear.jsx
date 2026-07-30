@@ -14,6 +14,80 @@ const DIAS = [
   { label: 'D', value: 0 },
 ];
 
+
+const EJERCICIOS_TIEMPO = ['Plancha'];
+
+function esEjercicioDeTiempo(ex) {
+  const nombre = ex.nombre ?? ex.name ?? '';
+  return !!ex.esTiempo || EJERCICIOS_TIEMPO.includes(nombre);
+}
+function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
+  const [running, setRunning] = React.useState(false);
+  const [remaining, setRemaining] = React.useState(null);
+  const intervalRef = React.useRef(null);
+
+  React.useEffect(() => () => clearInterval(intervalRef.current), []);
+
+  const start = () => {
+    const raw = (value === '' || value == null) ? placeholder : value;
+    const target = parseInt(raw, 10);
+    if (!target || target <= 0) return;
+    setRemaining(target);
+    setRunning(true);
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          setRunning(false);
+          if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
+          onComplete?.();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const reset = () => {
+    clearInterval(intervalRef.current);
+    setRunning(false);
+    setRemaining(null);
+  };
+
+  const isCounting = running || remaining === 0;
+
+  if (isCounting) {
+    return (
+      <div className="ejercicio-inputs-cont">
+        <span className={`tiempo-set-num ${remaining === 0 ? 'listo' : ''}`}>{remaining}</span>
+        <button
+          className="mini-btn"
+          title={remaining === 0 ? 'Reiniciar' : 'Detener'}
+          onClick={reset}
+        >
+          {remaining === 0 ? <RotateCcw size={13} /> : <Pause size={13} />}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ejercicio-inputs-cont">
+      <input
+        type="text" inputMode="numeric"
+        value={value}
+        disabled={disabled}
+        placeholder={placeholder || '0'}
+        onChange={e => onChange(e.target.value)}
+      />
+      <button className={`mini-btn`} title="Iniciar" disabled={disabled} onClick={start}>
+        <Play size={13} />
+      </button>
+    </div>
+  );
+}
+
 export default function RutinaCrear({
   draft, onChangeName, onMoveExercise, onRemoveExercise, onAddSet, onRemoveSet, onUpdateSetField,
   onOpenPicker, onSave, onCancel, onDeleteRoutine,
@@ -143,6 +217,7 @@ export default function RutinaCrear({
         )}
 
         {d.exercises.map((ex, exi) => {
+          const isTimed = esEjercicioDeTiempo(ex);
           const isCollapsed = collapsedIds.has(ex.id);
           return (
             <div
@@ -201,34 +276,46 @@ export default function RutinaCrear({
                 <div className="ejercicio-inputs">
                   {(() => {
                     const isBodyweight = ex.equipment === 'P. corporal';
+                    const isTimed = esEjercicioDeTiempo(ex);
                     return (
                       <>
                         <div className="ejercicio-inputs-header">
                           <span></span>
-                          <span>Kg</span>
-                          <span>Reps</span>
+                          {isTimed ? <span>Segundos</span> : <><span>Kg</span><span>Reps</span></>}
                           <span></span>
                         </div>
                         {ex.sets.map((s, si) => (
                           <div key={s.id} className="ejercicio-inputs-header">
                             <span className="ejercicio-num">{si + 1}</span>
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={s.weight}
-                              disabled={isBodyweight}
-                              placeholder="0"
-                              onChange={e =>
-                                onUpdateSetField(exi, si, 'weight', e.target.value.replace(',', '.'))
-                              }
-                            />
-                            <input
-                              type="text"
-                              inputMode="numeric"
-                              value={s.reps}
-                              placeholder="0"
-                              onChange={e => onUpdateSetField(exi, si, 'reps', e.target.value)}
-                            />
+                            {isTimed ? (
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                value={s.reps}
+                                placeholder="0"
+                                onChange={e => onUpdateSetField(exi, si, 'reps', e.target.value)}
+                              />
+                            ) : (
+                              <>
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={s.weight}
+                                  disabled={isBodyweight}
+                                  placeholder="0"
+                                  onChange={e =>
+                                    onUpdateSetField(exi, si, 'weight', e.target.value.replace(',', '.'))
+                                  }
+                                />
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  value={s.reps}
+                                  placeholder="0"
+                                  onChange={e => onUpdateSetField(exi, si, 'reps', e.target.value)}
+                                />
+                              </>
+                            )}
                             <button className="check right" onClick={() => onRemoveSet(exi, si)}>
                               <X size={14} />
                             </button>

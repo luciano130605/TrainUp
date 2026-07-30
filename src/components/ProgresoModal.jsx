@@ -81,7 +81,7 @@ function addFatigue(byMuscleDay, key, dayKey, vol, sets) {
     dayMap.set(dayKey, { vol: prev.vol + vol, sets: prev.sets + sets });
 }
 
-function buildMuscleRecovery(history) {
+export function buildMuscleRecovery(history) {
     // Por músculo (clave canónica), por día: volumen total y cantidad de series
     const byMuscleDay = new Map();
     // Guarda el nombre "lindo" para mostrar, la primera vez que se ve cada clave

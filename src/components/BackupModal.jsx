@@ -2,6 +2,10 @@ import React, { useState, useRef } from 'react';
 import { X, Download, Link as LinkIcon, Upload, FileDown, ClipboardPaste } from 'lucide-react';
 import "./backupModal.css"
 
+const canPaste = typeof navigator !== 'undefined'
+    && !!navigator.clipboard
+    && typeof navigator.clipboard.readText === 'function';
+
 export default function BackupModal({ mode, kind, onClose, onExportFile, onExportLink, onImportText, onImportFile }) {
     const [pasteValue, setPasteValue] = useState('');
     const fileInputRef = useRef(null);
@@ -59,15 +63,17 @@ export default function BackupModal({ mode, kind, onClose, onExportFile, onExpor
                                 onChange={e => setPasteValue(e.target.value)}
                             />
 
-                            <button
-                                className="mini-btn modal"
-                                type="button"
-                                title="Pegar"
-                                aria-label="Pegar"
-                                onClick={handlePaste}
-                            >
-                                <ClipboardPaste size={16} />
-                            </button>
+                            {canPaste && (
+                                <button
+                                    className="mini-btn modal"
+                                    type="button"
+                                    title="Pegar"
+                                    aria-label="Pegar"
+                                    onClick={handlePaste}
+                                >
+                                    <ClipboardPaste size={16} />
+                                </button>
+                            )}
                         </div>
                         <button
                             className="btns agregar modal"

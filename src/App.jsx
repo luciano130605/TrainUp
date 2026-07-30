@@ -10,6 +10,7 @@ import HistorialDetalle from './components/HistorialDetalle';
 import { scheduleReminderPush, cancelReminderPush } from './utils/push';
 import BackupModal from './components/BackupModal';
 import { encodeBackup, decodeBackup, downloadJSON, readJSONFile } from './utils/backup';
+import HomePage from "./components/Homepage"
 
 import { EXERCISES_DB } from './data/exercises';
 import { uid } from './utils/id';
@@ -23,9 +24,10 @@ import { openDescansoToast } from './components/descansoToastModal';
 import openTiempoDescansoToast, { resetDescansoState } from './components/TiempoDescansoToast';
 import MiniSesionBar from './components/MiniSesionBar';
 import PageSkeleton from './components/PageSkeleton';
+import { Copy, Pencil, Share2, Trash2 } from 'lucide-react';
 
 export default function App() {
-  const [screen, setScreen] = useState('routines');
+  const [screen, setScreen] = useState('home');
   const [routines, setRoutines] = useState([]);
   const [history, setHistory] = useState([]);
   const [customExercises, setCustomExercises] = useState([]);
@@ -61,6 +63,9 @@ export default function App() {
   const [modoOscuro, setModoOscuro] = useState(true);
   const [acento, setAcento] = useState('acento-verde');
   const [toasterPosition, setToasterPosition] = useState('bottom');
+  const [swipeGestures, setSwipeGestures] = useState(true);
+  const [swipeLeftAction, setSwipeLeftAction] = useState('delete');
+  const [swipeRightAction, setSwipeRightAction] = useState('edit');
 
   const ACENTOS_IDS = ['acento-verde', 'acento-celeste', 'acento-naranja', 'acento-violeta'];
 
@@ -83,6 +88,9 @@ export default function App() {
   // ---------- load ----------
   useEffect(() => {
     (async () => {
+      try { const r = await window.storage.get('gym_swipe_left', false); if (r && r.value) setSwipeLeftAction(JSON.parse(r.value)); } catch (e) { }
+      try { const r = await window.storage.get('gym_swipe_right', false); if (r && r.value) setSwipeRightAction(JSON.parse(r.value)); } catch (e) { }
+      try { const r = await window.storage.get('gym_swipe_gestures', false); if (r && r.value !== undefined) setSwipeGestures(JSON.parse(r.value)); } catch (e) { }
       try { const r = await window.storage.get('gym_reminder_enabled', false); if (r && r.value !== undefined) setReminderEnabled(JSON.parse(r.value)); } catch (e) { }
       try { const r = await window.storage.get('gym_reminder_time', false); if (r && r.value) setReminderTime(JSON.parse(r.value)); } catch (e) { }
       try { const r = await window.storage.get('gym_reminder_push_id', false); if (r && r.value) setReminderPushId(JSON.parse(r.value)); } catch (e) { }
@@ -102,6 +110,9 @@ export default function App() {
     if (!loaded) return;
     clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(async () => {
+      try { await window.storage.set('gym_swipe_left', JSON.stringify(swipeLeftAction), false); } catch (e) { console.error(e); }
+      try { await window.storage.set('gym_swipe_right', JSON.stringify(swipeRightAction), false); } catch (e) { console.error(e); }
+      try { await window.storage.set('gym_swipe_gestures', JSON.stringify(swipeGestures), false); } catch (e) { console.error(e); }
       try { await window.storage.set('gym_reminder_time', JSON.stringify(reminderTime), false); } catch (e) { console.error(e); }
       try { await window.storage.set('gym_reminder_push_id', JSON.stringify(reminderPushId), false); } catch (e) { console.error(e); }
       try { await window.storage.set('gym_routines', JSON.stringify(routines), false); } catch (e) { console.error(e); }
@@ -462,6 +473,18 @@ export default function App() {
 
     setRoutines(rs => rs.map(x => x.id === routineId ? { ...x, name: trimmed } : x));
     showToast('Nombre actualizado');
+  }
+
+  function getSwipeActionFor(actionId, routineId) {
+    switch (actionId) {
+      case 'edit': return { icon: <Pencil size={18} />, onTrigger: () => openEditor(routineId), className: 'style-neutral' };
+      case 'delete': return { icon: <Trash2 size={18} />, onTrigger: () => deleteRoutine(routineId), className: 'style-danger' };
+      case 'duplicate': return { icon: <Copy size={18} />, onTrigger: () => duplicateRoutine(routineId), className: 'style-neutral' };
+      case 'share': return { icon: <Share2 size={18} />, onTrigger: () => shareRoutine(routineId), className: 'style-neutral' };
+      case 'copyText': return { icon: <ClipboardCopy size={18} />, onTrigger: () => copyRoutineAsText(routineId), className: 'style-neutral' };
+      case 'rename': return { icon: <Pencil size={18} />, onTrigger: () => renameRoutineQuickPrompt(routineId), className: 'style-neutral' };
+      default: return null;
+    }
   }
 
   // ---------- NUEVO: compartir por link ----------
@@ -1381,7 +1404,7 @@ export default function App() {
 
   const activeRoutine = routines.find(x => x.id === activeRoutineId) || null;
   const activeHistoryEntry = history.find(x => x.id === activeHistoryId) || null;
-  const showTabs = screen === 'routines' || screen === 'history' || screen === 'proximamente';
+  const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente';
 
   return (
     <Toaster
@@ -1390,6 +1413,19 @@ export default function App() {
     >
       <div>
 
+        {screen === 'home' && (
+          <HomePage
+            routines={routines}
+            history={history}
+            session={session}
+            onStartSession={startSession}
+            onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
+            onNewRoutine={() => openEditor(null)}
+            onNavigate={(s) => setScreen(s)}
+            onSelectHistoryEntry={(id) => { setActiveHistoryId(id); setScreen('historyDetail'); }}
+          />
+        )}
+
         {screen === 'routines' && (
           <RutinaPage
             routines={routines}
@@ -1397,6 +1433,10 @@ export default function App() {
             onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
             onExport={() => setBackupModal({ mode: 'export', kind: 'routines' })}
             onImport={() => setBackupModal({ mode: 'import', kind: 'routines' })}
+            swipeGestures={swipeGestures}
+            getSwipeActionFor={getSwipeActionFor}
+            swipeLeftAction={swipeLeftAction}
+            swipeRightAction={swipeRightAction}
           />
         )}
         {screen === 'settings' && (
@@ -1412,6 +1452,12 @@ export default function App() {
             onChangeAcento={setAcento}
             toasterPosition={toasterPosition}
             onChangeToasterPosition={setToasterPosition}
+            swipeGestures={swipeGestures}
+            swipeLeftAction={swipeLeftAction}
+            onChangeSwipeLeftAction={setSwipeLeftAction}
+            swipeRightAction={swipeRightAction}
+            onChangeSwipeRightAction={setSwipeRightAction}
+            onToggleSwipeGestures={() => setSwipeGestures(v => !v)}
           />
         )}
 
@@ -1549,8 +1595,14 @@ export default function App() {
             onChangeToasterPosition={setToasterPosition}
             reminderTime={reminderTime}
             onChangeReminderTime={setReminderTime}
-            reminderEnabled={reminderEnabled}                    // 👈 agregar
-            onToggleReminder={() => setReminderEnabled(v => !v)} // 👈 agregar
+            reminderEnabled={reminderEnabled}
+            onToggleReminder={() => setReminderEnabled(v => !v)}
+            swipeGestures={swipeGestures}
+            onToggleSwipeGestures={() => setSwipeGestures(v => !v)}
+            swipeLeftAction={swipeLeftAction}
+            onChangeSwipeLeftAction={setSwipeLeftAction}
+            swipeRightAction={swipeRightAction}
+            onChangeSwipeRightAction={setSwipeRightAction}
           />
         )}
 

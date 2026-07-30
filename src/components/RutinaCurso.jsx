@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, Eye, CheckCircle2, ChevronDown } from 'lucide-react';
+import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, Eye, CheckCircle2, ChevronDown, RotateCcw } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
 import EjercicioModal from './ejercicioModal';
 import ResumenRutina from './ResumenRutina';
@@ -17,6 +17,79 @@ function formatElapsedFull(ms) {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+
+const EJERCICIOS_TIEMPO = ['Plancha'];
+
+function esEjercicioDeTiempo(ex) {
+  const nombre = ex.nombre ?? ex.name ?? '';
+  return !!ex.esTiempo || EJERCICIOS_TIEMPO.includes(nombre);
+}
+function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
+  const [running, setRunning] = React.useState(false);
+  const [remaining, setRemaining] = React.useState(null);
+  const intervalRef = React.useRef(null);
+
+  React.useEffect(() => () => clearInterval(intervalRef.current), []);
+
+  const start = () => {
+    const raw = (value === '' || value == null) ? placeholder : value;
+    const target = parseInt(raw, 10);
+    if (!target || target <= 0) return;
+    setRemaining(target);
+    setRunning(true);
+    clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setRemaining(prev => {
+        if (prev <= 1) {
+          clearInterval(intervalRef.current);
+          setRunning(false);
+          if (navigator.vibrate) navigator.vibrate([200, 80, 200]);
+          onComplete?.();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const reset = () => {
+    clearInterval(intervalRef.current);
+    setRunning(false);
+    setRemaining(null);
+  };
+
+  const isCounting = running || remaining === 0;
+
+  if (isCounting) {
+    return (
+      <div className="ejercicio-inputs-cont">
+        <span className={`tiempo-set-num ${remaining === 0 ? 'listo' : ''}`}>{remaining}</span>
+        <button
+          className="mini-btn"
+          title={remaining === 0 ? 'Reiniciar' : 'Detener'}
+          onClick={reset}
+        >
+          {remaining === 0 ? <RotateCcw size={13} /> : <Pause size={13} />}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="ejercicio-inputs-cont">
+      <input
+        type="text" inputMode="numeric"
+        value={value}
+        disabled={disabled}
+        placeholder={placeholder || '0'}
+        onChange={e => onChange(e.target.value)}
+      />
+      <button className={`mini-btn`} title="Iniciar" disabled={disabled} onClick={start}>
+        <Play size={13} />
+      </button>
+    </div>
+  );
+}
 export default function RutinaCurso({
   session, restTimer, restDefault, history = [], routineName,
   onCancel, onToggleSet, onUpdateField, onAddSet, onFinish,
@@ -110,6 +183,7 @@ export default function RutinaCurso({
   const handleToggleSet = (exi, si) => {
     const ex = s.exercises[exi];
     const set = ex.sets[si];
+    if (set.done) return; // ya está marcada (evita doble disparo si el timer completa dos veces)
     const willComplete = !set.done && ex.sets.every((st, idx) => idx === si || st.done);
 
     let weightVal = set.weight;
@@ -362,60 +436,80 @@ export default function RutinaCurso({
                 </div>
               </div>
 
-              {
-                !isCollapsed && (
-                  <div className="ejercicio-inputs">
-                    <div className="ejercicio-inputs-header">
-                      <span>Kg</span>
-                      <span>Reps</span>
-                    </div>
-                    {ex.sets.map((set, si) => (
-                      <div key={set.id ?? si} className="ejercicio-inputs-cont">
+              {!isCollapsed && (
+                <div className="ejercicio-inputs">
+                  
+                  {(() => {
+                    
+                    const isTimed = esEjercicioDeTiempo(ex);
+                    return (
+                      <div className="ejercicio-inputs-header">
+                        <span></span>
+                        {isTimed ? <span className='segs'>Segundos</span> : <><span>Kg</span><span>Reps</span></>}
+                      </div>
+                    );
+                  })()}
+                  {ex.sets.map((set, si) => {
+                    const isBodyweight = ex.equipment === 'P. corporal';
+                    const isTimed = esEjercicioDeTiempo(ex);
+                    return (
+                      <div key={set.id ?? si} className={`ejercicio-inputs-cont ${set.done ? 'done' : ''}`}>
                         <span className="ejercicio-num">{si + 1}</span>
-                        <input
-                          type="text" inputMode="decimal"
-                          value={set.weight}
-                          placeholder={set.placeholderWeight || '0'}
-                          onChange={e => {
-                            let val = e.target.value.replace(',', '.');
-                            const parts = val.split('.');
-                            if (parts.length > 2) {
-                              val = parts[0] + '.' + parts.slice(1).join('');
-                            }
-                            onUpdateField(exi, si, 'weight', val);
-                          }}
-                        />
-                        <input
-                          type="text" inputMode="numeric"
-                          value={set.reps}
-                          placeholder={set.placeholderReps || '0'}
-                          onChange={e => onUpdateField(exi, si, 'reps', e.target.value)}
-
-                        />
+                        {isTimed ? (
+                          <TimerInput
+                            value={set.reps}
+                            placeholder={set.placeholderReps}
+                            onChange={(v) => onUpdateField(exi, si, 'reps', v)}
+                            onComplete={() => handleToggleSet(exi, si)}
+                          />
+                        ) : (
+                          <>
+                            <input
+                              type="text" inputMode="decimal"
+                              value={set.weight}
+                              disabled={isBodyweight}
+                              placeholder={set.placeholderWeight || '0'}
+                              onChange={e => {
+                                let val = e.target.value.replace(',', '.');
+                                const parts = val.split('.');
+                                if (parts.length > 2) {
+                                  val = parts[0] + '.' + parts.slice(1).join('');
+                                }
+                                onUpdateField(exi, si, 'weight', val);
+                              }}
+                            />
+                            <input
+                              type="text" inputMode="numeric"
+                              value={set.reps}
+                              placeholder={set.placeholderReps || '0'}
+                              onChange={e => onUpdateField(exi, si, 'reps', e.target.value)}
+                            />
+                          </>
+                        )}
                         <div className='check-cont'>
                           <button title='Terminado' className={`check ${set.done ? 'done' : ''}`} onClick={() => handleToggleSet(exi, si)}>
                             {<Check size={15} style={{ position: "relative", right: 1 }} />}
                           </button>
                         </div>
                       </div>
-                    ))}
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      {ex.sets.length > 0 && onDuplicateLastSet && (
-                        <button className="btns agregar" onClick={() => onDuplicateLastSet(exi)}><Copy size={12} /> Duplicar</button>
-                      )}
-                    </div>
-                    {onUpdateNotes && (
-                      <input
-                        className="input-notas"
-                        placeholder="Notas"
-                        value={ex.notes || ''}
-                        onChange={e => onUpdateNotes(exi, e.target.value)}
-                        rows={2}
-                      />
+                    );
+                  })}
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {ex.sets.length > 0 && onDuplicateLastSet && (
+                      <button className="btns agregar" onClick={() => onDuplicateLastSet(exi)}><Copy size={12} /> Duplicar</button>
                     )}
                   </div>
-                )
-              }
+                  {onUpdateNotes && (
+                    <input
+                      className="input-notas"
+                      placeholder="Notas"
+                      value={ex.notes || ''}
+                      onChange={e => onUpdateNotes(exi, e.target.value)}
+                      rows={2}
+                    />
+                  )}
+                </div>
+              )}
             </div>
           );
         })}

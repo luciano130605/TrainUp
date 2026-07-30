@@ -4,6 +4,7 @@ import "./tabBar.css";
 import { Settings } from 'lucide-react';
 
 const TABS = [
+  { key: 'home', label: 'Inicio' },
   { key: 'routines', label: 'Rutinas' },
   { key: 'history', label: 'Historial' },
   { key: 'proximamente', label: 'Perfil' },
@@ -22,6 +23,12 @@ export default function TabBar({
   onChangeReminderTime,
   reminderEnabled,
   onToggleReminder,
+  swipeGestures,
+  onToggleSwipeGestures,
+  swipeLeftAction,
+  onChangeSwipeLeftAction,
+  swipeRightAction,
+  onChangeSwipeRightAction,
 }) {
   const [openSettings, setOpenSettings] = useState(false);
   const wrapRef = useRef(null);
@@ -113,8 +120,14 @@ export default function TabBar({
           onChangeToasterPosition={onChangeToasterPosition}
           reminderTime={reminderTime}
           onChangeReminderTime={onChangeReminderTime}
-          reminderEnabled={reminderEnabled}    
+          reminderEnabled={reminderEnabled}
           onToggleReminder={onToggleReminder}
+          swipeGestures={swipeGestures}
+          onToggleSwipeGestures={onToggleSwipeGestures}
+          swipeLeftAction={swipeLeftAction}
+          onChangeSwipeLeftAction={onChangeSwipeLeftAction}
+          swipeRightAction={swipeRightAction}
+          onChangeSwipeRightAction={onChangeSwipeRightAction}
         />
       </div>
     </div>
