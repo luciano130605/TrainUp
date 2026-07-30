@@ -170,6 +170,7 @@
     gap: 8px;
     overflow-x: auto;
 }
+
 .home-quick-item {
     display: flex;
     align-items: center;
@@ -266,6 +267,12 @@
     justify-content: space-between;
 }
 
+.home-logo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .home-logo {
     font-family: 'Oswald', sans-serif;
     font-size: 1.05rem;
@@ -277,6 +284,17 @@
 
 .home-logo-acento {
     color: var(--acento);
+}
+
+.home-racha {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--acento);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: .8rem;
+    line-height: 1;
 }
 
 .home-recup-card {
@@ -301,56 +319,90 @@
 }
 
 .home-recup-lista {
-    display: flex;
-    gap: 14px;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, 1fr);
+    grid-auto-columns: minmax(150px, 1fr);
+    gap: 8px;
     overflow-x: auto;
-    padding-bottom: 2px;
+    padding-bottom: 4px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+}
+
+
+.home-recup-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--acento-transp);
+    border-radius: 14px;
+    padding: 10px 14px;
+    overflow: hidden;
+    isolation: isolate;
+    scroll-snap-align: start;
 }
 
 .home-recup-item {
+    position: relative;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    width: 64px;
+    gap: 12px;
+    background: var(--acento-transp-2);
+    border-radius: 14px;
+    padding: 10px 14px;
+    overflow: hidden;
+    isolation: isolate;
 }
 
-.home-recup-ring {
-    --size: 46px;
-    width: var(--size);
-    height: var(--size);
-    border-radius: 50%;
+.home-recup-fill {
+    position: absolute;
+    inset: 0;
+    left: 0;
+    background: var(--acento);
+    opacity: .35;
+    z-index: 0;
+    transition: width .4s ease;
+    border-radius: 14px;
+}
+
+.home-recup-icon {
+    position: relative;
+    z-index: 1;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--componente);
+    color: var(--acento);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
     flex-shrink: 0;
-    background: var(--borde);
 }
 
-.home-recup-ring::before {
-    content: "";
-    position: absolute;
-    inset: 4px;
-    border-radius: 50%;
-    background: var(--borde);
-}
-
-.home-recup-ring span {
+.home-recup-info {
     position: relative;
-    font-size: .7rem;
-    font-weight: 700;
-    color: var(--texto);
-    font-family: 'JetBrains Mono', monospace;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .home-recup-nombre {
-    font-size: .65rem;
-    color: var(--texto-gris);
-    text-align: center;
+    color: var(--txt-btn);
+    font-weight: 600;
+    font-size: .75rem;
+    opacity: .85;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 64px;
+}
+
+.home-recup-pct {
+    color: var(--acento);
+    font-weight: 700;
+    font-size: 1.15rem;
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.2;
 }

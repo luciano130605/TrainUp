@@ -36,9 +36,6 @@ input::placeholder {
     animation-delay: 1.4s;
 }
 
-.home-logo {
-    animation: splashLogo 0.8s ease forwards;
-}
 
 @keyframes splashLogo {
     from {

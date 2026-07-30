@@ -51,32 +51,31 @@ h3 {
 .acento-naranja {
   --acento: #ff9a4a;
   --acento-transp: rgba(255, 154, 74, 0.675);
+  --acento-transp-2: rgba(255, 154, 74, 0.3);
 }
 
 .acento-violeta {
   --acento: #b28aff;
   --acento-transp: rgba(178, 138, 255, 0.675);
+  --acento-transp-2: rgba(178, 138, 255, 0.3);
 }
 
 
 .acento-verde {
   --acento: #c6ff34;
   --acento-transp: rgba(197, 255, 52, 0.675);
+  --acento-transp-2: rgba(197, 255, 52, 0.3);
 
 }
 
 .acento-celeste {
   --acento: rgb(178, 213, 229);
   --acento-transp: rgba(178, 213, 229, 0.675);
+  --acento-transp-2: rgba(178, 213, 229, 0.3);
 
 }
 
-.acento-azul {
-  --acento: #286bd1;
-  --txt-btn: #f2f1ec;
-  --acento-transp: rgba(40, 107, 209, 0.675);
 
-}
 
 html.claro {
   --fondo: rgb(234, 229, 227);
@@ -98,4 +97,8 @@ html {
 
 html.claro body {
   background: var(--fondo);
+}
+
+html::-webkit-scrollbar {
+    display: none;
 }

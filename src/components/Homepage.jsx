@@ -77,8 +77,16 @@ export default function HomePage({
 
                 <div className='cont-head'>
                     <h1 className="header-titulo">{saludo}</h1>
-                    <div className="home-logo">
-                        Train<span className="home-logo-acento">Up</span>
+                    <div className="home-logo-row">
+                        <div className="home-logo">
+                            Train<span className="home-logo-acento">Up</span>
+                        </div>
+                        {racha > 0 && (
+                            <div className="home-racha">
+                                <Flame size={15} />
+                                <span>{racha}</span>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <div className="header-sub">{fechaLarga}</div>
@@ -143,30 +151,19 @@ export default function HomePage({
                             <div className="home-recup-lista">
                                 {pendientes.map(r => (
                                     <div key={r.muscle} className="home-recup-item">
-                                        <div className="home-recup-ring" style={{ '--pct': r.pct }}>
-                                            <span>{r.pct}%</span>
+                                        <div className="home-recup-fill" style={{ width: `${r.pct}%` }} />
+                                        <div className="home-recup-icon"><Dumbbell size={18} /></div>
+                                        <div className="home-recup-info">
+                                            <span className="home-recup-nombre">{r.muscle}</span>
+                                            <span className="home-recup-pct">{r.pct}%</span>
                                         </div>
-                                        <span className="home-recup-nombre">{r.muscle}</span>
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
                 )}
-                <div className="home-stats-row">
-                    <div className="home-stat">
-                        <b className="home-stat-num">{routines.length}</b>
-                        <div className="home-stat-label">Rutinas</div>
-                    </div>
-                    <div className="home-stat">
-                        <div className="home-stat-num">{history.length}</div>
-                        <div className="home-stat-label">Entrenamientos</div>
-                    </div>
-                    <div className="home-stat">
-                        <div className="home-stat-num">{racha}</div>
-                        <div className="home-stat-label">Racha</div>
-                    </div>
-                </div>
+
 
                 <h3 className="home-section-titulo">Accesos rápidos</h3>
                 <div className="home-quick-grid">
