@@ -69,6 +69,13 @@ export default function App() {
 
   const ACENTOS_IDS = ['acento-verde', 'acento-celeste', 'acento-naranja', 'acento-violeta'];
 
+  const [showSplash, setShowSplash] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowSplash(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
   useEffect(() => {
     document.documentElement.classList.toggle('claro', !modoOscuro);
   }, [modoOscuro]);
@@ -1405,6 +1412,17 @@ export default function App() {
   const activeRoutine = routines.find(x => x.id === activeRoutineId) || null;
   const activeHistoryEntry = history.find(x => x.id === activeHistoryId) || null;
   const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente';
+
+
+  if (showSplash) {
+    return (
+      <div className="splash-screen">
+        <div className="home-logo">
+          Train<span className="home-logo-acento">Up</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Toaster
