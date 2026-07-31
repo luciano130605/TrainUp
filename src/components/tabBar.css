@@ -34,18 +34,11 @@
     z-index: 1;
     flex: 1;
     padding: 12px 8px 10px;
-    text-align: center;
     cursor: pointer;
     color: var(--texto-gris);
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    font-family: 'Oswald', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
 }
 
 .tabbar-item:hover {
@@ -54,7 +47,6 @@
 
 .tabbar-item.activo {
     color: var(--acento);
-    background: none !important;
 }
 
 .noHover {

@@ -55,3 +55,12 @@ input::placeholder {
         visibility: hidden;
     }
 }
+
+.cont {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.cont::-webkit-scrollbar {
+    display: none !important;
+}

@@ -92,6 +92,7 @@ html.claro {
 }
 
 html {
+  scrollbar-width: none;
   transition: background 0.2s ease;
 }
 
@@ -100,5 +101,5 @@ html.claro body {
 }
 
 html::-webkit-scrollbar {
-    display: none;
+  display: none;
 }

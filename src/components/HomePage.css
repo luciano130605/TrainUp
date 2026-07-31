@@ -164,11 +164,20 @@
     margin-bottom: -8px;
 }
 
+.home-quick-grid::-webkit-scrollbar, .home-recup-lista::-webkit-scrollbar {
+    display: none !important;
+}
+
 .home-quick-grid {
-    display: flex;
-    flex-direction: row;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(1, 1fr);
+    grid-auto-columns: 100%;
     gap: 8px;
     overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
 }
 
 .home-quick-item {
@@ -180,6 +189,10 @@
     border-radius: 12px;
     flex-shrink: 0;
     padding: 13px 14px;
+    overflow: hidden;
+    isolation: isolate;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
     cursor: pointer;
     transition: border-color .2s ease;
 }
@@ -322,11 +335,11 @@
     display: grid;
     grid-auto-flow: column;
     grid-template-rows: repeat(2, 1fr);
-    grid-auto-columns: minmax(150px, 1fr);
+    grid-auto-columns: 100%;
     gap: 8px;
     overflow-x: auto;
     padding-bottom: 4px;
-    scroll-snap-type: x proximity;
+    scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
 }
 
@@ -336,12 +349,13 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: var(--acento-transp);
+    background: var(--acento-transp-2);
     border-radius: 14px;
     padding: 10px 14px;
     overflow: hidden;
     isolation: isolate;
     scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
 
 .home-recup-item {
@@ -360,8 +374,8 @@
     position: absolute;
     inset: 0;
     left: 0;
-    background: var(--acento);
-    opacity: .35;
+    background: var(--acento-transp);
+    opacity: .8;
     z-index: 0;
     transition: width .4s ease;
     border-radius: 14px;
@@ -405,4 +419,28 @@
     font-size: 1.15rem;
     font-family: 'JetBrains Mono', monospace;
     line-height: 1.2;
+}
+
+.home-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.home-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    border: none;
+    padding: 0;
+    background: var(--borde-hover);
+    cursor: pointer;
+    transition: width .25s ease, background-color .25s ease;
+}
+
+.home-dot.active {
+    width: 20px;
+    background: var(--acento);
 }

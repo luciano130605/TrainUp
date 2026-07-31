@@ -2,13 +2,17 @@ import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import AjustesDropdown from './ajustes';
 import "./tabBar.css";
 import { Settings } from 'lucide-react';
+import HomeIcon from '../icons/home';
+import HomeFillIcon from '../icons/homeFill';
+import RutinaIcon from '../icons/rutinas';
+import RutinaFillIcon from '../icons/rutinasFIll';
+import HistorialIcon from '../icons/historial';
+import HistorialFillIcon from '../icons/historialFill';
+import UserIcon from '../icons/user';
+import UserFillIcon from '../icons/userFill';
+import SettingFillIcon from '../icons/settingFill';
 
-const TABS = [
-  { key: 'home', label: 'Inicio' },
-  { key: 'routines', label: 'Rutinas' },
-  { key: 'history', label: 'Historial' },
-  { key: 'proximamente', label: 'Perfil' },
-];
+
 
 export default function TabBar({
   screen,
@@ -30,6 +34,26 @@ export default function TabBar({
   swipeRightAction,
   onChangeSwipeRightAction,
 }) {
+
+
+  const TABS = [
+    {
+      key: "home",
+      label: screen === "home" ? <HomeFillIcon /> : <HomeIcon />,
+    },
+    {
+      key: "routines",
+      label: screen === "routines" ? <RutinaFillIcon /> : <RutinaIcon />,
+    },
+    {
+      key: "history",
+      label: screen === "history" ? <HistorialFillIcon /> : <HistorialIcon />,
+    },
+    {
+      key: "proximamente",
+      label: screen === "proximamente" ? <UserFillIcon /> : <UserIcon />,
+    },
+  ];
   const [openSettings, setOpenSettings] = useState(false);
   const wrapRef = useRef(null);
   const trackRef = useRef(null);
@@ -108,7 +132,7 @@ export default function TabBar({
           className="tabbar-item noHover"
           onClick={() => setOpenSettings((v) => !v)}
         >
-          <Settings size={14} />
+          <SettingFillIcon size={14} />
         </div>
         <AjustesDropdown
           open={openSettings}

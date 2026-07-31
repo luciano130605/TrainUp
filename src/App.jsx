@@ -584,7 +584,7 @@ export default function App() {
   function handleExportFile() {
     const kind = backupModal.kind;
     if (kind === 'routines') {
-      downloadJSON({ type: 'routines_backup', version: 1, exportedAt: Date.now(), routines }, `rutinas-backup-${Date.now()}.json`);
+      downloadJSON({ type: 'routines_backup', version: 1, exportedAt: Date.now(), routines }, `TrainUp-backup-${Date.now()}.json`);
     } else {
       downloadJSON({ type: 'history_backup', version: 1, exportedAt: Date.now(), history }, `historial-backup-${Date.now()}.json`);
     }
@@ -1429,7 +1429,7 @@ export default function App() {
       theme={modoOscuro ? 'light' : 'dark'}
       position={toasterPosition === 'top' ? 'top-center' : 'bottom-center'}
     >
-      <div>
+      <div className='cont'>
 
         {screen === 'home' && (
           <HomePage

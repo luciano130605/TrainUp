@@ -1,7 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import { Dumbbell, History, User, ChevronRight, Play, Flame, Plus, Clock, CircleArrowOutUpRight } from 'lucide-react';
 import ProgresoModal, { buildMuscleRecovery } from './ProgresoModal';
 import "./HomePage.css";
+import RutinasIconFill from "../icons/rutinasFIll"
+import HistorialIconFill from "../icons/historialFill"
+import UserIconFill from "../icons/userFill"
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -34,6 +37,52 @@ function formatFecha(ts) {
     if (d.toDateString() === hoy.toDateString()) return 'Hoy';
     if (d.toDateString() === ayer.toDateString()) return 'Ayer';
     return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
+// Bolitas de paginación reutilizables para los carruseles con scroll-snap
+function DotsIndicator({ count, active, onDotClick }) {
+    if (count <= 1) return null;
+    return (
+        <div className="home-dots">
+            {Array.from({ length: count }).map((_, i) => (
+                <button
+                    key={i}
+                    type="button"
+                    className={`home-dot${i === active ? ' active' : ''}`}
+                    aria-label={`Ir a la tarjeta ${i + 1} de ${count}`}
+                    onClick={() => onDotClick?.(i)}
+                />
+            ))}
+        </div>
+    );
+}
+
+// Trackea qué "página" del carrusel horizontal (scroll-snap) está activa
+function useCarouselDots(count) {
+    const ref = useRef(null);
+    const [active, setActive] = useState(0);
+
+    const handleScroll = useCallback(() => {
+        const el = ref.current;
+        if (!el || !el.clientWidth) return;
+        const idx = Math.round(el.scrollLeft / el.clientWidth);
+        setActive(prev => (prev === idx ? prev : idx));
+    }, []);
+
+    useEffect(() => {
+        // si la cantidad de items cambia (ej. cambia el historial), reseteamos
+        setActive(0);
+        ref.current?.scrollTo({ left: 0 });
+    }, [count]);
+
+    const goTo = useCallback((idx) => {
+        const el = ref.current;
+        if (!el) return;
+        el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
+        setActive(idx);
+    }, []);
+
+    return { ref, active, handleScroll, goTo };
 }
 
 export default function HomePage({
@@ -71,6 +120,13 @@ export default function HomePage({
         return s.charAt(0).toUpperCase() + s.slice(1);
     }, []);
 
+    // Accesos rápidos: 3 items, 1 por "página" (grid-template-rows: 1)
+    const quickCarousel = useCarouselDots(3);
+
+    // Recuperación: grid-template-rows: 2 -> páginas = ceil(items / 2)
+    const recupPages = Math.max(1, Math.ceil(pendientes.length / 2));
+    const recupCarousel = useCarouselDots(recupPages);
+
     return (
         <>
             <div className="home-header">
@@ -81,12 +137,7 @@ export default function HomePage({
                         <div className="home-logo">
                             Train<span className="home-logo-acento">Up</span>
                         </div>
-                        {racha > 0 && (
-                            <div className="home-racha">
-                                <Flame size={15} />
-                                <span>{racha}</span>
-                            </div>
-                        )}
+
                     </div>
                 </div>
                 <div className="header-sub">{fechaLarga}</div>
@@ -139,8 +190,8 @@ export default function HomePage({
                 </div>
 
                 {history.length > 0 && (
-                    <div className="home-recup-card" onClick={() => setProgresoOpen(true)}>
-                        <div className="home-recup-head">
+                    <div className="home-recup-card">
+                        <div className="home-recup-head" onClick={() => setProgresoOpen(true)}>
                             <span className="home-hoy-tag">Recuperación muscular</span>
                             <ChevronRight size={16} className="home-quick-chev" />
                         </div>
@@ -148,41 +199,61 @@ export default function HomePage({
                         {pendientes.length === 0 ? (
                             <p className="home-recup-vacio">Todos tus músculos están recuperados 💪</p>
                         ) : (
-                            <div className="home-recup-lista">
-                                {pendientes.map(r => (
-                                    <div key={r.muscle} className="home-recup-item">
-                                        <div className="home-recup-fill" style={{ width: `${r.pct}%` }} />
-                                        <div className="home-recup-icon"><Dumbbell size={18} /></div>
-                                        <div className="home-recup-info">
-                                            <span className="home-recup-nombre">{r.muscle}</span>
-                                            <span className="home-recup-pct">{r.pct}%</span>
+                            <>
+                                <div
+                                    className="home-recup-lista"
+                                    ref={recupCarousel.ref}
+                                    onScroll={recupCarousel.handleScroll}
+                                >
+                                    {pendientes.map(r => (
+                                        <div key={r.muscle} className="home-recup-item" onClick={() => setProgresoOpen(true)}>
+                                            <div className="home-recup-fill" style={{ width: `${r.pct}%` }} />
+                                            <div className="home-recup-icon"><Dumbbell size={18} /></div>
+                                            <div className="home-recup-info">
+                                                <span className="home-recup-nombre">{r.muscle}</span>
+                                                <span className="home-recup-pct">{r.pct}%</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                                <DotsIndicator
+                                    count={recupPages}
+                                    active={recupCarousel.active}
+                                    onDotClick={recupCarousel.goTo}
+                                />
+                            </>
                         )}
                     </div>
                 )}
 
 
                 <h3 className="home-section-titulo">Accesos rápidos</h3>
-                <div className="home-quick-grid">
+                <div
+                    className="home-quick-grid"
+                    ref={quickCarousel.ref}
+                    onScroll={quickCarousel.handleScroll}
+                >
                     <div className="home-quick-item" onClick={() => onNavigate('routines')}>
-                        <div className="home-quick-icon"><Dumbbell size={18} /></div>
+                        <div className="home-quick-icon"><RutinasIconFill /></div>
                         <span>Rutinas</span>
                         <ChevronRight size={14} className="home-quick-chev" />
                     </div>
                     <div className="home-quick-item" onClick={() => onNavigate('history')}>
-                        <div className="home-quick-icon"><History size={18} /></div>
+                        <div className="home-quick-icon"><HistorialIconFill /></div>
                         <span>Historial</span>
                         <ChevronRight size={14} className="home-quick-chev" />
                     </div>
                     <div className="home-quick-item" onClick={() => onNavigate('proximamente')}>
-                        <div className="home-quick-icon"><User size={18} /></div>
+                        <div className="home-quick-icon"><UserIconFill /></div>
                         <span>Perfil</span>
                         <ChevronRight size={14} className="home-quick-chev" />
                     </div>
                 </div>
+                <DotsIndicator
+                    count={3}
+                    active={quickCarousel.active}
+                    onDotClick={quickCarousel.goTo}
+                />
 
                 {ultimoEntreno && (
                     <>

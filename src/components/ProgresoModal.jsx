@@ -180,7 +180,12 @@ export default function ProgresoModal({ history, onClose }) {
                             <div className="progreso-seccion">
                                 {pending.map(r => (
                                     <div key={r.muscle} className="musc-recovery-card">
-                                        <div className="musc-recovery-ring" style={{ '--pct': r.pct }}>
+                                        <div
+                                            className="musc-recovery-ring"
+                                            style={{
+                                                background: `conic-gradient(var(--acento) ${r.pct}%, var(--borde) ${r.pct}%)`
+                                            }}
+                                        >
                                             <span>{r.pct}%</span>
                                         </div>
                                         <div className="musc-recovery-info">
