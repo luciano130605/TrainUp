@@ -37,11 +37,13 @@ import MiniSesionBar from './components/MiniSesionBar';
 import PageSkeleton from './components/PageSkeleton';
 import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
 import { flushSync } from 'react-dom';
+import OnboardingTour from './components/Onboardingtour';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [routines, setRoutines] = useState([]);
+  const [onboardingSeen, setOnboardingSeen] = useState(true);
   const [history, setHistory] = useState([]);
   const [customExercises, setCustomExercises] = useState([]);
   const [restDefault, setRestDefault] = useState(90);
@@ -105,6 +107,24 @@ export default function App() {
 
   const sessionRef = useRef(null);
   const lastSavedSessionRef = useRef(null);
+
+  useEffect(() => {
+    if (!loaded) return;
+    (async () => {
+      try {
+        const r = await window.storage.get('gym_onboarding_seen', false);
+        setOnboardingSeen(!!r?.value);
+      } catch (e) {
+        setOnboardingSeen(false); // si no existe la key, no lo vio -> mostramos el tour
+      }
+    })();
+  }, [loaded]);
+
+
+  async function finishOnboarding() {
+    setOnboardingSeen(true);
+    try { await window.storage.set('gym_onboarding_seen', 'true', false); } catch (e) { }
+  }
 
   useEffect(() => {
     sessionRef.current = session;
@@ -1834,6 +1854,10 @@ export default function App() {
             onImportText={handleImportText}
             onImportFile={handleImportFile}
           />
+        )}
+
+        {loaded && !onboardingSeen && (
+          <OnboardingTour onFinish={finishOnboarding} />
         )}
 
         {pendingImport && (

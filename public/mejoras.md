@@ -7,8 +7,6 @@ Social / Comunidad
 * Compartir rutinas desde la misma app por msje directo
 * Seguir a amigos y poder ver stats
 
-Diseño
-* Agregar skeletons
 
 Onboarding 
 * Tour rapido primera vez que entra, las 4 pantallas simple asi no es muy intenso, poder saltar 

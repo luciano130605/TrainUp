@@ -181,8 +181,7 @@ export default function Perfil({
         await supabase.auth.signOut();
         setDeleting(false);
         setDeleteModalOpen(false);
-        // authSession pasa a null en App.jsx por el listener de onAuthStateChange,
-        // lo que redirige solo a la pantalla de Login.
+       
     }
 
     if (loadingProfile) {
