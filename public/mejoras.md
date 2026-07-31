@@ -1,23 +1,23 @@
- KG o LB en settings
+Ajustes / Preferencias
+* KG o LB en settings
+* Configurar un descanso default para todos los ejercicios predeterminado
 
 
-render subir el back
-Login: 
-Paso 1 -> crear cuenta: nombre, email, password
-paso 2 -> Queres completar ahora el perfil
--> Parte de perfil un btn para q diga completar perfil
--> Si -> paso 3
-paso 3 -> Info personal: nombre (ya cargado del otro paso, cargalo con eso que cargo el usuario, pero q pueda editarlo) y apellido, Fecha de nacimiento y genero. Datos fisicos altura y peso. Objetivos Ganar musculo, perder grasa, mantenerse o mejorar fuerza    
+Social / Comunidad
+* Compartir rutinas desde la misma app por msje directo
+* Seguir a amigos y poder ver stats
 
+Diseño
+* Agregar skeletons
+* Animacion entre pantallas
 
+Onboarding 
+* Tour rapido primera vez que entra, las 4 pantallas simple asi no es muy intenso, poder saltar 
 
-
-
-
-
-notificaciones:
-Cambiar KV por Durable Object Alarm
-
+Notificaciones
+* Me llegan 2 notis juntas
+* Cuando sumo el tiempo desde el toast no se me suma a la notificaciones
+* Cambiar KV por Durable Object Alarm
 Ejemplo:
 
 Descanso empieza:

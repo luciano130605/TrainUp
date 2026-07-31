@@ -87,6 +87,38 @@ export default function App() {
 
   const ACENTOS_IDS = ['acento-verde', 'acento-celeste', 'acento-naranja', 'acento-violeta'];
 
+  const sessionRef = useRef(null);
+  const lastSavedSessionRef = useRef(null);
+
+  useEffect(() => {
+    sessionRef.current = session;
+  }, [session]);
+
+  useEffect(() => {
+    const AUTOSAVE_INTERVAL_MS = 5000;
+
+    const id = setInterval(async () => {
+      const current = sessionRef.current;
+      const serialized = current ? JSON.stringify(current) : null;
+
+      // Evitamos escribir en storage si no cambió nada desde el último guardado
+      if (serialized === lastSavedSessionRef.current) return;
+      lastSavedSessionRef.current = serialized;
+
+      try {
+        if (serialized) {
+          await window.storage.set('gym_active_session', serialized, false);
+        } else {
+          await window.storage.delete('gym_active_session', false);
+        }
+      } catch (e) {
+        console.error('Error autoguardando sesión en curso:', e);
+      }
+    }, AUTOSAVE_INTERVAL_MS);
+
+    return () => clearInterval(id);
+  }, []);
+
   const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
@@ -238,7 +270,28 @@ export default function App() {
   }, []);
 
 
+  useEffect(() => {
+    if (!loaded) return;
+    if (session) return; // ya hay una sesión activa en memoria
 
+    (async () => {
+      try {
+        const r = await window.storage.get('gym_active_session', false);
+        if (r?.value) {
+          const recovered = JSON.parse(r.value);
+          if (recovered?.exercises) {
+            setSession(recovered);
+            lastSavedSessionRef.current = r.value;
+            setScreen('session');
+            showToast('Recuperamos tu entrenamiento en curso');
+          }
+        }
+      } catch (e) {
+        // no había ninguna sesión guardada, no hacemos nada
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded]);
 
   // ---------- NUEVO: importar rutina desde link (?import=CODE) ----------
 
@@ -922,6 +975,8 @@ export default function App() {
 
     setRestTimer(null);
     setSession(null);
+    lastSavedSessionRef.current = null;
+    window.storage.delete('gym_active_session', false).catch(() => { });
     setScreen('routines');
     showToast(debeGuardar ? 'Rutina guardada' : 'Rutina descartada');
   }
@@ -936,6 +991,8 @@ export default function App() {
         onClick: () => {
           setRestTimer(null);
           setSession(null);
+          lastSavedSessionRef.current = null;
+          window.storage.delete('gym_active_session', false).catch(() => { });
           setScreen('routines');
           sileo.dismiss(toastId);
         },
