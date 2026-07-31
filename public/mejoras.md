@@ -8,9 +8,6 @@ Social / Comunidad
 * Seguir a amigos y poder ver stats
 
 
-Onboarding 
-* Tour rapido primera vez que entra, las 4 pantallas simple asi no es muy intenso, poder saltar 
-
 Notificaciones
 * Me llegan 2 notis juntas
 * Cuando sumo el tiempo desde el toast no se me suma a la notificaciones

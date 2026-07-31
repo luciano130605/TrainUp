@@ -110,6 +110,7 @@ export default function RutinaCurso({
   const [resumenOpen, setResumenOpen] = React.useState(false);
   const [prsSesion, setPrsSesion] = React.useState([]);
   const [finishingKeys, setFinishingKeys] = React.useState(new Set());
+
   React.useEffect(() => {
     if (s?.paused) return;
     const id = setInterval(() => forceTick(t => t + 1), 1000);
@@ -129,28 +130,8 @@ export default function RutinaCurso({
     };
   }, []);
 
-  if (!s) return null;
-
-  const elapsedMs = (s.paused ? s.pausedAt : Date.now()) - s.startedAt - (s.pausedMs || 0);
-
-  const allCollapsed = s.exercises.length > 0 && s.exercises.every((ex, exi) => collapsedIds.has(ex.id ?? exi));
-
-  const toggleAll = () => {
-    setCollapsedIds(allCollapsed ? new Set() : new Set(s.exercises.map((ex, exi) => ex.id ?? exi)));
-  };
-
-  const toggleOne = (key) => {
-    setCollapsedIds(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
-  const markGifFailed = (key) => {
-    setGifFailedIds(prev => new Set(prev).add(key));
-  };
-
+  // ---- Estos dos hooks estaban DESPUÉS del "if (!s) return null" ----
+  // ---- Eso rompía las reglas de los hooks cuando session pasaba a null ----
   const records = React.useMemo(() => {
     const map = new Map();
     history.forEach(entry => {
@@ -171,14 +152,37 @@ export default function RutinaCurso({
   }, [history]);
 
   const { totalSets, doneSets } = React.useMemo(() => {
+    if (!s) return { totalSets: 0, doneSets: 0 };
     let total = 0, done = 0;
     s.exercises.forEach(ex => {
       total += ex.sets.length;
       done += ex.sets.filter(st => st.done).length;
     });
     return { totalSets: total, doneSets: done };
-  }, [s.exercises]);
+  }, [s]);
+
+  if (!s) return null;
+
+  const elapsedMs = (s.paused ? s.pausedAt : Date.now()) - s.startedAt - (s.pausedMs || 0);
   const globalPct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0;
+
+  const allCollapsed = s.exercises.length > 0 && s.exercises.every((ex, exi) => collapsedIds.has(ex.id ?? exi));
+
+  const toggleAll = () => {
+    setCollapsedIds(allCollapsed ? new Set() : new Set(s.exercises.map((ex, exi) => ex.id ?? exi)));
+  };
+
+  const toggleOne = (key) => {
+    setCollapsedIds(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const markGifFailed = (key) => {
+    setGifFailedIds(prev => new Set(prev).add(key));
+  };
 
   const handleToggleSet = (exi, si) => {
     const ex = s.exercises[exi];
@@ -438,9 +442,9 @@ export default function RutinaCurso({
 
               {!isCollapsed && (
                 <div className="ejercicio-inputs">
-                  
+
                   {(() => {
-                    
+
                     const isTimed = esEjercicioDeTiempo(ex);
                     return (
                       <div className="ejercicio-inputs-header">
