@@ -87,11 +87,42 @@ input::placeholder {
     }
 }
 
-.cont {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.22s;
+    animation-timing-function: ease-out;
 }
 
-.cont::-webkit-scrollbar {
-    display: none !important;
+::view-transition-old(root) {
+    animation-name: screen-out;
+}
+
+::view-transition-new(root) {
+    animation-name: screen-in;
+}
+
+@keyframes screen-in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes screen-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+::view-transition-group(root) {
+    animation-duration: 0.22s;
 }

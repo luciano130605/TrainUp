@@ -9,7 +9,6 @@ Social / Comunidad
 
 Diseño
 * Agregar skeletons
-* Animacion entre pantallas
 
 Onboarding 
 * Tour rapido primera vez que entra, las 4 pantallas simple asi no es muy intenso, poder saltar 

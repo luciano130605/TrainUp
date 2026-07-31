@@ -36,11 +36,11 @@ import openTiempoDescansoToast, { resetDescansoState } from './components/Tiempo
 import MiniSesionBar from './components/MiniSesionBar';
 import PageSkeleton from './components/PageSkeleton';
 import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
+import { flushSync } from 'react-dom';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
-  const [screen, setScreen] = useState('home');
   const [routines, setRoutines] = useState([]);
   const [history, setHistory] = useState([]);
   const [customExercises, setCustomExercises] = useState([]);
@@ -86,6 +86,22 @@ export default function App() {
   const [swipeRightAction, setSwipeRightAction] = useState('edit');
 
   const ACENTOS_IDS = ['acento-verde', 'acento-celeste', 'acento-naranja', 'acento-violeta'];
+
+  const [screen, setScreenState] = useState('home');
+
+  const setScreen = useCallback((next) => {
+    const apply = () => setScreenState(next);
+
+    // Si el navegador soporta View Transitions, animamos el cambio de pantalla.
+    // Si no (ej: Firefox), cae directo a un cambio instantáneo sin romper nada.
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        flushSync(apply);
+      });
+    } else {
+      apply();
+    }
+  }, []);
 
   const sessionRef = useRef(null);
   const lastSavedSessionRef = useRef(null);
