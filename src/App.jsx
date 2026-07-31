@@ -11,7 +11,17 @@ import { scheduleReminderPush, cancelReminderPush } from './utils/push';
 import BackupModal from './components/BackupModal';
 import { encodeBackup, decodeBackup, downloadJSON, readJSONFile } from './utils/backup';
 import HomePage from "./components/Homepage"
-
+import Login from './components/Login';
+import { supabase } from './lib/supabaseClient';
+import { ensureUserProfile } from './lib/profile';
+import {
+  fetchUserData,
+  migrateLocalDataIfNeeded,
+  syncRoutines,
+  syncHistory,
+  syncCustomExercises,
+  syncSettings,
+} from './lib/db';
 import { EXERCISES_DB } from './data/exercises';
 import { uid } from './utils/id';
 import { playBeep } from './utils/audio';
@@ -20,13 +30,16 @@ import "./App.css"
 import "../index.css"
 import Ajustes from './components/ajustes';
 import ProximamentePage from './components/proximamente';
+import Perfil from './components/perfil';
 import { openDescansoToast } from './components/descansoToastModal';
 import openTiempoDescansoToast, { resetDescansoState } from './components/TiempoDescansoToast';
 import MiniSesionBar from './components/MiniSesionBar';
 import PageSkeleton from './components/PageSkeleton';
-import { Copy, Pencil, Share2, Trash2 } from 'lucide-react';
+import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
 
 export default function App() {
+  const [authSession, setAuthSession] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [screen, setScreen] = useState('home');
   const [routines, setRoutines] = useState([]);
   const [history, setHistory] = useState([]);
@@ -37,6 +50,8 @@ export default function App() {
   const [autoOpenResumen, setAutoOpenResumen] = useState(false);
   const [backupModal, setBackupModal] = useState(null);
   const [pendingImport, setPendingImport] = useState(null);
+  // junto a los otros estados
+  const [registering, setRegistering] = useState(false);
 
   const [activeRoutineId, setActiveRoutineId] = useState(null);
   const [activeHistoryId, setActiveHistoryId] = useState(null);
@@ -55,6 +70,9 @@ export default function App() {
   const [restTimer, setRestTimer] = useState(null);
   const restIntervalRef = useRef(null);
   const saveTimerRef = useRef(null);
+  const prevRoutineIds = useRef(new Set());
+  const prevHistoryIds = useRef(new Set());
+  const prevExerciseIds = useRef(new Set());
 
   const allExercises = [...EXERCISES_DB, ...customExercises];
   const findExercise = (id) => allExercises.find(e => e.id === id);
@@ -77,6 +95,40 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return;
+    }
+
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) {
+        setAuthSession(data.session);
+        setAuthLoading(false);
+      }
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setAuthSession(nextSession);
+      setAuthLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!authSession?.user) return;
+
+    ensureUserProfile(authSession.user).then(({ error }) => {
+      if (error) console.error('Profile sync error:', error);
+    });
+  }, [authSession?.user?.id]);
+
+  useEffect(() => {
     document.documentElement.classList.toggle('claro', !modoOscuro);
   }, [modoOscuro]);
 
@@ -92,45 +144,88 @@ export default function App() {
     html.classList.add(acento);
   }, [acento]);
 
-  // ---------- load ----------
+  // ---------- load desde Supabase + migración one-time ----------
   useEffect(() => {
+    if (!supabase || !authSession?.user?.id) return;
+    let cancelled = false;
+
     (async () => {
-      try { const r = await window.storage.get('gym_swipe_left', false); if (r && r.value) setSwipeLeftAction(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_swipe_right', false); if (r && r.value) setSwipeRightAction(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_swipe_gestures', false); if (r && r.value !== undefined) setSwipeGestures(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_reminder_enabled', false); if (r && r.value !== undefined) setReminderEnabled(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_reminder_time', false); if (r && r.value) setReminderTime(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_reminder_push_id', false); if (r && r.value) setReminderPushId(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_routines', false); if (r && r.value) setRoutines(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_history', false); if (r && r.value) setHistory(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_modo_oscuro', false); if (r && r.value) setModoOscuro(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_acento', false); if (r && r.value) setAcento(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_toaster_position', false); if (r && r.value) setToasterPosition(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_custom_exercises', false); if (r && r.value) setCustomExercises(JSON.parse(r.value)); } catch (e) { }
-      try { const r = await window.storage.get('gym_rest_default', false); if (r && r.value) setRestDefault(JSON.parse(r.value)); } catch (e) { }
-      setLoaded(true);
+      setLoaded(false);
+      const userId = authSession.user.id;
+
+      await migrateLocalDataIfNeeded(userId);
+      const data = await fetchUserData(userId);
+      if (cancelled || !data) return;
+
+      setRoutines(data.routines);
+      setHistory(data.history);
+      setCustomExercises(data.customExercises);
+      prevRoutineIds.current = new Set(data.routines.map(r => r.id));
+      prevHistoryIds.current = new Set(data.history.map(h => h.id));
+      prevExerciseIds.current = new Set(data.customExercises.map(e => e.id));
+
+      if (data.settings) {
+        setRestDefault(data.settings.restDefault);
+        setReminderEnabled(data.settings.reminderEnabled);
+        setReminderTime(data.settings.reminderTime);
+        setModoOscuro(data.settings.modoOscuro);
+        setAcento(data.settings.acento);
+        setToasterPosition(data.settings.toasterPosition);
+        setSwipeGestures(data.settings.swipeGestures);
+        setSwipeLeftAction(data.settings.swipeLeftAction);
+        setSwipeRightAction(data.settings.swipeRightAction);
+      }
+
+      // el id de push notification es por dispositivo, sigue local
+      try {
+        const r = await window.storage.get('gym_reminder_push_id', false);
+        if (r?.value) setReminderPushId(JSON.parse(r.value));
+      } catch (e) { }
+
+      if (!cancelled) setLoaded(true);
     })();
-  }, []);
+
+    return () => { cancelled = true; };
+  }, [authSession?.user?.id]);
+
+  // ---------- limpiar estado al cerrar sesión ----------
+  useEffect(() => {
+    if (authSession) return;
+    setRoutines([]);
+    setHistory([]);
+    setCustomExercises([]);
+    prevRoutineIds.current = new Set();
+    prevHistoryIds.current = new Set();
+    prevExerciseIds.current = new Set();
+    setLoaded(false);
+  }, [authSession]);
 
   // ---------- persist (debounced) ----------
   useEffect(() => {
-    if (!loaded) return;
+    if (!loaded || !authSession?.user?.id) return;
     clearTimeout(saveTimerRef.current);
+    const userId = authSession.user.id;
+
     saveTimerRef.current = setTimeout(async () => {
-      try { await window.storage.set('gym_swipe_left', JSON.stringify(swipeLeftAction), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_swipe_right', JSON.stringify(swipeRightAction), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_swipe_gestures', JSON.stringify(swipeGestures), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_reminder_time', JSON.stringify(reminderTime), false); } catch (e) { console.error(e); }
       try { await window.storage.set('gym_reminder_push_id', JSON.stringify(reminderPushId), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_routines', JSON.stringify(routines), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_history', JSON.stringify(history), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_custom_exercises', JSON.stringify(customExercises), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_rest_default', JSON.stringify(restDefault), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_modo_oscuro', JSON.stringify(modoOscuro), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_acento', JSON.stringify(acento), false); } catch (e) { console.error(e); }
-      try { await window.storage.set('gym_toaster_position', JSON.stringify(toasterPosition), false); } catch (e) { console.error(e); }
+
+      try { prevRoutineIds.current = await syncRoutines(userId, routines, prevRoutineIds.current); } catch (e) { console.error(e); }
+      try { prevHistoryIds.current = await syncHistory(userId, history, prevHistoryIds.current); } catch (e) { console.error(e); }
+      try { prevExerciseIds.current = await syncCustomExercises(userId, customExercises, prevExerciseIds.current); } catch (e) { console.error(e); }
+
+      try {
+        await syncSettings(userId, {
+          restDefault, reminderEnabled, reminderTime, modoOscuro, acento,
+          toasterPosition, swipeGestures, swipeLeftAction, swipeRightAction,
+        });
+      } catch (e) { console.error(e); }
     }, 350);
-  }, [routines, history, customExercises, restDefault, loaded, reminderTime, reminderEnabled, reminderPushId, modoOscuro, acento, toasterPosition]);
+  }, [
+    routines, history, customExercises, restDefault, loaded,
+    reminderTime, reminderEnabled, reminderPushId, modoOscuro, acento,
+    toasterPosition, swipeGestures, swipeLeftAction, swipeRightAction,
+    authSession?.user?.id,
+  ]);
 
   const showToast = useCallback((msg, type = 'success') => {
     sileo[type]({
@@ -1411,8 +1506,13 @@ export default function App() {
 
   const activeRoutine = routines.find(x => x.id === activeRoutineId) || null;
   const activeHistoryEntry = history.find(x => x.id === activeHistoryId) || null;
-  const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente';
+  const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente' || screen === 'perfil';
 
+  async function handleSignOut() {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    setScreen('home');
+  }
 
   if (showSplash) {
     return (
@@ -1424,12 +1524,27 @@ export default function App() {
     );
   }
 
+  if (authLoading) {
+    return (
+      <div className="auth-loading-screen">
+        <div className="home-logo">
+          Train<span className="home-logo-acento">Up</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!authSession || registering) {
+    return <Login onRegisteringChange={setRegistering} />;
+  }
+
   return (
     <Toaster
       theme={modoOscuro ? 'light' : 'dark'}
       position={toasterPosition === 'top' ? 'top-center' : 'bottom-center'}
     >
       <div className='cont'>
+
 
         {screen === 'home' && (
           <HomePage
@@ -1580,6 +1695,18 @@ export default function App() {
         {screen === 'proximamente' && (
           <ProximamentePage
 
+          />
+        )}
+        {screen === 'perfil' && (
+          <Perfil
+            authSession={authSession}
+            routines={routines}
+            history={history}
+            onSignOut={handleSignOut}
+            reminderEnabled={reminderEnabled}
+            onToggleReminder={() => setReminderEnabled(v => !v)}
+            reminderTime={reminderTime}
+            onChangeReminderTime={setReminderTime}
           />
         )}
 

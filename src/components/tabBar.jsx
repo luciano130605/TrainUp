@@ -50,8 +50,8 @@ export default function TabBar({
       label: screen === "history" ? <HistorialFillIcon /> : <HistorialIcon />,
     },
     {
-      key: "proximamente",
-      label: screen === "proximamente" ? <UserFillIcon /> : <UserIcon />,
+      key: "perfil",
+      label: screen === "perfil" ? <UserFillIcon /> : <UserIcon />,
     },
   ];
   const [openSettings, setOpenSettings] = useState(false);

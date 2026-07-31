@@ -243,11 +243,6 @@
                     <span>{Math.round(entry.totalVolume)}kg</span>
                   </div>
                 </div>
-                {onDeleteEntry && (
-                  <button className="mini-btn danger" title="Eliminar" onClick={e => { e.stopPropagation(); onDeleteEntry(entry.id); }}>
-                    <Trash2 size={14} />
-                  </button>
-                )}
               </div>
             );
           })}

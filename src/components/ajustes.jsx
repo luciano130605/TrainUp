@@ -88,19 +88,7 @@ export default function Ajustes({
 
             <div className="ajustes-dropdown-separador" />
 
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div className="ajustes-dropdown-seccion-titulo">Recordatorio diario</div>
-                <button className={`mini-btn noti ${reminderEnabled ? "activa" : ""}`} role="switch" aria-checked={reminderEnabled} onClick={onToggleReminder}>
-                    {reminderEnabled ? "activado" : "Desactivado"}
-                </button>
-            </div>
-            <input
-                type="time"
-                className={`input-time-ajustes ${!reminderEnabled ? "disabled" : ""}`}
-                value={reminderTime}
-                onChange={(e) => onChangeReminderTime(e.target.value)}
-                disabled={!reminderEnabled}
-            />
+           
 
             {/* <div className="ajustes-dropdown-separador" />
 
