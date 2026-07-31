@@ -103,7 +103,7 @@ export default function HomePage({
 
     const recovery = useMemo(() => buildMuscleRecovery(history), [history]);
     const pendientes = useMemo(
-        () => recovery.filter(r => !r.recovered).slice(0, 5),
+        () => recovery.filter(r => !r.recovered),
         [recovery]
     );
 

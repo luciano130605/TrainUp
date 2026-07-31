@@ -211,8 +211,9 @@ export default function RutinaCurso({
     let nombre, w, r;
     if (willComplete) {
       nombre = ex.nombre ?? ex.name;
-      w = +set.weight || 0;
-      r = +set.reps || 0;
+      w = +(weightVal || set.placeholderWeight) || 0;
+      r = +(repsVal || set.placeholderReps) || 0;
+
       const record = records.get(nombre);
       isPR = w > 0 && (!record || w > record.weight || (w === record.weight && r > record.reps));
     }
