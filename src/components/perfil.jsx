@@ -187,10 +187,59 @@ export default function Perfil({
 
     if (loadingProfile) {
         return (
-            <div className="auth-loading-screen">
-                <div className="home-logo">
-                    Train<span className="home-logo-acento">Up</span>
+            <div className="perfil-page">
+                <div className="perfil-header">
+                    <div className="skeleton skeleton-avatar" />
+                    <div style={{ flex: 1 }}>
+                        <div className="skeleton skeleton-line" style={{ width: '55%', height: 20, marginBottom: 8 }} />
+                        <div className="skeleton skeleton-line" style={{ width: '35%', height: 12 }} />
+                    </div>
                 </div>
+
+                <div className="perfil skeleton-form">
+                    <div className="skeleton skeleton-line" style={{ width: 140, height: 18, marginBottom: 16 }} />
+
+                    <div className="login-field-row">
+                        <div className="skeleton skeleton-input" />
+                        <div className="skeleton skeleton-input" />
+                    </div>
+                    <div className="login-field-row">
+                        <div className="skeleton skeleton-input" />
+                        <div className="skeleton skeleton-input" />
+                    </div>
+                    <div className="login-field-row">
+                        <div className="skeleton skeleton-input" />
+                        <div className="skeleton skeleton-input" />
+                    </div>
+
+                    <div className="skeleton skeleton-line" style={{ width: '40%', height: 14, margin: '18px 0 10px' }} />
+                    <div className="login-field-row">
+                        <div className="skeleton skeleton-card-obj" />
+                        <div className="skeleton skeleton-card-obj" />
+                    </div>
+                    <div className="login-field-row">
+                        <div className="skeleton skeleton-card-obj" />
+                        <div className="skeleton skeleton-card-obj" />
+                    </div>
+
+
+                    <div className="skeleton skeleton-line" style={{ width: '60%', height: 14, margin: '18px 0 10px' }} />
+                    <div className="dias-selector">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <div key={i} className="skeleton skeleton-chip" />
+                        ))}
+                    </div>
+
+                    <div className="skeleton skeleton-btn" style={{ marginTop: 20 }} />
+                </div>
+
+                <div className="skeleton skeleton-line" style={{ width: 160, height: 18, margin: '20px 0 14px' }} />
+                <div className="skeleton skeleton-row" />
+                <div className="skeleton skeleton-row-2" />
+
+                <div className="skeleton skeleton-line" style={{ width: 100, height: 18, margin: '20px 0 14px' }} />
+                <div className="skeleton skeleton-btn" style={{ marginBottom: 10 }} />
+                <div className="skeleton skeleton-btn" />
             </div>
         );
     }
