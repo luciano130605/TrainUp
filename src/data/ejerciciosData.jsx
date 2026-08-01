@@ -16,6 +16,7 @@ const ejerciciosLocal = [
     { id: "0009", nombre: "Curl martillo (Mancuernas)", gif: "/gifs/curl-martillo-con-mancuernas.jpg", parteDelCuerpo: "Biceps", subMusculos: ["Antebrazo"], equipamiento: "Mancuernas" },
     { id: "0010", nombre: "Curl predicador (Maquina)", gif: "/gifs/predicador-maquina.gif", parteDelCuerpo: "Biceps", equipamiento: "Maquinas" },
     { id: "0011", nombre: "Curl predicador (Barra)", gif: "/gifs/predicador-barra.gif", subMusculos: [], parteDelCuerpo: "Biceps", equipamiento: "Barra" },
+    { id: "0062", nombre: "Curl bayesian (Polea)", gif: "/gifs/curl-bayesian.gif", subMusculos: [], parteDelCuerpo: "Biceps", equipamiento: "Polea" },
 
     /* espalda */
     { id: "0012", nombre: "Jalón al pecho - Agarre abierto (Maquina)", gif: "/gifs/jalon-pecho-abierto.gif", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Maquinas" },
