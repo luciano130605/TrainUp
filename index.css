@@ -60,6 +60,11 @@ h3 {
   --acento-transp-2: rgba(178, 138, 255, 0.3);
 }
 
+/* 
+.acento-verde {
+  --acento: #22c55e;
+
+} */
 
 .acento-verde {
   --acento: #c6ff34;

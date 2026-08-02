@@ -7,6 +7,7 @@ function toNumberOrNull(value) {
 export function buildProfilePayload(user, profile = {}) {
   const metadataName = user?.user_metadata?.nombre || user?.user_metadata?.name || '';
   const emailName = user?.email?.split('@')[0] || '';
+  const metadataUsername = user?.user_metadata?.username || '';
 
   return {
     id: user.id,
@@ -18,6 +19,11 @@ export function buildProfilePayload(user, profile = {}) {
     peso_kg: toNumberOrNull(profile.pesoKg),
     objetivo: profile.objetivo || null,
     dias_entrenamiento: toNumberOrNull(profile.diasEntrenamiento),
+    email: user?.email || null,
+    // Solo pisamos el username si vino uno nuevo; si no, no lo tocamos.
+    ...(profile.username?.trim() || metadataUsername
+      ? { username: (profile.username?.trim() || metadataUsername) }
+      : {}),
   };
 }
 

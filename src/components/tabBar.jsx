@@ -11,6 +11,8 @@ import HistorialFillIcon from '../icons/historialFill';
 import UserIcon from '../icons/user';
 import UserFillIcon from '../icons/userFill';
 import SettingFillIcon from '../icons/settingFill';
+import MsjIcon from '../icons/msj';
+import MsjIconFill from '../icons/msjFill';
 
 
 
@@ -50,8 +52,8 @@ export default function TabBar({
       label: screen === "history" ? <HistorialFillIcon /> : <HistorialIcon />,
     },
     {
-      key: "perfil",
-      label: screen === "perfil" ? <UserFillIcon /> : <UserIcon />,
+      key: "mensajes",
+      label: screen === "mensajes" ? <MsjIconFill /> : <MsjIcon />,
     },
   ];
   const [openSettings, setOpenSettings] = useState(false);
@@ -135,6 +137,7 @@ export default function TabBar({
           <SettingFillIcon size={14} />
         </div>
         <AjustesDropdown
+          onNavigate={onNavigate}
           open={openSettings}
           modoOscuro={modoOscuro}
           onToggleModo={onToggleModo}

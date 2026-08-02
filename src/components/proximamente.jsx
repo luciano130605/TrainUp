@@ -4,12 +4,6 @@ import './proximamente.css';
 
 const FEATURES = [
 
-    {
-        icon: User,
-        title: 'Perfil',
-        desc: 'Guardá tu progreso y accedé a tu historial desde cualquier dispositivo.',
-    }
-
 ];
 
 export default function ProximamentePage() {

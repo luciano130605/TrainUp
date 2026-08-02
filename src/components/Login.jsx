@@ -52,11 +52,18 @@ const emptyProfile = {
   diasEntrenamiento: '',
 };
 
+export function normalizeUsername(v) {
+  return v.replace(/[^a-zA-Z0-9_.]/g, '');
+}
+
 export default function Login({ onRegisteringChange } = {}) {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [step, setStep] = useState(1); // solo aplica en 'register': 1, 2, 3
 
+  const [loginIdentifier, setLoginIdentifier] = useState(''); // usuario o email, solo para el form de login
   const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [usernameStatus, setUsernameStatus] = useState(null); // null | 'checking' | 'available' | 'taken' | 'invalid'
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -75,6 +82,8 @@ export default function Login({ onRegisteringChange } = {}) {
     setStep(1);
     setPassword('');
     setPasswordConfirm('');
+    setUsername('');
+    setUsernameStatus(null);
     setProfile(emptyProfile);
     setPendingUserId(null);
     setNeedsEmailConfirm(false);
@@ -92,14 +101,25 @@ export default function Login({ onRegisteringChange } = {}) {
     setProfile((p) => ({ ...p, [field]: value }));
   }
 
+  async function checkUsernameAvailability() {
+    const u = username.trim();
+    if (!u) { setUsernameStatus(null); return; }
+    if (u.length < 3) { setUsernameStatus('invalid'); return; }
+    setUsernameStatus('checking');
+    const { data, error: rpcError } = await supabase.rpc('username_available', { p_username: u });
+    if (rpcError) { setUsernameStatus(null); return; }
+    setUsernameStatus(data ? 'available' : 'taken');
+  }
+
   // ---------- LOGIN ----------
   async function handleLogin(event) {
     event.preventDefault();
     setError('');
     setMessage('');
 
-    if (!email.trim() || !password) {
-      setError('Completá email y contraseña.');
+    const identifier = loginIdentifier.trim();
+    if (!identifier || !password) {
+      setError('Completá usuario/email y contraseña.');
       return;
     }
     if (!supabase) {
@@ -108,8 +128,22 @@ export default function Login({ onRegisteringChange } = {}) {
     }
 
     setLoading(true);
+
+    let loginEmail = identifier;
+    if (!identifier.includes('@')) {
+      const { data: resolvedEmail, error: rpcError } = await supabase.rpc('get_email_by_username', {
+        p_username: identifier,
+      });
+      if (rpcError || !resolvedEmail) {
+        setLoading(false);
+        setError('No encontramos ese usuario.');
+        return;
+      }
+      loginEmail = resolvedEmail;
+    }
+
     const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: loginEmail,
       password,
     });
 
@@ -133,6 +167,16 @@ export default function Login({ onRegisteringChange } = {}) {
     event.preventDefault();
     setError('');
 
+    const trimmedUsername = username.trim();
+
+    if (!trimmedUsername) {
+      setError('Elegí un nombre de usuario.');
+      return;
+    }
+    if (trimmedUsername.length < 3) {
+      setError('El usuario debe tener al menos 3 caracteres.');
+      return;
+    }
     if (!profile.nombre.trim() || !email.trim() || !password) {
       setError('Completá nombre, email y contraseña.');
       return;
@@ -150,16 +194,32 @@ export default function Login({ onRegisteringChange } = {}) {
       return;
     }
 
-    onRegisteringChange?.(true);
     setLoading(true);
+    const { data: available, error: availError } = await supabase.rpc('username_available', {
+      p_username: trimmedUsername,
+    });
+    if (availError) {
+      setLoading(false);
+      setError('No se pudo validar el usuario, probá de nuevo.');
+      return;
+    }
+    if (!available) {
+      setLoading(false);
+      setUsernameStatus('taken');
+      setError('Ese nombre de usuario ya está en uso.');
+      return;
+    }
+
+    onRegisteringChange?.(true);
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
-      options: { data: { nombre: profile.nombre.trim() } },
+      options: { data: { nombre: profile.nombre.trim(), username: trimmedUsername } },
     });
 
     if (authError) {
       setLoading(false);
+      onRegisteringChange?.(false);
       setError(authError.message);
       return;
     }
@@ -171,12 +231,15 @@ export default function Login({ onRegisteringChange } = {}) {
       return;
     }
 
-    const { error: profileError } = await ensureUserProfile(data.user, profile);
+    const { error: profileError } = await ensureUserProfile(data.user, { ...profile, username: trimmedUsername });
     setLoading(false);
 
     if (profileError) {
       onRegisteringChange?.(false);
-      setError('Cuenta creada, pero no se pudo crear el perfil: ' + profileError.message);
+      const dup = /duplicate key|unique/i.test(profileError.message || '');
+      setError(dup
+        ? 'Ese nombre de usuario ya está en uso, elegí otro.'
+        : 'Cuenta creada, pero no se pudo crear el perfil: ' + profileError.message);
       return;
     }
 
@@ -230,6 +293,7 @@ export default function Login({ onRegisteringChange } = {}) {
       pesoKg,
       objetivo,
       diasEntrenamiento,
+      username: username.trim(),
     });
     setLoading(false);
 
@@ -325,16 +389,15 @@ export default function Login({ onRegisteringChange } = {}) {
         {!isRegister && (
           <form className="login-form" onSubmit={handleLogin}>
             <label className="login-field">
-              <span>Email</span>
+              <span>Usuario o email</span>
               <div className="login-input">
-                <Mail size={18} />
+                <User size={18} />
                 <input
-                  autoComplete="email"
-                  inputMode="email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="tu@gmail.com"
-                  type="email"
-                  value={email}
+                  autoComplete="username"
+                  onChange={(e) => setLoginIdentifier(e.target.value)}
+                  placeholder="tu usuario o tu@email.com"
+                  type="text"
+                  value={loginIdentifier}
                 />
               </div>
             </label>
@@ -371,6 +434,25 @@ export default function Login({ onRegisteringChange } = {}) {
         {/* ---------- REGISTRO PASO 1 ---------- */}
         {isRegister && step === 1 && (
           <form className="login-form" onSubmit={handleStep1Submit}>
+            <label className="login-field">
+              <span>Usuario</span>
+              <div className="login-input">
+                <User size={18} />
+                <input
+                  autoComplete="username"
+                  onChange={(e) => { setUsername(normalizeUsername(e.target.value)); setUsernameStatus(null); }}
+                  onBlur={checkUsernameAvailability}
+                  placeholder="tu usuario"
+                  type="text"
+                  value={username}
+                />
+              </div>
+              {usernameStatus === 'checking' && <span className="header-sub">Verificando disponibilidad...</span>}
+              {usernameStatus === 'available' && <span className="header-sub" style={{ color: 'var(--acento)' }}>Usuario disponible</span>}
+              {usernameStatus === 'taken' && <span className="header-sub" style={{ color: 'var(--rojo)' }}>Ese usuario ya está en uso</span>}
+              {usernameStatus === 'invalid' && <span className="header-sub" style={{ color: 'var(--rojo)' }}>Mínimo 3 caracteres</span>}
+            </label>
+
             <label className="login-field">
               <span>Nombre</span>
               <div className="login-input">

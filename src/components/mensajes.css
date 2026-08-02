@@ -1,0 +1,123 @@
+.mensajes-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+}
+
+.mensajes-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--borde);
+    background: var(--componente);
+    color: inherit;
+    font-size: .8rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    position: relative;
+}
+
+.mensajes-tab.activo {
+    background: var(--acento);
+    color: var(--txt-btn);
+    font-weight: 600;
+}
+
+.mensajes-badge {
+    background: var(--acento);
+    color: var(--txt-btn);
+    font-size: .7rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.mensajes-search {
+    margin-bottom: 18px;
+}
+
+.mensajes-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--componente);
+    margin-bottom: 8px;
+}
+
+.mensajes-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--acento);
+    color: var(--txt-btn);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.mensajes-row-info {
+    flex: 1;
+    min-width: 0;
+    color: var(--texto);
+}
+
+.mensajes-row-nombre {
+    font-weight: 600;
+    font-size: .9rem;
+}
+
+.mensajes-row-username {
+    font-size: .7rem;
+    color: var(--texto-gris);
+}
+
+.mensajes-row-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.mensajes-seccion-titulo {
+    font-size: .8rem;
+    margin: 18px 0 10px;
+    color: var(--texto-gris);
+}
+
+.mensajes-empty {
+    text-align: center;
+    font-size: .8rem;
+    padding: 30px 10px;
+    color:var(--texto-gris)
+}
+
+.mensajes-routine-pick {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px;
+    border-radius: 10px;
+    background: var(--fondo);
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid var(--borde);
+}
+
+.mensajes-routine-pick.selected {
+    border-color: var(--acento);
+    color: var(--txt-btn);
+    background: var(--acento);
+}

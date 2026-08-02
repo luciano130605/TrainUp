@@ -38,6 +38,7 @@ import PageSkeleton from './components/PageSkeleton';
 import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
 import { flushSync } from 'react-dom';
 import OnboardingTour from './components/Onboardingtour';
+import Mensajes from './components/Mensajes';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
@@ -652,6 +653,33 @@ export default function App() {
     setRoutines(rs => [...rs, copy]);
     setKebabOpen(false);
     showToast('Rutina duplicada');
+  }
+
+  function importSharedRoutine(routineData) {
+    let name = routineData.name || 'Rutina compartida';
+    const nameExists = (n) => routines.some(r => r.name === n);
+    if (nameExists(name)) {
+      let candidate = `${name} (compartida)`;
+      let i = 2;
+      while (nameExists(candidate)) {
+        candidate = `${name} (compartida ${i})`;
+        i++;
+      }
+      name = candidate;
+    }
+    const newRoutine = {
+      id: uid(),
+      name,
+      exercises: (routineData.exercises || []).map(ex => ({
+        id: uid(),
+        name: ex.name,
+        muscle: ex.muscle || '',
+        rest: ex.rest || '',
+        sets: (ex.sets || []).map(s => ({ id: uid(), reps: s.reps || '', weight: s.weight || '' })),
+      })),
+    };
+    setRoutines(rs => [...rs, newRoutine]);
+    showToast(`Rutina agregada: ${name}`);
   }
 
   // ---------- NUEVO: renombrar rápido ----------
@@ -1599,7 +1627,7 @@ export default function App() {
 
   const activeRoutine = routines.find(x => x.id === activeRoutineId) || null;
   const activeHistoryEntry = history.find(x => x.id === activeHistoryId) || null;
-  const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente' || screen === 'perfil';
+  const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente' || screen === 'perfil' || screen === 'mensajes';
 
   async function handleSignOut() {
     if (!supabase) return;
@@ -1651,6 +1679,13 @@ export default function App() {
             onSelectHistoryEntry={(id) => { setActiveHistoryId(id); setScreen('historyDetail'); }}
           />
         )}
+        {screen === 'mensajes' && (
+          <Mensajes
+            authSession={authSession}
+            routines={routines}
+            onImportRoutine={importSharedRoutine}
+          />
+        )}
 
         {screen === 'routines' && (
           <RutinaPage
@@ -1691,6 +1726,7 @@ export default function App() {
           <RutinaDetalle
             routine={activeRoutine}
             kebabOpen={kebabOpen}
+            authSession={authSession}
             onToggleKebab={() => setKebabOpen(k => !k)}
             onBack={() => { setScreen('routines'); setKebabOpen(false); }}
             onEdit={() => openEditor(activeRoutine.id)}

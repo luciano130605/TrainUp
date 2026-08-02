@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
-import { GENEROS, OBJETIVOS, DIAS } from './Login';
+import { GENEROS, OBJETIVOS, DIAS, normalizeUsername } from './Login';
 import './perfil.css';
 
 const emptyProfile = {
@@ -69,6 +69,9 @@ export default function Perfil({
     const [error, setError] = useState('');
     const [saved, setSaved] = useState(false);
 
+    const [usernameStatus, setUsernameStatus] = useState(null)
+    const [originalUsername, setOriginalUsername] = useState('')
+
     const [deleteModalOpen, setDeleteModalOpen] = useState(false);
     const [confirmInput, setConfirmInput] = useState('');
     const [deleting, setDeleting] = useState(false);
@@ -98,6 +101,7 @@ export default function Perfil({
                 setProfile({
                     nombre: data.nombre || '',
                     apellido: data.apellido || '',
+                    username: data.username || '',
                     fechaNacimiento: data.fecha_nacimiento || '',
                     genero: data.genero || '',
                     alturaCm: data.altura_cm != null ? String(data.altura_cm) : '',
@@ -115,6 +119,16 @@ export default function Perfil({
         setSaved(false);
     }
 
+    async function checkUsernameAvailability() {
+        const u = profile.username.trim();
+        if (!u || u === originalUsername) { setUsernameStatus(null); return; }
+        if (u.length < 3) { setUsernameStatus('invalid'); return; }
+        setUsernameStatus('checking');
+        const { data, error: rpcError } = await supabase.rpc('username_available', { p_username: u });
+        if (rpcError) { setUsernameStatus(null); return; }
+        setUsernameStatus(data ? 'available' : 'taken');
+    }
+
     async function handleSave(event) {
         event.preventDefault();
         setError('');
@@ -123,16 +137,44 @@ export default function Perfil({
             setError('El nombre no puede quedar vacío.');
             return;
         }
+        const trimmedUsername = profile.username.trim();
+        if (!trimmedUsername) {
+            setError('El usuario no puede quedar vacío.');
+            return;
+        }
+        if (trimmedUsername.length < 3) {
+            setError('El usuario debe tener al menos 3 caracteres.');
+            return;
+        }
         if (!userId || !supabase) {
             setError('No se pudo identificar la cuenta.');
             return;
         }
 
         setSaving(true);
+
+        if (trimmedUsername !== originalUsername) {
+            const { data: available, error: availError } = await supabase.rpc('username_available', {
+                p_username: trimmedUsername,
+            });
+            if (availError) {
+                setSaving(false);
+                setError('No se pudo validar el usuario, probá de nuevo.');
+                return;
+            }
+            if (!available) {
+                setSaving(false);
+                setUsernameStatus('taken');
+                setError('Ese nombre de usuario ya está en uso.');
+                return;
+            }
+        }
+
         const { error: dbError } = await supabase.from('profiles').upsert({
             id: userId,
             nombre: profile.nombre.trim(),
             apellido: profile.apellido.trim() || null,
+            username: trimmedUsername,
             fecha_nacimiento: profile.fechaNacimiento || null,
             genero: profile.genero || null,
             altura_cm: profile.alturaCm ? Number(profile.alturaCm) : null,
@@ -143,9 +185,11 @@ export default function Perfil({
         setSaving(false);
 
         if (dbError) {
-            setError('No se pudo guardar: ' + dbError.message);
+            const dup = /duplicate key|unique/i.test(dbError.message || '');
+            setError(dup ? 'Ese nombre de usuario ya está en uso.' : 'No se pudo guardar: ' + dbError.message);
             return;
         }
+        setOriginalUsername(trimmedUsername);
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
     }
@@ -181,7 +225,7 @@ export default function Perfil({
         await supabase.auth.signOut();
         setDeleting(false);
         setDeleteModalOpen(false);
-       
+
     }
 
     if (loadingProfile) {
@@ -200,6 +244,9 @@ export default function Perfil({
 
                     <div className="login-field-row">
                         <div className="skeleton skeleton-input" />
+                        <div className="skeleton skeleton-input" />
+                    </div>
+                    <div className="login-field-row">
                         <div className="skeleton skeleton-input" />
                     </div>
                     <div className="login-field-row">
@@ -274,6 +321,26 @@ export default function Perfil({
                             <User size={18} />
                             <input type="text" value={profile.apellido} onChange={(e) => updateField('apellido', e.target.value)} placeholder="Opcional" />
                         </div>
+                    </label>
+                </div>
+                <div className="login-field-row todo">
+                    <label className="login-field">
+                        <span>Usuario</span>
+                        <div className="login-input step3">
+                            <User size={18} />
+                            <input
+                                type="text"
+                                value={profile.username}
+                                onChange={(e) => updateField('username', normalizeUsername(e.target.value))}
+                                onBlur={checkUsernameAvailability}
+                                placeholder="tu usuario"
+                            />
+                        </div>
+
+                        {usernameStatus === 'checking' && <span className="header-sub">Verificando disponibilidad...</span>}
+                        {usernameStatus === 'available' && <span className="header-sub" style={{ color: 'var(--acento)' }}>Usuario disponible</span>}
+                        {usernameStatus === 'taken' && <span className="header-sub" style={{ color: 'var(--rojo)' }}>Ese usuario ya está en uso</span>}
+                        {usernameStatus === 'invalid' && <span className="header-sub" style={{ color: 'var(--rojo)' }}>Mínimo 3 caracteres</span>}
                     </label>
                 </div>
 

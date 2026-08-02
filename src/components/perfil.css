@@ -193,6 +193,7 @@
     height: 46px;
     border-radius: 10px;
 }
+
 .skeleton-card-obj {
     flex: 1;
     height: 46px;
@@ -216,11 +217,16 @@
     border-radius: 10px;
 }
 
+.todo {
+    width: 1070px !important;
+}
+
 .skeleton-row {
     width: 100%;
     height: 48px;
     border-radius: 8px;
 }
+
 .skeleton-row-2 {
     width: 100%;
     margin-top: 10px;

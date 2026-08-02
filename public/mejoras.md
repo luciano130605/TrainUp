@@ -4,7 +4,8 @@ Ajustes / Preferencias
 
 
 Social / Comunidad
-* Compartir rutinas desde la misma app por msje directo
+* Perfil, tocar y ver el perfil y los datos y stats (en perfil en ajustes podes si es privado o publico tus datos, stats, etc)
+* notificaciones push cuando te envian un msj
 * Seguir a amigos y poder ver stats
 
 
