@@ -78,6 +78,42 @@ export default function Login({ onRegisteringChange } = {}) {
 
   const isRegister = mode === 'register';
 
+  // nuevos estados, junto a los demás useState
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
+  async function handleForgotPassword(event) {
+    event.preventDefault();
+    setError('');
+    setMessage('');
+
+    const targetEmail = forgotEmail.trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setError('Ingresá un email válido.');
+      return;
+    }
+    if (!supabase) {
+      setError('Supabase no está configurado.');
+      return;
+    }
+
+    setForgotLoading(true);
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(targetEmail, {
+      redirectTo: `${window.location.origin}/reset-password`, // ajustá a tu ruta real
+    });
+    setForgotLoading(false);
+
+    if (resetError) {
+      setError(resetError.message);
+      return;
+    }
+
+    setForgotSent(true);
+    setMessage('Si el email existe, te enviamos un link para restablecer la contraseña.');
+  }
+
   function resetAll() {
     setStep(1);
     setPassword('');
@@ -134,6 +170,7 @@ export default function Login({ onRegisteringChange } = {}) {
       const { data: resolvedEmail, error: rpcError } = await supabase.rpc('get_email_by_username', {
         p_username: identifier,
       });
+      console.log('resolvedEmail:', resolvedEmail, 'rpcError:', rpcError);
       if (rpcError || !resolvedEmail) {
         setLoading(false);
         setError('No encontramos ese usuario.');
@@ -386,7 +423,7 @@ export default function Login({ onRegisteringChange } = {}) {
         {message && <p className="login-message">{message}</p>}
 
         {/* ---------- LOGIN ---------- */}
-        {!isRegister && (
+        {!isRegister && !forgotMode && (
           <form className="login-form" onSubmit={handleLogin}>
             <label className="login-field">
               <span>Usuario o email</span>
@@ -424,9 +461,58 @@ export default function Login({ onRegisteringChange } = {}) {
               </div>
             </label>
 
+            <button
+              type="button"
+              className="login-forgot-link"
+              onClick={() => {
+                setError('');
+                setMessage('');
+                setForgotEmail(loginIdentifier.includes('@') ? loginIdentifier : '');
+                setForgotSent(false);
+                setForgotMode(true);
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+
             <button className="btns acento" disabled={loading} type="submit">
               {loading ? <Loader2 size={18} className="login-spin" /> : ""}
               {loading ? 'Validando...' : 'Entrar'}
+            </button>
+          </form>
+        )}
+
+        {!isRegister && forgotMode && (
+          <form className="login-form" onSubmit={handleForgotPassword}>
+            <p className="header-sub">
+              Ingresá tu email y te mandamos un link para restablecer tu contraseña.
+            </p>
+            <label className="login-field">
+              <span>Email</span>
+              <div className="login-input">
+                <Mail size={18} />
+                <input
+                  autoComplete="email"
+                  inputMode="email"
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="tu@email.com"
+                  type="email"
+                  value={forgotEmail}
+                />
+              </div>
+            </label>
+
+            <button className="btns acento" disabled={forgotLoading || forgotSent} type="submit">
+              {forgotLoading ? <Loader2 size={18} className="login-spin" /> : ""}
+              {forgotSent ? 'Link enviado' : forgotLoading ? 'Enviando...' : 'Enviar link'}
+            </button>
+
+            <button
+              type="button"
+              className="login-forgot-link left"
+              onClick={() => { setForgotMode(false); setError(''); setMessage(''); }}
+            >
+              Volver
             </button>
           </form>
         )}

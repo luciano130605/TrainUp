@@ -39,6 +39,7 @@ import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-reac
 import { flushSync } from 'react-dom';
 import OnboardingTour from './components/Onboardingtour';
 import Mensajes from './components/Mensajes';
+import ResetPassword from './components/ResetPassword';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
@@ -1633,6 +1634,10 @@ export default function App() {
     if (!supabase) return;
     await supabase.auth.signOut();
     setScreen('home');
+  }
+
+  if (window.location.pathname === '/reset-password') {
+    return <ResetPassword />;
   }
 
   if (showSplash) {

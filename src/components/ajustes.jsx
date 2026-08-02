@@ -8,6 +8,7 @@ const ACENTOS = [
     { id: 'acento-celeste', nombre: 'Celeste', color: '#b2d5e5' },
     { id: 'acento-naranja', nombre: 'Naranja', color: '#ff9a4a' },
     { id: 'acento-violeta', nombre: 'Violeta', color: '#b28aff' },
+    { id: 'acento-rosa', nombre: 'Rosa', color: '#ff1493' },
 ];
 
 const MODO_DEFAULT = true;

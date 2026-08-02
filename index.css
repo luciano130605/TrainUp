@@ -59,6 +59,12 @@ h3 {
   --acento-transp: rgba(178, 138, 255, 0.675);
   --acento-transp-2: rgba(178, 138, 255, 0.3);
 }
+.acento-rosa {
+  --acento: #ff1493;
+  --txt-btn: var(--texto);
+  --acento-transp: rgba(255, 20, 147, 0.675);
+  --acento-transp-2: rgba(255, 20, 147, 0.3);
+}
 
 /* 
 .acento-verde {
