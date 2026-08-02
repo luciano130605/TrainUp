@@ -540,7 +540,7 @@ export default function RutinaDetalle({
             ))}
 
             <div className="btn-cont-modal">
-              <button className="btns agregar m" onClick={() => setSendModalOpen(false)} disabled={sending}>
+              <button className="btns agregar login-btn" onClick={() => setSendModalOpen(false)} disabled={sending}>
                 Cancelar
               </button>
               <button

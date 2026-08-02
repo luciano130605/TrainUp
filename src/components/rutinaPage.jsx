@@ -294,7 +294,7 @@ export default function RutinaPage({
             ))}
 
             <div className="btn-cont-modal">
-              <button className="btns agregar m" onClick={() => setSendAllModalOpen(false)} disabled={sending}>
+              <button className="btns agregar login-btn" onClick={() => setSendAllModalOpen(false)} disabled={sending}>
                 Cancelar
               </button>
               <button
