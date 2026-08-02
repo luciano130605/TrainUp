@@ -86,3 +86,7 @@ export async function setProfilePublic(userId, isPublic) {
         .update({ is_public: isPublic, updated_at: new Date().toISOString() })
         .eq('id', userId);
 }
+
+export async function setPrivacySettings(userId, fields) {
+    return supabase.from('profiles').update(fields).eq('id', userId);
+}

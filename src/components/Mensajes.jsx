@@ -5,6 +5,8 @@ import { supabase } from '../lib/supabaseClient';
 import {
     UserPlus, Search, Check, X, Send, Users, Inbox, Loader2, Trash2, Dumbbell,
     Flame, TrendingUp, Repeat, Lock, Globe,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 import {
     searchUsers, getPublicProfiles, fetchFriendships, sendFriendRequest,
@@ -16,8 +18,9 @@ import "./login.css"
 import RutinasIconFill from "../icons/rutinasFIll"
 import MensajesIconFill from "../icons/msjFill"
 import PerfilStats from './PerfilStats';
+import PerfilPublico from './PerfilPublico';
 
-export default function Mensajes({ authSession, routines, onImportRoutine }) {
+export default function Mensajes({ authSession, routines, onImportRoutine, onOpenProfile }) {
     const userId = authSession?.user?.id;
 
     const [tab, setTab] = useState('amigos'); // amigos | solicitudes | compartidas
@@ -304,7 +307,7 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                                     <div className="mensajes-row" key={u.id}>
                                         <div
                                             className="mensajes-row-clickable"
-                                            onClick={() => openProfileView(u.id)}
+                                            onClick={() => onOpenProfile(u.id)}
                                         >
                                             <div className="mensajes-avatar">{iniciales(u)}</div>
                                             <div className="mensajes-row-info">
@@ -317,8 +320,8 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                                             {status === 'sent' && <span className="header-sub">Pendiente</span>}
                                             {status === 'received' && <span className="header-sub">Te escribió a vos</span>}
                                             {!status && (
-                                                <button className="btn acento" onClick={() => handleSendRequest(u)}>
-                                                    <UsuarioAdd size={16} />
+                                                <button className="btn" onClick={() => onOpenProfile(u.id)}>
+                                                    <ChevronRight size={16} />
                                                 </button>
                                             )}
                                         </div>
@@ -336,7 +339,7 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                         <div className="mensajes-row" key={f.friendshipId}>
                             <div
                                 className="mensajes-row-clickable"
-                                onClick={() => openProfileView(f.id)}
+                                onClick={() => onOpenProfile(f.id)}
                             >
                                 <div className="mensajes-avatar">{iniciales(f)}</div>
                                 <div className="mensajes-row-info">

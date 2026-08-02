@@ -8,7 +8,7 @@ import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
 import { GENEROS, OBJETIVOS, DIAS, normalizeUsername } from './Login';
 import './perfil.css';
-import { setProfilePublic } from '../lib/social';
+import { setPrivacySettings } from '../lib/social';
 
 const emptyProfile = {
     nombre: '',
@@ -19,7 +19,9 @@ const emptyProfile = {
     pesoKg: '',
     objetivo: '',
     diasEntrenamiento: '',
-    isPublic: true,
+    mostrarNombre: true,
+    mostrarRutinas: true,
+    mostrarStats: true,
 };
 
 const CONFIRM_WORD = 'ELIMINAR';
@@ -88,7 +90,6 @@ export default function Perfil({
             if (!fetchError && data) {
                 setProfile({
                     nombre: data.nombre || '',
-                    isPublic: data.is_public ?? true,
                     apellido: data.apellido || '',
                     username: data.username || '',
                     fechaNacimiento: data.fecha_nacimiento || '',
@@ -97,23 +98,27 @@ export default function Perfil({
                     pesoKg: data.peso_kg != null ? String(data.peso_kg) : '',
                     objetivo: data.objetivo || '',
                     diasEntrenamiento: data.dias_entrenamiento != null ? String(data.dias_entrenamiento) : '',
+                    mostrarNombre: data.mostrar_nombre ?? true,
+                    mostrarRutinas: data.mostrar_rutinas ?? true,
+                    mostrarStats: data.mostrar_stats ?? true,
                 });
-                setOriginalUsername(data.username || ''); // <- esto faltaba
+                setOriginalUsername(data.username || '');
             }
             setLoadingProfile(false);
         })();
     }, [userId]);
 
-    async function handleTogglePublic() {
-        const next = !profile.isPublic;
-        setProfile(p => ({ ...p, isPublic: next })); // feedback visual instantáneo
-        const { error } = await setProfilePublic(userId, next);
+    async function handleTogglePrivacy(field, dbField) {
+        const next = !profile[field];
+        setProfile(p => ({ ...p, [field]: next }));
+        const { error } = await setPrivacySettings(userId, { [dbField]: next });
+        console.log('ERROR COMPLETO:', error);   
         if (error) {
-            setProfile(p => ({ ...p, isPublic: !next })); // revertir si falla
+            setProfile(p => ({ ...p, [field]: !next }));
             sileo.error({ title: 'No se pudo actualizar la privacidad' });
             return;
         }
-        sileo.success({ title: next ? 'Tu perfil ahora es público' : 'Tu perfil ahora es privado' });
+        sileo.success({ title: next ? 'Ahora es visible' : 'Ahora es privado' });
     }
 
     function updateField(field, value) {
@@ -171,20 +176,23 @@ export default function Perfil({
                 return;
             }
         }
-
-        const { error: dbError } = await supabase.from('profiles').upsert({
-            id: userId,
-            nombre: profile.nombre.trim(),
-            apellido: profile.apellido.trim() || null,
-            username: trimmedUsername,
-            fecha_nacimiento: profile.fechaNacimiento || null,
-            genero: profile.genero || null,
-            altura_cm: profile.alturaCm ? Number(profile.alturaCm) : null,
-            peso_kg: profile.pesoKg ? Number(profile.pesoKg) : null,
-            objetivo: profile.objetivo || null,
-            dias_entrenamiento: profile.diasEntrenamiento ? Number(profile.diasEntrenamiento) : null,
-            is_public: profile.isPublic,
-        });
+        const { error: dbError } = await supabase
+            .from('profiles')
+            .update({
+                nombre: profile.nombre.trim(),
+                apellido: profile.apellido.trim() || null,
+                mostrar_nombre: profile.mostrarNombre,
+                mostrar_rutinas: profile.mostrarRutinas,
+                mostrar_stats: profile.mostrarStats,
+                username: trimmedUsername,
+                fecha_nacimiento: profile.fechaNacimiento || null,
+                genero: profile.genero || null,
+                altura_cm: profile.alturaCm ? Number(profile.alturaCm) : null,
+                peso_kg: profile.pesoKg ? Number(profile.pesoKg) : null,
+                objetivo: profile.objetivo || null,
+                dias_entrenamiento: profile.diasEntrenamiento ? Number(profile.diasEntrenamiento) : null,
+            })
+            .eq('id', userId);
         setSaving(false);
 
         if (dbError) {
@@ -435,26 +443,31 @@ export default function Perfil({
             </form>
 
             <h3 className="perfil-seccion-titulo">Privacidad</h3>
-            <div className="perfil-row">
-                <div className="perfil-row-label">
-                    {profile.isPublic ? <Globe size={16} /> : <Lock size={16} />}
-                    <span>Perfil público</span>
-                </div>
-                <button
-                    className={`mini-btn noti ${profile.isPublic ? 'activa' : ''}`}
-                    role="switch"
-                    aria-checked={profile.isPublic}
-                    type="button"
-                    onClick={handleTogglePublic}
-                >
-                    {profile.isPublic ? 'Público' : 'Privado'}
-                </button>
-            </div>
-            <p className="header-sub" style={{ marginTop: 8 }}>
-                {profile.isPublic
-                    ? 'Cualquiera que te busque puede ver tu racha y stats.'
-                    : 'Solo tus amigos pueden ver tu racha y stats.'}
+            <p className="header-sub" style={{ marginBottom: 10 }}>
+                Tu usuario (@{profile.username}) siempre es visible para que te puedan buscar.
             </p>
+
+            {[
+                { key: 'mostrarNombre', db: 'mostrar_nombre', label: 'Nombre completo' },
+                { key: 'mostrarRutinas', db: 'mostrar_rutinas', label: 'Mis rutinas' },
+                { key: 'mostrarStats', db: 'mostrar_stats', label: 'Mis stats y racha' },
+            ].map(({ key, db, label }) => (
+                <div className="perfil-row" key={key}>
+                    <div className="perfil-row-label">
+                        {profile[key] ? <Globe size={16} /> : <Lock size={16} />}
+                        <span>{label}</span>
+                    </div>
+                    <button
+                        className={`mini-btn noti ${profile[key] ? 'activa' : ''}`}
+                        role="switch"
+                        aria-checked={profile[key]}
+                        type="button"
+                        onClick={() => handleTogglePrivacy(key, db)}
+                    >
+                        {profile[key] ? 'Visible' : 'Privado'}
+                    </button>
+                </div>
+            ))}
 
             <h3 className="perfil-seccion-titulo">Notificaciones</h3>
             <div className="perfil-row">

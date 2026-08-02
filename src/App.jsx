@@ -40,6 +40,7 @@ import { flushSync } from 'react-dom';
 import OnboardingTour from './components/Onboardingtour';
 import Mensajes from './components/Mensajes';
 import ResetPassword from './components/ResetPassword';
+import PerfilPublico from './components/perfilPublico';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
@@ -56,6 +57,8 @@ export default function App() {
   const [pendingImport, setPendingImport] = useState(null);
   // junto a los otros estados
   const [registering, setRegistering] = useState(false);
+
+  const [viewingProfileId, setViewingProfileId] = useState(null);
 
   const [activeRoutineId, setActiveRoutineId] = useState(null);
   const [activeHistoryId, setActiveHistoryId] = useState(null);
@@ -189,6 +192,13 @@ export default function App() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+
+  function openProfileScreen(id) {
+    setViewingProfileId(id);
+    setScreen('perfilPublico');
+  }
+
 
   useEffect(() => {
     if (!authSession?.user) return;
@@ -1689,9 +1699,20 @@ export default function App() {
           <Mensajes
             authSession={authSession}
             routines={routines}
+            onOpenProfile={openProfileScreen}
             onImportRoutine={importSharedRoutine}
           />
         )}
+
+        {screen === 'perfilPublico' && viewingProfileId && (
+  <PerfilPublico
+    userId={authSession.user.id}
+    targetId={viewingProfileId}
+    myRoutines={routines}
+    onBack={() => setScreen('mensajes')}
+    onImportRoutine={importSharedRoutine}   
+  />
+)}
 
         {screen === 'routines' && (
           <RutinaPage
