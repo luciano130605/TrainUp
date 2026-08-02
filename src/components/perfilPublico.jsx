@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Lock, UserPlus, Check, X, Send, Dumbbell, Loader2, Copy } from 'lucide-react';
+import { ArrowLeft, Lock, UserPlus, Check, X, Send, Dumbbell, Loader2, Copy, ChevronLeft } from 'lucide-react';
 import { sileo } from 'sileo';
 import {
     getProfileView, sendFriendRequest, respondFriendRequest,
@@ -84,7 +84,7 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
     return (
         <div className="page-cont top">
             <button className="mini-btn" onClick={onBack} style={{ marginBottom: 12 }}>
-                <ArrowLeft size={16} />
+                <ChevronLeft size={16} />
             </button>
 
             <div className="perfil-header">

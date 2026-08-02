@@ -408,58 +408,62 @@ export default function HomePage({
                         </div>
                     </div>
                 )}
-
-                <h3 className="home-section-titulo">Accesos rápidos</h3>
-                <div
-                    className="home-quick-grid"
-                    ref={quickCarousel.ref}
-                    onScroll={quickCarousel.handleScroll}
-                >
-                    <div className="home-quick-item" onClick={() => onNavigate('routines')}>
-                        <div className="home-quick-icon"><RutinasIconFill /></div>
-                        <span>Rutinas</span>
-                        <ChevronRight size={14} className="home-quick-chev" />
+                <div className="home-msj-card">
+                    <h3 className="home-hoy-tag">Accesos rápidos</h3>
+                    <div
+                        className="home-quick-grid"
+                        ref={quickCarousel.ref}
+                        onScroll={quickCarousel.handleScroll}
+                    >
+                        <div className="home-quick-item" onClick={() => onNavigate('routines')}>
+                            <div className="home-quick-icon"><RutinasIconFill /></div>
+                            <span>Rutinas</span>
+                            <ChevronRight size={14} className="home-quick-chev" />
+                        </div>
+                        <div className="home-quick-item" onClick={() => onNavigate('history')}>
+                            <div className="home-quick-icon"><HistorialIconFill /></div>
+                            <span>Historial</span>
+                            <ChevronRight size={14} className="home-quick-chev" />
+                        </div>
+                        <div className="home-quick-item" onClick={() => onNavigate('mensajes')}>
+                            <div className="home-quick-icon"><MsjIconFill /></div>
+                            <span>Mensajes</span>
+                            <ChevronRight size={14} className="home-quick-chev" />
+                        </div>
+                        <div className="home-quick-item" onClick={() => onNavigate('perfil')}>
+                            <div className="home-quick-icon"><UserIconFill /></div>
+                            <span>Perfil</span>
+                            <ChevronRight size={14} className="home-quick-chev" />
+                        </div>
                     </div>
-                    <div className="home-quick-item" onClick={() => onNavigate('history')}>
-                        <div className="home-quick-icon"><HistorialIconFill /></div>
-                        <span>Historial</span>
-                        <ChevronRight size={14} className="home-quick-chev" />
-                    </div>
-                    <div className="home-quick-item" onClick={() => onNavigate('mensajes')}>
-                        <div className="home-quick-icon"><MsjIconFill /></div>
-                        <span>Mensajes</span>
-                        <ChevronRight size={14} className="home-quick-chev" />
-                    </div>
-                    <div className="home-quick-item" onClick={() => onNavigate('perfil')}>
-                        <div className="home-quick-icon"><UserIconFill /></div>
-                        <span>Perfil</span>
-                        <ChevronRight size={14} className="home-quick-chev" />
-                    </div>
+                    <DotsIndicator
+                        count={4}
+                        active={quickCarousel.active}
+                        onDotClick={quickCarousel.goTo}
+                    />
                 </div>
-                <DotsIndicator
-                    count={4}
-                    active={quickCarousel.active}
-                    onDotClick={quickCarousel.goTo}
-                />
-
                 {ultimoEntreno && (
                     <>
-                        <div className="home-section-titulo">Último entrenamiento</div>
-                        <div
-                            className="home-ultimo-card"
-                            onClick={() => onSelectHistoryEntry?.(ultimoEntreno.id)}
-                        >
-                            <div className="home-ultimo-icon"><Dumbbell size={16} /></div>
-                            <div className="home-ultimo-info">
-                                <div className="home-ultimo-nombre">{ultimoEntreno.routineName}</div>
-                                <div className="home-ultimo-sub">
-                                    {formatFecha(ultimoEntreno.date)}
-                                    {ultimoEntreno.durationSec ? ` · ${formatDuration(ultimoEntreno.durationSec)}` : ''}
-                                    {ultimoEntreno.totalSets ? ` · ${ultimoEntreno.totalSets} series` : ''}
+                        <div className="home-msj-card">
+
+                            <div className="home-hoy-tag">Último entrenamiento</div>
+                            <div
+                                className="home-ultimo-card"
+                                onClick={() => onSelectHistoryEntry?.(ultimoEntreno.id)}
+                            >
+                                <div className="home-ultimo-icon"><Dumbbell size={16} /></div>
+                                <div className="home-ultimo-info">
+                                    <div className="home-ultimo-nombre">{ultimoEntreno.routineName}</div>
+                                    <div className="home-ultimo-sub">
+                                        {formatFecha(ultimoEntreno.date)}
+                                        {ultimoEntreno.durationSec ? ` · ${formatDuration(ultimoEntreno.durationSec)}` : ''}
+                                        {ultimoEntreno.totalSets ? ` · ${ultimoEntreno.totalSets} series` : ''}
+                                    </div>
                                 </div>
+                                <ChevronRight size={16} className="home-quick-chev" />
                             </div>
-                            <ChevronRight size={16} className="home-quick-chev" />
                         </div>
+
                     </>
                 )}
 
