@@ -8,6 +8,7 @@ import "./HomePage.css";
 import "./mensajes.css";
 import RutinasIconFill from "../icons/rutinasFIll"
 import HistorialIconFill from "../icons/historialFill"
+import MsjIconFill from "../icons/msjFill"
 import UserIconFill from "../icons/userFill"
 import { supabase } from '../lib/supabaseClient';
 import {
@@ -424,14 +425,19 @@ export default function HomePage({
                         <span>Historial</span>
                         <ChevronRight size={14} className="home-quick-chev" />
                     </div>
-                    <div className="home-quick-item" onClick={() => onNavigate('proximamente')}>
+                    <div className="home-quick-item" onClick={() => onNavigate('mensajes')}>
+                        <div className="home-quick-icon"><MsjIconFill /></div>
+                        <span>Mensajes</span>
+                        <ChevronRight size={14} className="home-quick-chev" />
+                    </div>
+                    <div className="home-quick-item" onClick={() => onNavigate('perfil')}>
                         <div className="home-quick-icon"><UserIconFill /></div>
                         <span>Perfil</span>
                         <ChevronRight size={14} className="home-quick-chev" />
                     </div>
                 </div>
                 <DotsIndicator
-                    count={3}
+                    count={4}
                     active={quickCarousel.active}
                     onDotClick={quickCarousel.goTo}
                 />
