@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import {
-    UserPlus, Search, Check, X, Send, Users, Inbox, Loader2, Trash2, Dumbbell,
-} from 'lucide-react';
+
 import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
 import {
+    UserPlus, Search, Check, X, Send, Users, Inbox, Loader2, Trash2, Dumbbell,
+    Flame, TrendingUp, Repeat, Lock, Globe,
+} from 'lucide-react';
+import {
     searchUsers, getPublicProfiles, fetchFriendships, sendFriendRequest,
     respondFriendRequest, removeFriendship, fetchSharedRoutines, sendRoutineShare,
-    respondRoutineShare, subscribeSocial,
+    respondRoutineShare, subscribeSocial, getProfileView,
 } from '../lib/social';
 import './mensajes.css';
 import "./login.css"
 import RutinasIconFill from "../icons/rutinasFIll"
 import MensajesIconFill from "../icons/msjFill"
+import PerfilStats from './PerfilStats';
 
 export default function Mensajes({ authSession, routines, onImportRoutine }) {
     const userId = authSession?.user?.id;
@@ -27,6 +30,7 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searching, setSearching] = useState(false);
+    const [viewingProfile, setViewingProfile] = useState(null);
 
     const [shareModalFor, setShareModalFor] = useState(null); // { id, username, nombre } del amigo
     const [selectedRoutineId, setSelectedRoutineId] = useState(null);
@@ -172,6 +176,20 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
         setShareModalFor(friend);
     }
 
+    async function openProfileView(targetId) {
+        setViewingProfile({ loading: true, data: null });
+        const { data, error } = await getProfileView(targetId);
+        if (error || !data) {
+            sileo.error({ title: 'No se pudo cargar el perfil' });
+            setViewingProfile(null);
+            return;
+        }
+        setViewingProfile({ loading: false, data });
+    }
+    function closeProfileView() {
+        setViewingProfile(null);
+    }
+
     async function confirmSendRoutine() {
         const routine = routines.find(r => r.id === selectedRoutineId);
         if (!routine || !shareModalFor) return;
@@ -284,10 +302,15 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                                 const status = friendshipStatusWith(u.id);
                                 return (
                                     <div className="mensajes-row" key={u.id}>
-                                        <div className="mensajes-avatar">{iniciales(u)}</div>
-                                        <div className="mensajes-row-info">
-                                            <div className="mensajes-row-nombre">{u.nombre || u.username}</div>
-                                            <div className="mensajes-row-username">@{u.username}</div>
+                                        <div
+                                            className="mensajes-row-clickable"
+                                            onClick={() => openProfileView(u.id)}
+                                        >
+                                            <div className="mensajes-avatar">{iniciales(u)}</div>
+                                            <div className="mensajes-row-info">
+                                                <div className="mensajes-row-nombre">{u.nombre || u.username}</div>
+                                                <div className="mensajes-row-username">@{u.username}</div>
+                                            </div>
                                         </div>
                                         <div className="mensajes-row-actions">
                                             {status === 'accepted' && <span className="header-sub">Ya son amigos</span>}
@@ -295,7 +318,7 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                                             {status === 'received' && <span className="header-sub">Te escribió a vos</span>}
                                             {!status && (
                                                 <button className="btn acento" onClick={() => handleSendRequest(u)}>
-                                                    <UserPlus size={16} />
+                                                    <UsuarioAdd size={16} />
                                                 </button>
                                             )}
                                         </div>
@@ -311,10 +334,15 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                     )}
                     {friends.map(f => (
                         <div className="mensajes-row" key={f.friendshipId}>
-                            <div className="mensajes-avatar">{iniciales(f)}</div>
-                            <div className="mensajes-row-info">
-                                <div className="mensajes-row-nombre">{f.nombre || f.username}</div>
-                                <div className="mensajes-row-username">@{f.username}</div>
+                            <div
+                                className="mensajes-row-clickable"
+                                onClick={() => openProfileView(f.id)}
+                            >
+                                <div className="mensajes-avatar">{iniciales(f)}</div>
+                                <div className="mensajes-row-info">
+                                    <div className="mensajes-row-nombre">{f.nombre || f.username}</div>
+                                    <div className="mensajes-row-username">@{f.username}</div>
+                                </div>
                             </div>
                             <div className="mensajes-row-actions">
                                 <button className="btns primario" style={{ padding: '8px 12px' }} onClick={() => openShareModal(f)} title="Enviar rutina">
@@ -444,6 +472,51 @@ export default function Mensajes({ authSession, routines, onImportRoutine }) {
                                 {sendingShare ? 'Enviando...' : 'Enviar'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {viewingProfile && (
+                <div className="modal-overlay" onClick={closeProfileView}>
+                    <div className="modal-cont" onClick={e => e.stopPropagation()}>
+                        {viewingProfile.loading && (
+                            <div className="header-sub" style={{ padding: '20px 0', textAlign: 'center' }}>
+                                <Loader2 size={18} className="login-spin" /> Cargando perfil...
+                            </div>
+                        )}
+
+                        {!viewingProfile.loading && viewingProfile.data && (
+                            <>
+                                <div className="perfil-header" style={{ paddingBottom: 14 }}>
+
+
+                                    <div className="perfil-avatar">
+                                        {(viewingProfile.data.nombre?.[0] || viewingProfile.data.username?.[0] || '?').toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <h2 className="perfil-nombre">{viewingProfile.data.nombre || viewingProfile.data.username}</h2>
+                                        <span className="perfil-email">@{viewingProfile.data.username}</span>
+                                    </div>
+
+                                </div>
+
+                                {viewingProfile.data.can_view_stats ? (
+                                    <PerfilStats data={viewingProfile.data} />
+                                ) : (
+                                    <div className="mensajes-empty">
+                                        <Lock size={18} style={{ marginBottom: 6 }} />
+                                        <div>Este perfil es privado.</div>
+                                        <div>Hazte amigo para ver sus stats.</div>
+                                    </div>
+                                )}
+
+
+                                <button className="mini-btn" style={{ marginTop: 16, width: 'auto' }} onClick={closeProfileView}>
+                                    Cerrar
+                                </button>
+
+                            </>
+                        )}
                     </div>
                 </div>
             )}

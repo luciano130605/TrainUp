@@ -1,27 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    User,
-    LogOut,
-    Trash2,
-    Save,
-    Ruler,
-    Scale,
-    Bell,
-    Loader2,
-    Check,
-    ChevronRight,
-    Dumbbell,
-    Flame,
-    Calendar,
-    Activity,
-    Repeat,
-    AlertTriangle,
-    X,
+    User, LogOut, Trash2, Save, Ruler, Scale, Bell, Loader2, Check,
+    ChevronRight, Dumbbell, Flame, Calendar, Activity, Repeat,
+    AlertTriangle, X, Globe, Lock,
 } from 'lucide-react';
 import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
 import { GENEROS, OBJETIVOS, DIAS, normalizeUsername } from './Login';
 import './perfil.css';
+import { setProfilePublic } from '../lib/social';
 
 const emptyProfile = {
     nombre: '',
@@ -32,6 +19,7 @@ const emptyProfile = {
     pesoKg: '',
     objetivo: '',
     diasEntrenamiento: '',
+    isPublic: true,
 };
 
 const CONFIRM_WORD = 'ELIMINAR';
@@ -100,6 +88,7 @@ export default function Perfil({
             if (!fetchError && data) {
                 setProfile({
                     nombre: data.nombre || '',
+                    isPublic: data.is_public ?? true,
                     apellido: data.apellido || '',
                     username: data.username || '',
                     fechaNacimiento: data.fecha_nacimiento || '',
@@ -113,6 +102,18 @@ export default function Perfil({
             setLoadingProfile(false);
         })();
     }, [userId]);
+
+    async function handleTogglePublic() {
+        const next = !profile.isPublic;
+        setProfile(p => ({ ...p, isPublic: next })); // feedback visual instantáneo
+        const { error } = await setProfilePublic(userId, next);
+        if (error) {
+            setProfile(p => ({ ...p, isPublic: !next })); // revertir si falla
+            sileo.error({ title: 'No se pudo actualizar la privacidad' });
+            return;
+        }
+        sileo.success({ title: next ? 'Tu perfil ahora es público' : 'Tu perfil ahora es privado' });
+    }
 
     function updateField(field, value) {
         setProfile((p) => ({ ...p, [field]: value }));
@@ -181,6 +182,7 @@ export default function Perfil({
             peso_kg: profile.pesoKg ? Number(profile.pesoKg) : null,
             objetivo: profile.objetivo || null,
             dias_entrenamiento: profile.diasEntrenamiento ? Number(profile.diasEntrenamiento) : null,
+            is_public: profile.isPublic,
         });
         setSaving(false);
 
@@ -430,6 +432,28 @@ export default function Perfil({
                     {saving ? 'Guardando...' : saved ? 'Guardado' : 'Guardar cambios'}
                 </button>
             </form>
+
+            <h3 className="perfil-seccion-titulo">Privacidad</h3>
+            <div className="perfil-row">
+                <div className="perfil-row-label">
+                    {profile.isPublic ? <Globe size={16} /> : <Lock size={16} />}
+                    <span>Perfil público</span>
+                </div>
+                <button
+                    className={`mini-btn noti ${profile.isPublic ? 'activa' : ''}`}
+                    role="switch"
+                    aria-checked={profile.isPublic}
+                    type="button"
+                    onClick={handleTogglePublic}
+                >
+                    {profile.isPublic ? 'Público' : 'Privado'}
+                </button>
+            </div>
+            <p className="header-sub" style={{ marginTop: 8 }}>
+                {profile.isPublic
+                    ? 'Cualquiera que te busque puede ver tu racha y stats.'
+                    : 'Solo tus amigos pueden ver tu racha y stats.'}
+            </p>
 
             <h3 className="perfil-seccion-titulo">Notificaciones</h3>
             <div className="perfil-row">

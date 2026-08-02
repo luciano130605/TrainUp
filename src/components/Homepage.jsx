@@ -1,10 +1,19 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
-import { Dumbbell, History, User, ChevronRight, Play, Flame, Plus, Clock, CircleArrowOutUpRight } from 'lucide-react';
+import {
+    Dumbbell, History, User, ChevronRight, Play, Flame, Plus, Clock,
+    CircleArrowOutUpRight, MessageCircle, Check, X, Users,
+} from 'lucide-react';
 import ProgresoModal, { buildMuscleRecovery } from './ProgresoModal';
 import "./HomePage.css";
+import "./mensajes.css";
 import RutinasIconFill from "../icons/rutinasFIll"
 import HistorialIconFill from "../icons/historialFill"
 import UserIconFill from "../icons/userFill"
+import { supabase } from '../lib/supabaseClient';
+import {
+    fetchFriendships, fetchSharedRoutines, getPublicProfiles, subscribeSocial,
+    respondFriendRequest, respondRoutineShare,
+} from '../lib/social';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -86,9 +95,9 @@ function useCarouselDots(count) {
 }
 
 export default function HomePage({
-    routines = [], history = [], session,
+    routines = [], history = [], session, authSession,
     onStartSession, onSelectRoutine, onNewRoutine,
-    onNavigate, onSelectHistoryEntry,
+    onNavigate, onSelectHistoryEntry, onImportRoutine,
 }) {
     const hoy = new Date().getDay();
     const [progresoOpen, setProgresoOpen] = useState(false);
@@ -127,6 +136,86 @@ export default function HomePage({
     const recupPages = Math.max(1, Math.ceil(pendientes.length / 2));
     const recupCarousel = useCarouselDots(recupPages);
 
+    const userId = authSession?.user?.id;
+    const [friendships, setFriendships] = useState([]);
+    const [shares, setShares] = useState([]);
+    const [profiles, setProfiles] = useState({});
+    const [socialLoaded, setSocialLoaded] = useState(false);
+
+    const loadSocialSummary = useCallback(async () => {
+        if (!supabase || !userId) return;
+        const [{ data: fData }, { data: sData }] = await Promise.all([
+            fetchFriendships(userId),
+            fetchSharedRoutines(userId),
+        ]);
+        const friendshipsList = fData || [];
+        const sharesList = sData || [];
+        setFriendships(friendshipsList);
+        setShares(sharesList);
+
+        const idsNeeded = new Set();
+        friendshipsList.forEach(f => {
+            idsNeeded.add(f.requester_id === userId ? f.addressee_id : f.requester_id);
+        });
+        sharesList.forEach(s => {
+            idsNeeded.add(s.sender_id === userId ? s.receiver_id : s.sender_id);
+        });
+        if (idsNeeded.size > 0) {
+            const { data: profData } = await getPublicProfiles([...idsNeeded]);
+            if (profData) {
+                setProfiles(prev => {
+                    const next = { ...prev };
+                    profData.forEach(p => { next[p.id] = p; });
+                    return next;
+                });
+            }
+        }
+        setSocialLoaded(true);
+    }, [userId]);
+
+    useEffect(() => { loadSocialSummary(); }, [loadSocialSummary]);
+
+    useEffect(() => {
+        const unsubscribe = subscribeSocial(userId, loadSocialSummary);
+        return unsubscribe;
+    }, [userId, loadSocialSummary]);
+
+    // ---------- listas derivadas (mismo criterio que Mensajes.jsx) ----------
+    const friends = useMemo(() => friendships
+        .filter(f => f.status === 'accepted')
+        .map(f => {
+            const otherId = f.requester_id === userId ? f.addressee_id : f.requester_id;
+            return { friendshipId: f.id, ...profiles[otherId], id: otherId };
+        }), [friendships, profiles, userId]);
+
+    const incomingRequests = useMemo(() => friendships
+        .filter(f => f.status === 'pending' && f.addressee_id === userId)
+        .map(f => ({ friendshipId: f.id, ...profiles[f.requester_id], id: f.requester_id })),
+        [friendships, profiles, userId]);
+
+    const incomingShares = useMemo(() => shares
+        .filter(s => s.status === 'pending' && s.receiver_id === userId)
+        .map(s => ({ ...s, from: profiles[s.sender_id] })),
+        [shares, profiles, userId]);
+
+    const pendingCount = incomingRequests.length + incomingShares.length;
+    const iniciales = (p) => (p?.nombre?.[0] || p?.username?.[0] || '?').toUpperCase();
+
+    // ---------- acciones rápidas desde el home ----------
+    async function handleRespondRequest(e, friendshipId, accept) {
+        e.stopPropagation();
+        const { error } = await respondFriendRequest(friendshipId, accept);
+        if (!error) loadSocialSummary();
+    }
+
+    async function handleRespondShare(e, share, accept) {
+        e.stopPropagation();
+        const { error } = await respondRoutineShare(share.id, accept);
+        if (!error) {
+            if (accept) onImportRoutine?.(share.routine_data);
+            loadSocialSummary();
+        }
+    }
     return (
         <>
             <div className="home-header">
@@ -226,6 +315,98 @@ export default function HomePage({
                     </div>
                 )}
 
+
+                {userId && socialLoaded && (
+                    <div className="home-msj-card">
+                        <div className="home-msj-head" onClick={() => onNavigate('mensajes')}>
+                            <div className="home-msj-tag-row">
+                                <span className="home-hoy-tag">Mensajes</span>
+                                {pendingCount > 0 && <span className="mensajes-badge">{pendingCount}</span>}
+                            </div>
+                            <ChevronRight size={16} className="home-quick-chev" />
+                        </div>
+
+                        {/* Solicitudes de amistad pendientes */}
+                        {incomingRequests.length > 0 && (
+                            <div className="home-msj-subseccion">
+                                <span className="home-msj-subtitulo">Solicitudes de amistad</span>
+                                <div className="home-msj-scroll-list">
+                                    {incomingRequests.map(r => (
+                                        <div className="mensajes-row" key={r.friendshipId}>
+                                            <div className="mensajes-row-clickable" onClick={() => onNavigate('mensajes')}>
+                                                <div className="mensajes-avatar">{iniciales(r)}</div>
+                                                <div className="mensajes-row-info">
+                                                    <div className="mensajes-row-nombre">{r.nombre || r.username}</div>
+                                                    <div className="mensajes-row-username">@{r.username}</div>
+                                                </div>
+                                            </div>
+                                            <div className="mensajes-row-actions">
+                                                <button className="btns primario" style={{ padding: '6px 10px' }} onClick={(e) => handleRespondRequest(e, r.friendshipId, true)}>
+                                                    <Check size={14} />
+                                                </button>
+                                                <button className="btns eliminar" style={{ padding: '6px 10px' }} onClick={(e) => handleRespondRequest(e, r.friendshipId, false)}>
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Rutinas compartidas pendientes */}
+                        {incomingShares.length > 0 && (
+                            <div className="home-msj-subseccion">
+                                <span className="home-msj-subtitulo">Rutinas compartidas</span>
+                                <div className="home-msj-scroll-list">
+                                    {incomingShares.map(s => (
+                                        <div className="mensajes-row" key={s.id}>
+                                            <div className="mensajes-row-clickable" onClick={() => onNavigate('mensajes')}>
+                                                <div className="mensajes-avatar"><Dumbbell size={16} /></div>
+                                                <div className="mensajes-row-info">
+                                                    <div className="mensajes-row-nombre">{s.routine_name}</div>
+                                                    <div className="mensajes-row-username">de @{s.from?.username || '...'}</div>
+                                                </div>
+                                            </div>
+                                            <div className="mensajes-row-actions">
+                                                <button className="btns primario" style={{ padding: '6px 10px' }} onClick={(e) => handleRespondShare(e, s, true)}>
+                                                    <Check size={14} />
+                                                </button>
+                                                <button className="btns eliminar" style={{ padding: '6px 10px' }} onClick={(e) => handleRespondShare(e, s, false)}>
+                                                    <X size={14} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Amigos */}
+                        <div className="home-msj-subseccion">
+                            <span className="home-msj-subtitulo">
+                                Tus amigos {friends.length > 0 && `(${friends.length})`}
+                            </span>
+                            {friends.length === 0 ? (
+                                <p className="home-msj-vacio">Todavía no agregaste amigos. Buscalos acá.</p>
+                            ) : (
+                                <div className="home-msj-scroll-list">
+                                    {friends.map(f => (
+                                        <div className="mensajes-row" key={f.friendshipId} onClick={() => onNavigate('mensajes')}>
+                                            <div className="mensajes-row-clickable">
+                                                <div className="mensajes-avatar">{iniciales(f)}</div>
+                                                <div className="mensajes-row-info">
+                                                    <div className="mensajes-row-nombre">{f.nombre || f.username}</div>
+                                                    <div className="mensajes-row-username">@{f.username}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 <h3 className="home-section-titulo">Accesos rápidos</h3>
                 <div

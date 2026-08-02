@@ -72,3 +72,17 @@ export function subscribeSocial(userId, onChange) {
         .subscribe();
     return () => supabase.removeChannel(channel);
 }
+
+export async function getProfileView(targetId) {
+    if (!supabase || !targetId) return { data: null, error: null };
+    const { data, error } = await supabase.rpc('get_profile_view', { p_target_id: targetId });
+    return { data: Array.isArray(data) ? data[0] || null : data, error };
+}
+
+export async function setProfilePublic(userId, isPublic) {
+    if (!supabase || !userId) return { error: null };
+    return supabase
+        .from('profiles')
+        .update({ is_public: isPublic, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+}

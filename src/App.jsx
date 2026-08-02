@@ -1673,6 +1673,7 @@ export default function App() {
             history={history}
             session={session}
             onStartSession={startSession}
+            authSession={authSession}
             onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
             onNewRoutine={() => openEditor(null)}
             onNavigate={(s) => setScreen(s)}
@@ -1691,6 +1692,8 @@ export default function App() {
           <RutinaPage
             routines={routines}
             onNewRoutine={() => openEditor(null)}
+            authSession={authSession}
+
             onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
             onExport={() => setBackupModal({ mode: 'export', kind: 'routines' })}
             onImport={() => setBackupModal({ mode: 'import', kind: 'routines' })}

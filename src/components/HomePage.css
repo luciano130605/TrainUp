@@ -164,7 +164,8 @@
     margin-bottom: -8px;
 }
 
-.home-quick-grid::-webkit-scrollbar, .home-recup-lista::-webkit-scrollbar {
+.home-quick-grid::-webkit-scrollbar,
+.home-recup-lista::-webkit-scrollbar {
     display: none !important;
 }
 
@@ -443,4 +444,99 @@
 .home-dot.active {
     width: 20px;
     background: var(--acento);
+}
+
+
+.home-msj-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--componente);
+    border: 1px solid var(--borde-hover);
+    border-radius: 8px;
+    padding: 14px 16px;
+}
+
+.home-msj-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+}
+
+.home-msj-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.home-msj-subseccion {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 10px;
+    border-top: 1px solid var(--borde);
+}
+
+.home-msj-subtitulo {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .65rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--texto-gris);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.home-msj-vacio {
+    color: var(--texto-gris);
+    font-size: .8rem;
+    margin: 0;
+}
+
+.home-msj-avatares {
+    display: flex;
+    align-items: center;
+}
+
+.home-msj-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--acento);
+    color: var(--txt-btn);
+    font-size: .7rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -8px;
+    border: 2px solid var(--componente);
+    flex-shrink: 0;
+}
+
+.home-msj-avatar:first-child {
+    margin-left: 0;
+}
+
+.home-msj-avatar-mas {
+    background: var(--fondo-transp);
+    color: var(--texto-gris);
+}
+
+.home-msj-scroll-list {
+    max-height: 58px;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.home-msj-scroll-list::-webkit-scrollbar {
+    display: none;
+}
+
+.home-msj-scroll-list .mensajes-row {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
 }
