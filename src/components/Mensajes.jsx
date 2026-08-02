@@ -18,7 +18,7 @@ import "./login.css"
 import RutinasIconFill from "../icons/rutinasFIll"
 import MensajesIconFill from "../icons/msjFill"
 import PerfilStats from './PerfilStats';
-import PerfilPublico from './PerfilPublico';
+import PerfilPublico from './perfilPublico';
 
 export default function Mensajes({ authSession, routines, onImportRoutine, onOpenProfile }) {
     const userId = authSession?.user?.id;
