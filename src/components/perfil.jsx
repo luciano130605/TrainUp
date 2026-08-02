@@ -98,6 +98,7 @@ export default function Perfil({
                     objetivo: data.objetivo || '',
                     diasEntrenamiento: data.dias_entrenamiento != null ? String(data.dias_entrenamiento) : '',
                 });
+                setOriginalUsername(data.username || ''); // <- esto faltaba
             }
             setLoadingProfile(false);
         })();
