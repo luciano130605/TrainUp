@@ -87,7 +87,7 @@ export default function App() {
 
   // 1. Nuevos estados (junto a restDefault)
   const [modoOscuro, setModoOscuro] = useState(true);
-  const [acento, setAcento] = useState('acento-rosa');
+  const [acento, setAcento] = useState('acento');
   const [toasterPosition, setToasterPosition] = useState('bottom');
   const [swipeGestures, setSwipeGestures] = useState(true);
   const [swipeLeftAction, setSwipeLeftAction] = useState('delete');
@@ -1665,7 +1665,7 @@ export default function App() {
     return (
       <div className="auth-loading-screen">
         <div className="home-logo">
-          Train<span className="home-logo-acento">Up</span>
+          <Logo  />
         </div>
       </div>
     );

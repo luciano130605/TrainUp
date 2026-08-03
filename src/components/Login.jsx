@@ -24,6 +24,7 @@ import {
 import { supabase, supabaseConfigured } from '../lib/supabaseClient';
 import { ensureUserProfile } from '../lib/profile';
 import './login.css';
+import Logo from "../../public/logo"
 
 export const GENEROS = [
   { value: 'femenino', label: 'Femenino' },
@@ -381,7 +382,7 @@ export default function Login({ onRegisteringChange } = {}) {
           </h1>
 
           <div className="home-logo">
-            Train<span className="home-logo-acento">Up</span>
+            <Logo />
           </div>
         </div>
 

@@ -46,8 +46,6 @@ h3 {
   font-family: 'Oswald'
 }
 
-
-
 .acento-naranja {
   --acento: #ff9a4a;
   --acento-transp: rgba(255, 154, 74, 0.675);
@@ -59,6 +57,7 @@ h3 {
   --acento-transp: rgba(178, 138, 255, 0.675);
   --acento-transp-2: rgba(178, 138, 255, 0.3);
 }
+
 .acento-rosa {
   --acento: #ff1493;
   --acento-transp: rgba(255, 20, 147, 0.675);
