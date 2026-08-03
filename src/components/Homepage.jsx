@@ -15,6 +15,7 @@ import {
     fetchFriendships, fetchSharedRoutines, getPublicProfiles, subscribeSocial,
     respondFriendRequest, respondRoutineShare,
 } from '../lib/social';
+import Logo from '../../public/logo';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -225,7 +226,7 @@ export default function HomePage({
                     <h1 className="header-titulo">{saludo}</h1>
                     <div className="home-logo-row">
                         <div className="home-logo">
-                            Train<span className="home-logo-acento">Up</span>
+                            <Logo />
                         </div>
 
                     </div>

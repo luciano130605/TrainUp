@@ -41,6 +41,7 @@ import OnboardingTour from './components/Onboardingtour';
 import Mensajes from './components/Mensajes';
 import ResetPassword from './components/ResetPassword';
 import PerfilPublico from './components/perfilPublico';
+import Logo from '../public/logo';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
@@ -86,7 +87,7 @@ export default function App() {
 
   // 1. Nuevos estados (junto a restDefault)
   const [modoOscuro, setModoOscuro] = useState(true);
-  const [acento, setAcento] = useState('acento-verde');
+  const [acento, setAcento] = useState('acento-rosa');
   const [toasterPosition, setToasterPosition] = useState('bottom');
   const [swipeGestures, setSwipeGestures] = useState(true);
   const [swipeLeftAction, setSwipeLeftAction] = useState('delete');
@@ -1653,8 +1654,8 @@ export default function App() {
   if (showSplash) {
     return (
       <div className="splash-screen">
-        <div className="home-logo">
-          Train<span className="home-logo-acento">Up</span>
+        <div className="home-logo screen">
+         <Logo />
         </div>
       </div>
     );
