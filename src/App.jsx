@@ -87,7 +87,7 @@ export default function App() {
 
   // 1. Nuevos estados (junto a restDefault)
   const [modoOscuro, setModoOscuro] = useState(true);
-  const [acento, setAcento] = useState('acento');
+  const [acento, setAcento] = useState('acento-rosa');
   const [toasterPosition, setToasterPosition] = useState('bottom');
   const [swipeGestures, setSwipeGestures] = useState(true);
   const [swipeLeftAction, setSwipeLeftAction] = useState('delete');
