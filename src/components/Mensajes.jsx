@@ -37,6 +37,11 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
 
     const [friendships, setFriendships] = useState([]);
     const [shares, setShares] = useState([]);
+
+    const [myProfile, setMyProfile] = useState(null);
+    const [ownProfileOpen, setOwnProfileOpen] = useState(false);
+    const [ownProfileData, setOwnProfileData] = useState(null);
+    const [ownProfileLoading, setOwnProfileLoading] = useState(false);
     const [profiles, setProfiles] = useState({});
 
     const [searchQuery, setSearchQuery] = useState('');
@@ -51,6 +56,57 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
     const [activeThreadId, setActiveThreadId] = useState(null);
 
     const seenPendingRef = useRef(null);
+
+    useEffect(() => {
+        if (!userId) return;
+        getPublicProfiles([userId]).then(({ data }) => {
+            if (data && data[0]) setMyProfile(data[0]);
+        });
+    }, [userId]);
+
+
+    async function openOwnProfile() {
+        setOwnProfileOpen(true);
+        setOwnProfileLoading(true);
+        const { data, error } = await getProfileView(userId);
+        if (error || !data) {
+            sileo.error({ title: 'No se pudo cargar tu perfil' });
+            setOwnProfileOpen(false);
+            setOwnProfileLoading(false);
+            return;
+        }
+        setOwnProfileData(data);
+        setOwnProfileLoading(false);
+    }
+
+    function closeOwnProfile() {
+        setOwnProfileOpen(false);
+        setOwnProfileData(null);
+    }
+
+    async function handleShareOwnProfile() {
+        const nombreVisible = ownProfileData?.mostrar_nombre
+            ? (ownProfileData?.nombre || ownProfileData?.username)
+            : ownProfileData?.username;
+        const profileUrl = `${window.location.origin}/perfil/${userId}`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: `Perfil de ${nombreVisible}`,
+                    text: 'Mirá mi perfil',
+                    url: profileUrl,
+                });
+            } else {
+                await navigator.clipboard.writeText(profileUrl);
+                sileo.success({ title: 'Link copiado al portapapeles' });
+            }
+        } catch (error) {
+            if (error?.name !== 'AbortError') {
+                sileo.error({ title: 'No se pudo compartir el perfil' });
+            }
+        }
+    }
 
     const loadAll = useCallback(async () => {
         if (!supabase || !userId) return;
@@ -283,7 +339,23 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
 
     return (
         <div className="page-cont top">
-            <h1>Mensajes</h1>
+            <div className="header-cont" style={{ position: 'static', padding: 0, border: 'none', background: 'none', backdropFilter: 'none' }}>
+                <h1 className="header-titulo">Mensajes</h1>
+                <button
+                    className="btn"
+                    title="Ver mi perfil"
+                    onClick={openOwnProfile}
+                    style={{
+                        background: 'var(--acento)',
+                        color: 'var(--txt-btn)',
+                        fontFamily: "'Oswald', sans-serif",
+                        fontWeight: 700,
+                        fontSize: '.85rem',
+                    }}
+                >
+                    {iniciales(myProfile)}
+                </button>
+            </div>
 
             <div className="mensajes-tabs" style={{ marginTop: 16 }}>
                 <button className={`mensajes-tab${tab === 'amigos' ? ' activo' : ''}`} onClick={() => setTab('amigos')}>
@@ -584,6 +656,43 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                                 {sendingShare ? 'Enviando...' : 'Enviar'}
                             </button>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {ownProfileOpen && (
+                <div className="modal-overlay" onClick={closeOwnProfile}>
+                    <div className="modal-cont" onClick={e => e.stopPropagation()}>
+                        {ownProfileLoading && (
+                            <div className="header-sub" style={{ padding: '20px 0', textAlign: 'center' }}>
+                                <Loader2 size={18} className="login-spin" /> Cargando tu perfil...
+                            </div>
+                        )}
+
+                        {!ownProfileLoading && ownProfileData && (
+                            <>
+                                <div className="perfil-header" style={{ paddingBottom: 14 }}>
+                                    <div className="perfil-avatar">
+                                        {(ownProfileData.nombre?.[0] || ownProfileData.username?.[0] || '?').toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <h2 className="perfil-nombre">{ownProfileData.nombre || ownProfileData.username}</h2>
+                                        <span className="perfil-email">@{ownProfileData.username}</span>
+                                    </div>
+                                </div>
+
+                                <PerfilStats data={ownProfileData} />
+
+                                <div className="btn-cont-modal" style={{ marginTop: 16 }}>
+                                    <button className="btns agregar" onClick={closeOwnProfile}>
+                                        Cerrar
+                                    </button>
+                                    <button className="btns primario" onClick={handleShareOwnProfile}>
+                                        Compartir perfil
+                                    </button>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </div>
             )}

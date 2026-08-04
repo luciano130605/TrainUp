@@ -99,8 +99,6 @@ export default function App() {
   const setScreen = useCallback((next) => {
     const apply = () => setScreenState(next);
 
-    // Si el navegador soporta View Transitions, animamos el cambio de pantalla.
-    // Si no (ej: Firefox), cae directo a un cambio instantáneo sin romper nada.
     if (document.startViewTransition) {
       document.startViewTransition(() => {
         flushSync(apply);
