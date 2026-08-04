@@ -566,7 +566,7 @@
     align-items: center;
     gap: 6px;
     background: var(--acento-transp-2);
-    border: 1px solid var(--borde-hover);
+    border: 1px solid var(--acento);
     border-radius: var(--home-radius-sm);
     padding: 8px 10px;
     margin-bottom: 10px;
