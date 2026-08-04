@@ -2,14 +2,19 @@ Ajustes / Preferencias
 * KG o LB en settings
 * Configurar un descanso default para todos los ejercicios predeterminado
 
+Perfo
+* Que funcione sin wifi, todo local y que se guarde en la BD cuando tenga wifi.. que avise con un icon
+* Cuando achico una rutina el tiempo no vuelve
+
+
+Diseño 
+* agregar toast a todo
+
 
 Social / Comunidad
-* Perfil, tocar y ver el perfil y los datos y stats (en perfil en ajustes podes si es privado o publico tus datos, stats, etc)
 * notificaciones push cuando te envian un msj
-* Seguir a amigos y poder ver stats
 btns en el header
 Invitar amigo
-
 Codigo QR mostrar un qr para invitar
 
 

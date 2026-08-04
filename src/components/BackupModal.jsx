@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { X, Download, Link as LinkIcon, Upload, FileDown, ClipboardPaste } from 'lucide-react';
 import "./backupModal.css"
+import { DownloadIcon, ExportIcon, Link, Paste } from '../icons/icons';
 
 const canPaste = typeof navigator !== 'undefined'
     && !!navigator.clipboard
@@ -39,10 +40,10 @@ export default function BackupModal({ mode, kind, onClose, onExportFile, onExpor
                         <p className="header-sub" style={{ marginBottom: 16 }}>Elegí cómo querés exportar.</p>
                         <div className='modal-btns'>
                             <button className="btns agregar" onClick={onExportFile}>
-                                <FileDown size={15} /> Descargar archivo (.json)
+                                <DownloadIcon size={18} /> Descargar archivo (.json)
                             </button>
                             <button className="btns agregar" onClick={onExportLink}>
-                                <LinkIcon size={15} /> Copiar link
+                                <Link size={15} /> Copiar link
                             </button>
                         </div>
                         {kind === 'history' && (
@@ -71,7 +72,7 @@ export default function BackupModal({ mode, kind, onClose, onExportFile, onExpor
                                     aria-label="Pegar"
                                     onClick={handlePaste}
                                 >
-                                    <ClipboardPaste size={16} />
+                                    <Paste size={30} />
                                 </button>
                             )}
                         </div>
@@ -93,7 +94,7 @@ export default function BackupModal({ mode, kind, onClose, onExportFile, onExpor
                             className="btns agregar"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <Upload size={15} /> Subir archivo .json
+                            <ExportIcon size={15} /> Subir archivo .json
                         </button>
                     </>
                 )}

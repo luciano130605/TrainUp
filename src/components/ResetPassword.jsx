@@ -13,9 +13,7 @@ export default function ResetPassword() {
     const [sessionReady, setSessionReady] = useState(false);
     const [linkInvalid, setLinkInvalid] = useState(false);
 
-    // Supabase manda el link con un token en el hash (#access_token=...&type=recovery)
-    // El propio cliente de supabase-js lo detecta automáticamente y crea una sesión temporal.
-    // Solo tenemos que esperar a que dispare el evento.
+  
     useEffect(() => {
         if (!supabase) return;
 
@@ -25,12 +23,10 @@ export default function ResetPassword() {
             }
         });
 
-        // Fallback: si ya había sesión de recovery cuando montó el componente
         supabase.auth.getSession().then(({ data }) => {
             if (data.session) setSessionReady(true);
         });
 
-        // Si después de un momento no hay sesión ni evento, el link es inválido/expirado
         const timeout = setTimeout(() => {
             setSessionReady((ready) => {
                 if (!ready) setLinkInvalid(true);
@@ -67,7 +63,6 @@ export default function ResetPassword() {
         }
 
         setDone(true);
-        // Cerramos la sesión de recovery para que tenga que loguearse de nuevo con la nueva contraseña
         await supabase.auth.signOut();
     }
 

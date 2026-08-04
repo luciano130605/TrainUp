@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import { sileo } from "sileo";
-import { Minus, Plus, Pause, Play, Timer } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
 import { playBeep } from '../utils/audio';
 import "./descanso.css";
 import "./rutina.css";
 import { scheduleServerPush, cancelServerPush } from '../utils/push';
+import { AgregarQuince, PauseIcon, PlayIcon, Retroceder15, TimerIcon } from '../icons/icons';
 
 const stopAll = (e) => e.stopPropagation();
 
@@ -37,7 +37,7 @@ function tick() {
         beeped = true;
         playBeep();
         sileo.success({ title: "Tiempo terminado", duration: 3000 });
-        showBrowserNotification(); // 👈 nuevo
+        showBrowserNotification();
     }
     notify();
 }
@@ -255,13 +255,13 @@ function ContenidoDescanso() {
         <div ref={rootRef} className="tiempo-toast" onPointerDown={stopAll} onMouseDown={stopAll} onClick={stopAll}>
             <div className="tiempo-controles minimal">
                 <div role="button" tabIndex={0} className="mini-btn" title="Restar 15s" onClick={() => adjust(-15)}>
-                    <Minus size={16} />
+                    <Retroceder15 size={16} />
                 </div>
                 <div role="button" tabIndex={0} className="mini-btn descanso" title={running ? 'Pausar' : 'Reanudar'} onClick={togglePause}>
-                    {running ? <Pause size={16} /> : <Play size={16} />}
+                    {running ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
                 </div>
                 <div role="button" tabIndex={0} className="mini-btn" title="Sumar 15s" onClick={() => adjust(15)}>
-                    <Plus size={16} />
+                    <AgregarQuince size={16} />
                 </div>
             </div>
         </div>
@@ -346,7 +346,7 @@ export function DescansoBotonFlotante() {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
         >
-            <Timer size={20} />
+            <TimerIcon size={20} />
         </button>
     );
 

@@ -9,6 +9,9 @@ import { supabase } from '../lib/supabaseClient';
 import { GENEROS, OBJETIVOS, DIAS, normalizeUsername } from './Login';
 import './perfil.css';
 import { setPrivacySettings } from '../lib/social';
+import UserIcon from '../icons/user';
+import UserFillIcon from '../icons/userFill';
+import { GlobalIcon, Lockicon, LogOutIcon, NotificationIcon, TrashIcon } from '../icons/icons';
 
 const emptyProfile = {
     nombre: '',
@@ -112,7 +115,7 @@ export default function Perfil({
         const next = !profile[field];
         setProfile(p => ({ ...p, [field]: next }));
         const { error } = await setPrivacySettings(userId, { [dbField]: next });
-        console.log('ERROR COMPLETO:', error);   
+        console.log('ERROR COMPLETO:', error);
         if (error) {
             setProfile(p => ({ ...p, [field]: !next }));
             sileo.error({ title: 'No se pudo actualizar la privacidad' });
@@ -322,23 +325,20 @@ export default function Perfil({
                     <label className="login-field">
                         <span>Nombre</span>
                         <div className="login-input step3">
-                            <User size={18} />
                             <input type="text" value={profile.nombre} onChange={(e) => updateField('nombre', e.target.value)} />
                         </div>
                     </label>
                     <label className="login-field">
                         <span>Apellido</span>
                         <div className="login-input step3">
-                            <User size={18} />
                             <input type="text" value={profile.apellido} onChange={(e) => updateField('apellido', e.target.value)} placeholder="Opcional" />
                         </div>
                     </label>
                 </div>
-                <div className="login-field-row todo">
-                    <label className="login-field">
+                <div className="cont-todo">
+                    <label className="login-field todo">
                         <span>Usuario</span>
-                        <div className="login-input step3">
-                            <User size={18} />
+                        <div className="login-input">
                             <input
                                 type="text"
                                 value={profile.username}
@@ -358,8 +358,7 @@ export default function Perfil({
                 <div className="login-field-row">
                     <label className="login-field">
                         <span>Fecha de nacimiento</span>
-                        <div className="login-input step3">
-                            <Calendar size={18} />
+                        <div className="login-input step3 nacimiento">
                             <input type="date" value={profile.fechaNacimiento} onChange={(e) => updateField('fechaNacimiento', e.target.value)} />
                         </div>
                     </label>
@@ -380,7 +379,6 @@ export default function Perfil({
                     <label className="login-field">
                         <span>Altura (cm)</span>
                         <div className="login-input step3">
-                            <Ruler size={18} />
                             <input
                                 inputMode="decimal"
                                 type="text"
@@ -392,7 +390,6 @@ export default function Perfil({
                     <label className="login-field">
                         <span>Peso (kg)</span>
                         <div className="login-input step3">
-                            <Scale size={18} />
                             <input
                                 inputMode="decimal"
                                 type="text"
@@ -448,13 +445,13 @@ export default function Perfil({
             </p>
 
             {[
-                { key: 'mostrarNombre', db: 'mostrar_nombre', label: 'Nombre completo' },
+
                 { key: 'mostrarRutinas', db: 'mostrar_rutinas', label: 'Mis rutinas' },
                 { key: 'mostrarStats', db: 'mostrar_stats', label: 'Mis stats y racha' },
             ].map(({ key, db, label }) => (
                 <div className="perfil-row" key={key}>
                     <div className="perfil-row-label">
-                        {profile[key] ? <Globe size={16} /> : <Lock size={16} />}
+                        {profile[key] ? <GlobalIcon size={16} /> : <Lockicon size={16} />}
                         <span>{label}</span>
                     </div>
                     <button
@@ -472,7 +469,7 @@ export default function Perfil({
             <h3 className="perfil-seccion-titulo">Notificaciones</h3>
             <div className="perfil-row">
                 <div className="perfil-row-label">
-                    <Bell size={16} />
+                    <NotificationIcon size={16} />
                     <span>Recordatorio diario</span>
                 </div>
                 <button className={`mini-btn noti ${reminderEnabled ? 'activa' : ''}`} role="switch" aria-checked={reminderEnabled} onClick={onToggleReminder}>
@@ -489,24 +486,19 @@ export default function Perfil({
 
             <h3 className="perfil-seccion-titulo">Cuenta</h3>
             <button className="btns agregar perfil-cuenta-btn" onClick={onSignOut} type="button">
-                <LogOut size={18} />
+                <LogOutIcon size={18} />
                 Cerrar sesión
             </button>
             <button className="btns eliminar perfil-cuenta-btn" onClick={openDeleteModal} type="button">
-                <Trash2 size={18} />
+                <TrashIcon size={18} />
                 Eliminar cuenta
             </button>
 
             {deleteModalOpen && (
                 <div className="modal-overlay" onClick={closeDeleteModal}>
-                    <div className="modal-cont modal-cont--danger" onClick={(e) => e.stopPropagation()}>
+                    <div className="modal-cont modal-cont--danger" style={{ textAlign: "center" }} onClick={(e) => e.stopPropagation()}>
 
                         <div className='modal-icons-cont'>
-
-
-                            <div className="modal-danger-icon">
-                                <AlertTriangle size={20} />
-                            </div>
 
                             <button
                                 className="mini-btn"
@@ -560,7 +552,7 @@ export default function Perfil({
                                 onClick={confirmDeleteAccount}
                                 disabled={!confirmMatches || deleting}
                             >
-                                {deleting ? <Loader2 size={16} className="login-spin" /> : <Trash2 size={16} />}
+                                {deleting ? <Loader2 size={16} className="login-spin" /> : <TrashIcon size={16} />}
                                 {deleting ? 'Eliminando...' : 'Eliminar'}
                             </button>
                         </div>

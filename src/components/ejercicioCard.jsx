@@ -1,5 +1,6 @@
 import { Check, Dumbbell, Info } from "lucide-react";
 import { useState } from "react";
+import { MoreHorizontal } from "../icons/icons";
 
 export default function EjercicioCard({ exercise, selected, onSelect }) {
     const [gifFailed, setGifFailed] = useState(false);
@@ -48,7 +49,7 @@ export default function EjercicioCard({ exercise, selected, onSelect }) {
                         }}
                         onMouseLeave={() => setShowTooltip(false)}
                     >
-                        <Info size={14} />
+                        <MoreHorizontal size={14} />
                         {showTooltip && (
                             <div className="info-tooltip">
                                 <p>

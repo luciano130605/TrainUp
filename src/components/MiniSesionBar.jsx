@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Play, Pause, Check, Dumbbell } from 'lucide-react';
 import './rutina.css';
+import { PauseIcon, PlayIcon } from '../icons/icons';
 
 function formatElapsedFull(ms) {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -45,7 +46,7 @@ export default function MiniSesionBar({ session, raised, onExpand, onTogglePause
                 </div>
                 <div className="mini-sesion-acciones" onClick={e => e.stopPropagation()}>
                     <button className="mini-btn" title={session.paused ? 'Reanudar' : 'Pausar'} onClick={onTogglePause}>
-                        {session.paused ? <Play size={16} /> : <Pause size={16} />}
+                        {session.paused ? <PlayIcon size={16} /> : <PauseIcon size={16} />}
                     </button>
                     <button className="mini-btn acento" title="Finalizar rutina" onClick={onFinish}>
                         <Check size={16} />

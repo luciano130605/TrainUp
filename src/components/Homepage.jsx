@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import {
-    Dumbbell, History, User, ChevronRight, Play, Flame, Plus, Clock,
-    CircleArrowOutUpRight, MessageCircle, Check, X, Users,
+    Dumbbell, ChevronRight, Plus,
+    Check, X, Flame,
 } from 'lucide-react';
 import ProgresoModal, { buildMuscleRecovery } from './ProgresoModal';
 import "./HomePage.css";
@@ -16,6 +16,7 @@ import {
     respondFriendRequest, respondRoutineShare,
 } from '../lib/social';
 import Logo from '../../public/logo';
+import { PlayIcon } from '../icons/icons';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -50,7 +51,6 @@ function formatFecha(ts) {
     return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
-// Bolitas de paginación reutilizables para los carruseles con scroll-snap
 function DotsIndicator({ count, active, onDotClick }) {
     if (count <= 1) return null;
     return (
@@ -68,7 +68,6 @@ function DotsIndicator({ count, active, onDotClick }) {
     );
 }
 
-// Trackea qué "página" del carrusel horizontal (scroll-snap) está activa
 function useCarouselDots(count) {
     const ref = useRef(null);
     const [active, setActive] = useState(0);
@@ -81,7 +80,6 @@ function useCarouselDots(count) {
     }, []);
 
     useEffect(() => {
-        // si la cantidad de items cambia (ej. cambia el historial), reseteamos
         setActive(0);
         ref.current?.scrollTo({ left: 0 });
     }, [count]);
@@ -222,16 +220,21 @@ export default function HomePage({
         <>
             <div className="home-header">
 
-                <div className='cont-head'>
+                <div className='cont-head' style={{ justifyContent: 'space-between' }}>
                     <h1 className="header-titulo">{saludo}</h1>
-                    <div className="home-logo-row">
-                        <div className="home-logo">
-                            <Logo />
-                        </div>
+                    {racha > 0 && (
+                        <span className="home-racha-pill">
+                            <span className="home-racha-dot" />
+                            <Flame size={11} />
+                            {racha} {racha === 1 ? 'día' : 'días'}
+                        </span>
+                    )}
 
-                    </div>
                 </div>
-                <div className="header-sub">{fechaLarga}</div>
+                <div className="header-sub">
+                    {fechaLarga}
+
+                </div>
             </div>
 
             <div className="page-cont home-cont">
@@ -268,11 +271,11 @@ export default function HomePage({
                                         </div>
                                     </div>
                                     <button
-                                        className="home-hoy-play"
+                                        className="btn primario"
                                         title="Empezar"
                                         onClick={() => onStartSession(r.id)}
                                     >
-                                        <Play size={16} />
+                                        <PlayIcon size={18} />
                                     </button>
                                 </div>
                             ))}
@@ -328,7 +331,6 @@ export default function HomePage({
                             <ChevronRight size={16} className="home-quick-chev" />
                         </div>
 
-                        {/* Solicitudes de amistad pendientes */}
                         {incomingRequests.length > 0 && (
                             <div className="home-msj-subseccion">
                                 <span className="home-msj-subtitulo">Solicitudes de amistad</span>

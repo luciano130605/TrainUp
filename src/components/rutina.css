@@ -38,7 +38,7 @@
     position: relative;
     z-index: 20;
     outline: none !important;
-    color: var(--txt-btn)  !important;
+    color: var(--txt-btn) !important;
     background: var(--acento) !important;
     transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -512,7 +512,7 @@
 
 .segs {
     position: relative;
-    right: 100px;
+    right: 0px;
 }
 
 .tiempo-set-cont input {
@@ -539,8 +539,8 @@
 }
 
 .mini-btn.listo {
-   border-color: var(--acento);
-   color: var(--acento);
+    border-color: var(--acento);
+    color: var(--acento);
 }
 
 .ejercicio-inputs-cont.done {
@@ -552,6 +552,7 @@
     border-color: var(--acento-transp);
     pointer-events: none;
 }
+
 .ejercicio-inputs-cont.done .mini-btn {
     border-color: var(--acento-transp);
     pointer-events: none;
@@ -1588,8 +1589,28 @@
 .dia-chip.activo {
     background: var(--acento);
     color: var(--txt-btn);
+    border-color: var(--acento);
     font-weight: 600;
 }
+
+.dia-chip.activo::before {
+    opacity: 0;
+}
+
+.dia-chip.esHoy {
+    font-weight: 600;
+}
+
+.dia-chip.esHoy::before {
+    content: '';
+    position: absolute;
+    width: 6px;
+    margin-top: 30px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--acento);
+}
+
 
 .hoy {
     border-color: var(--acento);
@@ -1786,7 +1807,6 @@
     display: none;
 }
 
-.card-dia-chip.activo {}
 
 .card-dia-chip.es-hoy {
     border-color: var(--acento);
@@ -1963,3 +1983,11 @@
     background: var(--acento);
     color: var(--txt-btn);
 }
+
+
+
+
+
+
+
+

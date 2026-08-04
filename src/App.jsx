@@ -85,7 +85,6 @@ export default function App() {
   const allExercises = [...EXERCISES_DB, ...customExercises];
   const findExercise = (id) => allExercises.find(e => e.id === id);
 
-  // 1. Nuevos estados (junto a restDefault)
   const [modoOscuro, setModoOscuro] = useState(true);
   const [acento, setAcento] = useState('acento-rosa');
   const [toasterPosition, setToasterPosition] = useState('bottom');
@@ -199,6 +198,17 @@ export default function App() {
     setViewingProfileId(id);
     setScreen('perfilPublico');
   }
+
+  useEffect(() => {
+    const match = window.location.pathname.match(/^\/perfil\/([^/]+)$/);
+
+    if (!match) return;
+
+    const profileId = match[1];
+
+    setViewingProfileId(profileId);
+    setScreen('perfilPublico');
+  }, []);
 
 
   useEffect(() => {
@@ -1655,7 +1665,7 @@ export default function App() {
     return (
       <div className="splash-screen">
         <div className="home-logo screen">
-         <Logo />
+          <Logo />
         </div>
       </div>
     );
@@ -1665,7 +1675,7 @@ export default function App() {
     return (
       <div className="auth-loading-screen">
         <div className="home-logo">
-          <Logo  />
+          <Logo />
         </div>
       </div>
     );
@@ -1706,14 +1716,14 @@ export default function App() {
         )}
 
         {screen === 'perfilPublico' && viewingProfileId && (
-  <PerfilPublico
-    userId={authSession.user.id}
-    targetId={viewingProfileId}
-    myRoutines={routines}
-    onBack={() => setScreen('mensajes')}
-    onImportRoutine={importSharedRoutine}   
-  />
-)}
+          <PerfilPublico
+            userId={authSession.user.id}
+            targetId={viewingProfileId}
+            myRoutines={routines}
+            onBack={() => setScreen('mensajes')}
+            onImportRoutine={importSharedRoutine}
+          />
+        )}
 
         {screen === 'routines' && (
           <RutinaPage
@@ -1874,9 +1884,17 @@ export default function App() {
             entry={activeHistoryEntry}
             onBack={() => setScreen('history')}
             onDelete={() => deleteHistoryEntry(activeHistoryEntry.id)}
+            onRepeat={(entry) => {
+              const routine = routines.find(r => r.id === entry.routineId);
+              if (!routine) {
+                sileo.error({ title: 'La rutina original ya no existe' });
+                return;
+              }
+              startSession(routine.id);
+            }}
+            history={history}
           />
         )}
-
         {session && screen !== 'session' && (
           <MiniSesionBar
             session={session}

@@ -3,8 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
 import {
-    UserPlus, Search, Check, X, Send, Users, Inbox, Loader2, Trash2, Dumbbell,
-    Flame, TrendingUp, Repeat, Lock, Globe,
+    Check, X, Loader2, Dumbbell,
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
@@ -19,27 +18,39 @@ import RutinasIconFill from "../icons/rutinasFIll"
 import MensajesIconFill from "../icons/msjFill"
 import PerfilStats from './PerfilStats';
 import PerfilPublico from './perfilPublico';
+import { SearchIcon, SendIcon, TrashIcon } from '../icons/icons';
+
+function formatTime(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const sameDay = d.toDateString() === now.toDateString();
+    if (sameDay) return d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+}
 
 export default function Mensajes({ authSession, routines, onImportRoutine, onOpenProfile }) {
     const userId = authSession?.user?.id;
 
-    const [tab, setTab] = useState('amigos'); // amigos | solicitudes | compartidas
+    const [tab, setTab] = useState('amigos');
     const [loading, setLoading] = useState(true);
 
     const [friendships, setFriendships] = useState([]);
     const [shares, setShares] = useState([]);
-    const [profiles, setProfiles] = useState({}); // id -> { username, nombre }
+    const [profiles, setProfiles] = useState({});
 
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [searching, setSearching] = useState(false);
     const [viewingProfile, setViewingProfile] = useState(null);
 
-    const [shareModalFor, setShareModalFor] = useState(null); // { id, username, nombre } del amigo
+    const [shareModalFor, setShareModalFor] = useState(null);
     const [selectedRoutineId, setSelectedRoutineId] = useState(null);
     const [sendingShare, setSendingShare] = useState(false);
 
-    const seenPendingRef = useRef(null); // para no togglear toasts en la primera carga
+    const [activeThreadId, setActiveThreadId] = useState(null);
+
+    const seenPendingRef = useRef(null);
 
     const loadAll = useCallback(async () => {
         if (!supabase || !userId) return;
@@ -70,7 +81,6 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
             }
         }
 
-        // toast si aparecieron cosas nuevas para revisar
         const pendingIncomingCount =
             friendshipsList.filter(f => f.status === 'pending' && f.addressee_id === userId).length +
             sharesList.filter(s => s.status === 'pending' && s.receiver_id === userId).length;
@@ -104,7 +114,6 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
         return () => clearTimeout(t);
     }, [searchQuery]);
 
-    // ---------- listas derivadas ----------
     const friends = useMemo(() => friendships
         .filter(f => f.status === 'accepted')
         .map(f => {
@@ -132,6 +141,29 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
         .map(s => ({ ...s, to: profiles[s.receiver_id] })),
         [shares, profiles, userId]);
 
+    const conversations = useMemo(() => {
+        return friends
+            .map(f => {
+                const msgs = shares
+                    .filter(s =>
+                        (s.sender_id === f.id && s.receiver_id === userId) ||
+                        (s.sender_id === userId && s.receiver_id === f.id)
+                    )
+                    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                const last = msgs[msgs.length - 1] || null;
+                const unread = msgs.filter(s => s.status === 'pending' && s.receiver_id === userId).length;
+                return { ...f, msgs, last, unread };
+            })
+            .sort((a, b) => {
+                if (a.last && b.last) return new Date(b.last.created_at) - new Date(a.last.created_at);
+                if (a.last) return -1;
+                if (b.last) return 1;
+                return (a.nombre || a.username || '').localeCompare(b.nombre || b.username || '');
+            });
+    }, [friends, shares, userId]);
+
+    const activeConversation = conversations.find(c => c.id === activeThreadId) || null;
+
     const friendshipStatusWith = useCallback((otherId) => {
         const f = friendships.find(fr => fr.requester_id === otherId || fr.addressee_id === otherId);
         if (!f) return null;
@@ -142,7 +174,6 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
 
     const badgeCount = incomingRequests.length + incomingShares.length;
 
-    // ---------- acciones ----------
     async function handleSendRequest(target) {
         const { error } = await sendFriendRequest(userId, target.id);
         if (error) {
@@ -226,40 +257,29 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
         return (
             <div className="page-cont top">
                 <h1>Mensajes</h1>
-                <div className="header-sub" style={{ marginTop: 20 }}>
-                    <Loader2 size={18} className="login-spin" /> Cargando...
+                <div className="mensajes-tabs" style={{ marginTop: 16, gap: 8 }}>
+                    <div className="skeleton skeleton-tab-full" />
+                    <div className="skeleton skeleton-tab-full" />
+                    <div className="skeleton skeleton-tab-full" />
                 </div>
-            </div>
+                <div className="skeleton skeleton-line" style={{ width: "100%", height: 30, margin: '18px 0 10px' }} />
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div className="chat-row" key={i} style={{ cursor: 'default' }}>
+                        <div className="skeleton skeleton-avatar-chat" />
+                        <div style={{ flex: 1 }}>
+                            <div className="skeleton skeleton-line" style={{ width: '30%', height: 13, marginBottom: 7 }} />
+                            <div className="skeleton skeleton-line" style={{ width: '35%', height: 11 }} />
+                        </div>
+
+                        <div className="skeleton skeleton-line" style={{ width: 30, height: 30, marginBottom: 7, borderRadius: 8 }} />
+                        <div className="skeleton skeleton-line" style={{ width: 30, height: 30, marginBottom: 7, borderRadius: 8 }} />
+
+                    </div>
+                ))
+                }
+            </div >
         );
     }
-
-    const UsuarioAdd = ({ size = 15, color = "currentColor" }) => {
-        return (<svg width={size} height={size} viewBox={`0 0 24 24`} fill={color} xmlns="http://www.w3.org/2000/svg">
-            <g clip-path="url(#clip0_3111_32727)">
-                <path d="M11.9999 15C6.98991 15 2.90991 18.36 2.90991 22.5C2.90991 22.78 3.12991 23 3.40991 23H20.5899C20.8699 23 21.0899 22.78 21.0899 22.5C21.0899 18.36 17.0099 15 11.9999 15Z" fill="currentColor" />
-                <path d="M15.71 3.66C14.81 2.64 13.47 2 12 2C10.6 2 9.32 2.57 8.41 3.51C7.54 4.41 7 5.65 7 7C7 7.94 7.26 8.82 7.73 9.57C7.98 10 8.3 10.39 8.68 10.71C9.55 11.51 10.71 12 12 12C13.83 12 15.41 11.02 16.28 9.57C16.54 9.14 16.74 8.66 16.85 8.16C16.95 7.79 17 7.4 17 7C17 5.72 16.51 4.55 15.71 3.66ZM13.87 7.92H12.94V8.89C12.94 9.41 12.52 9.83 12 9.83C11.48 9.83 11.06 9.41 11.06 8.89V7.92H10.13C9.61 7.92 9.19 7.5 9.19 6.98C9.19 6.46 9.61 6.04 10.13 6.04H11.06V5.15C11.06 4.63 11.48 4.21 12 4.21C12.52 4.21 12.94 4.63 12.94 5.15V6.04H13.87C14.39 6.04 14.81 6.46 14.81 6.98C14.81 7.5 14.39 7.92 13.87 7.92Z" fill="currentColor" />
-            </g>
-            <defs>
-                <clipPath id="clip0_3111_32727">
-                    <rect width="24" height="24" fill="white" />
-                </clipPath>
-            </defs>
-        </svg>);
-    };
-
-    const Amigos = ({ size = 15, color = "currentColor" }) => {
-        return (<svg width={size} height={size} viewBox={`0 0 24 24`} fill={color} xmlns="http://www.w3.org/2000/svg">
-            <g clip-path="url(#clip0_3111_32731)">
-                <path d="M12 2C9.38 2 7.25 4.13 7.25 6.75C7.25 9.32 9.26 11.4 11.88 11.49C11.96 11.48 12.04 11.48 12.1 11.49C12.12 11.49 12.13 11.49 12.15 11.49C12.16 11.49 12.16 11.49 12.17 11.49C14.73 11.4 16.74 9.32 16.75 6.75C16.75 4.13 14.62 2 12 2Z" fill="currentColor" />
-                <path d="M17.08 14.1596C14.29 12.2996 9.73996 12.2996 6.92996 14.1596C5.65996 14.9996 4.95996 16.1496 4.95996 17.3796C4.95996 18.6096 5.65996 19.7496 6.91996 20.5896C8.31996 21.5296 10.16 21.9996 12 21.9996C13.84 21.9996 15.68 21.5296 17.08 20.5896C18.34 19.7396 19.04 18.5996 19.04 17.3596C19.03 16.1396 18.34 14.9896 17.08 14.1596ZM14.33 16.5596L11.81 19.0796C11.69 19.1996 11.53 19.2596 11.37 19.2596C11.21 19.2596 11.05 19.1896 10.93 19.0796L9.66996 17.8196C9.42996 17.5796 9.42996 17.1796 9.66996 16.9396C9.90996 16.6996 10.31 16.6996 10.55 16.9396L11.37 17.7596L13.45 15.6796C13.69 15.4396 14.09 15.4396 14.33 15.6796C14.58 15.9196 14.58 16.3196 14.33 16.5596Z" fill="currentColor" />
-            </g>
-            <defs>
-                <clipPath id="clip0_3111_32731">
-                    <rect width="24" height="24" fill="white" />
-                </clipPath>
-            </defs>
-        </svg>);
-    };
 
     return (
         <div className="page-cont top">
@@ -267,24 +287,25 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
 
             <div className="mensajes-tabs" style={{ marginTop: 16 }}>
                 <button className={`mensajes-tab${tab === 'amigos' ? ' activo' : ''}`} onClick={() => setTab('amigos')}>
-                    <Amigos /> Amigos
+                    Amigos
                 </button>
                 <button className={`mensajes-tab${tab === 'solicitudes' ? ' activo' : ''}`} onClick={() => setTab('solicitudes')}>
-                    <UsuarioAdd /> Solicitudes
+                    Solicitudes
                     {incomingRequests.length > 0 && <span className="mensajes-badge">{incomingRequests.length}</span>}
                 </button>
-                <button className={`mensajes-tab${tab === 'compartidas' ? ' activo' : ''}`} onClick={() => setTab('compartidas')}>
-                    <RutinasIconFill size={15} /> Rutinas
+                <button
+                    className={`mensajes-tab${tab === 'compartidas' ? ' activo' : ''}`}
+                    onClick={() => { setTab('compartidas'); setActiveThreadId(null); }}
+                >
+                    Rutinas
                     {incomingShares.length > 0 && <span className="mensajes-badge">{incomingShares.length}</span>}
                 </button>
             </div>
 
-            {/* ---------- AMIGOS ---------- */}
             {tab === 'amigos' && (
                 <>
-                    <div className="mensajes-search">
-                        <div className="login-input">
-                            <Search size={18} />
+                    <div className="hist-search-row">
+                        <div className="hist-search-input">
                             <input
                                 type="text"
                                 placeholder="Buscar por usuario..."
@@ -299,7 +320,10 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                             <h3 className="mensajes-seccion-titulo">Resultados</h3>
                             {searching && <div className="header-sub">Buscando...</div>}
                             {!searching && searchResults.length === 0 && (
-                                <div className="mensajes-empty">No encontramos ese usuario.</div>
+                                <div className="mensajes-empty">
+                                    <SearchIcon size={20} style={{ marginBottom: 6 }} />
+                                    <div>No encontramos ese usuario.</div>
+                                </div>
                             )}
                             {searchResults.map(u => {
                                 const status = friendshipStatusWith(u.id);
@@ -333,7 +357,9 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
 
                     <h3 className="mensajes-seccion-titulo">Tus amigos</h3>
                     {friends.length === 0 && (
-                        <div className="mensajes-empty">Todavía no tenés amigos agregados. Buscalos arriba.</div>
+                        <div className="mensajes-empty">
+                            <div>Todavía no tenés amigos agregados. Buscalos arriba.</div>
+                        </div>
                     )}
                     {friends.map(f => (
                         <div className="mensajes-row" key={f.friendshipId}>
@@ -348,11 +374,15 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                                 </div>
                             </div>
                             <div className="mensajes-row-actions">
-                                <button className="btns primario" style={{ padding: '8px 12px' }} onClick={() => openShareModal(f)} title="Enviar rutina">
+                                <button
+                                    className="btn primario"
+                                    onClick={() => { setTab('compartidas'); setActiveThreadId(f.id); }}
+                                    title="Enviar rutina"
+                                >
                                     <MensajesIconFill size={16} />
                                 </button>
-                                <button className="btns eliminar" style={{ padding: '8px 12px' }} onClick={() => handleRemoveFriendship(f.friendshipId)} title="Eliminar amigo">
-                                    <Trash2 size={16} />
+                                <button className="btn eliminar msj" onClick={() => handleRemoveFriendship(f.friendshipId)} title="Eliminar amigo">
+                                    <TrashIcon size={16} />
                                 </button>
                             </div>
                         </div>
@@ -360,11 +390,14 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                 </>
             )}
 
-            {/* ---------- SOLICITUDES ---------- */}
             {tab === 'solicitudes' && (
                 <>
                     <h3 className="mensajes-seccion-titulo">Recibidas</h3>
-                    {incomingRequests.length === 0 && <div className="mensajes-empty">No tenés solicitudes pendientes.</div>}
+                    {incomingRequests.length === 0 && (
+                        <div className="mensajes-empty">
+                            <div>No tenés solicitudes pendientes.</div>
+                        </div>
+                    )}
                     {incomingRequests.map(r => (
                         <div className="mensajes-row" key={r.friendshipId}>
                             <div className="mensajes-avatar">{iniciales(r)}</div>
@@ -373,10 +406,10 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                                 <div className="mensajes-row-username">@{r.username}</div>
                             </div>
                             <div className="mensajes-row-actions">
-                                <button className="btns primario" style={{ padding: '8px 12px' }} onClick={() => handleRespondRequest(r.friendshipId, true)}>
+                                <button className="btn primario" onClick={() => handleRespondRequest(r.friendshipId, true)}>
                                     <Check size={16} />
                                 </button>
-                                <button className="btns eliminar" style={{ padding: '8px 12px' }} onClick={() => handleRespondRequest(r.friendshipId, false)}>
+                                <button className="btn eliminar msj" onClick={() => handleRespondRequest(r.friendshipId, false)}>
                                     <X size={16} />
                                 </button>
                             </div>
@@ -384,7 +417,11 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                     ))}
 
                     <h3 className="mensajes-seccion-titulo">Enviadas</h3>
-                    {outgoingRequests.length === 0 && <div className="mensajes-empty">No enviaste solicitudes pendientes.</div>}
+                    {outgoingRequests.length === 0 && (
+                        <div className="mensajes-empty">
+                            <div>No enviaste solicitudes pendientes.</div>
+                        </div>
+                    )}
                     {outgoingRequests.map(r => (
                         <div className="mensajes-row" key={r.friendshipId}>
                             <div className="mensajes-avatar">{iniciales(r)}</div>
@@ -393,8 +430,8 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                                 <div className="mensajes-row-username">@{r.username}</div>
                             </div>
                             <div className="mensajes-row-actions">
-                                <span className="header-sub" style={{ marginRight: 6 }}>Pendiente</span>
-                                <button className="btns eliminar" style={{ padding: '8px 12px' }} onClick={() => handleRemoveFriendship(r.friendshipId)} title="Cancelar">
+                                <span className="header-sub" style={{ marginRight: 2 }}>Pendiente</span>
+                                <button className="btn eliminar msj" onClick={() => handleRemoveFriendship(r.friendshipId)} title="Cancelar">
                                     <X size={16} />
                                 </button>
                             </div>
@@ -403,45 +440,117 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                 </>
             )}
 
-            {/* ---------- RUTINAS COMPARTIDAS ---------- */}
-            {tab === 'compartidas' && (
-                <>
-                    <h3 className="mensajes-seccion-titulo">Recibidas</h3>
-                    {incomingShares.length === 0 && <div className="mensajes-empty">No tenés rutinas por revisar.</div>}
-                    {incomingShares.map(s => (
-                        <div className="mensajes-row" key={s.id}>
-                            <div className="mensajes-avatar"><Dumbbell size={18} /></div>
-                            <div className="mensajes-row-info">
-                                <div className="mensajes-row-nombre">{s.routine_name}</div>
-                                <div className="mensajes-row-username">de @{s.from?.username || '...'}</div>
-                            </div>
-                            <div className="mensajes-row-actions">
-                                <button className="btns primario" style={{ padding: '8px 12px' }} onClick={() => handleRespondShare(s, true)} title="Agregar a mis rutinas">
-                                    <Check size={16} />
+            {/* ---------- RUTINAS: bandeja de chats ---------- */}
+            <div className='chat-cont'>
+                {tab === 'compartidas' && (
+                    activeConversation ? (
+                        <div className="rutina-chat">
+                            <div className="rutina-chat-header">
+                                <button className="mini-btn" onClick={() => setActiveThreadId(null)} aria-label="Volver">
+                                    <ChevronLeft size={16} />
                                 </button>
-                                <button className="btns eliminar" style={{ padding: '8px 12px' }} onClick={() => handleRespondShare(s, false)} title="Descartar">
-                                    <X size={16} />
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-
-                    <h3 className="mensajes-seccion-titulo">Enviadas</h3>
-                    {sentShares.length === 0 && <div className="mensajes-empty">No enviaste rutinas todavía.</div>}
-                    {sentShares.map(s => (
-                        <div className="mensajes-row" key={s.id}>
-                            <div className="mensajes-avatar"><Dumbbell size={18} /></div>
-                            <div className="mensajes-row-info">
-                                <div className="mensajes-row-nombre">{s.routine_name}</div>
-                                <div className="mensajes-row-username">
-                                    a @{s.to?.username || '...'} ·{' '}
-                                    {s.status === 'pending' ? 'pendiente' : s.status === 'accepted' ? 'aceptada' : 'rechazada'}
+                                <div className="mensajes-avatar">{iniciales(activeConversation)}</div>
+                                <div className="mensajes-row-info">
+                                    <div className="mensajes-row-nombre">{activeConversation.nombre || activeConversation.username}</div>
+                                    <div className="mensajes-row-username">@{activeConversation.username}</div>
                                 </div>
                             </div>
+
+                            <div className="rutina-chat-messages">
+                                {activeConversation.msgs.length === 0 ? (
+                                    <div className="mensajes-empty">
+                                        <Dumbbell size={20} style={{ marginBottom: 6 }} />
+                                        <div>Todavía no compartieron rutinas. Mandale la primera.</div>
+                                    </div>
+                                ) : activeConversation.msgs.map(s => {
+                                    const isMine = s.sender_id === userId;
+                                    const exCount = s.routine_data?.exercises?.length ?? 0;
+                                    return (
+                                        <div className={`rutina-bubble-row ${isMine ? 'out' : 'in'}`} key={s.id}>
+                                            <div className="rutina-bubble-col">
+                                                <div className="rutina-bubble">
+                                                    <div className="rutina-bubble-top">
+                                                        <Dumbbell size={14} /> {s.routine_name}
+                                                    </div>
+                                                    <div className="rutina-bubble-sub">{exCount} ejercicios</div>
+
+                                                    {isMine && (
+                                                        <div className="rutina-bubble-sub" style={{ marginTop: 6 }}>
+                                                            {s.status === 'pending' && 'Pendiente'}
+                                                            {s.status === 'accepted' && 'Aceptada ✓'}
+                                                            {s.status === 'rejected' && 'Rechazada'}
+                                                        </div>
+                                                    )}
+
+                                                    {!isMine && s.status === 'pending' && (
+                                                        <div className="rutina-bubble-actions">
+                                                            <button
+                                                                className="btns primario"
+                                                                style={{ width: 'auto', padding: '0 12px', borderRadius: 999, fontSize: '.75rem', fontWeight: 700, gap: 6 }}
+                                                                onClick={() => handleRespondShare(s, true)}
+                                                            >
+                                                                <Check size={14} /> Agregar
+                                                            </button>
+                                                            <button
+                                                                className="btn eliminar msj"
+                                                                onClick={() => handleRespondShare(s, false)}
+                                                                aria-label="Descartar"
+                                                            >
+                                                                <X size={14} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+
+                                                    {!isMine && s.status !== 'pending' && (
+                                                        <div className="rutina-bubble-sub" style={{ marginTop: 6 }}>
+                                                            {s.status === 'accepted' ? 'Agregada a tus rutinas ✓' : 'Descartada'}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <span className="rutina-bubble-time">{formatTime(s.created_at)}</span>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="rutina-chat-composer" onClick={() => openShareModal(activeConversation)}>
+                                <SendIcon size={15} />
+                                <span>Compartir una rutina...</span>
+                            </div>
                         </div>
-                    ))}
-                </>
-            )}
+                    ) : (
+                        <>
+                            {conversations.length === 0 && (
+                                <div className="mensajes-empty">
+                                    <Dumbbell size={20} style={{ marginBottom: 6 }} />
+                                    <div>Agregá amigos para poder compartirles rutinas.</div>
+                                </div>
+                            )}
+                            {conversations.map(c => (
+                                <div className="mensajes-row" key={c.id} >
+                                    <div className="mensajes-avatar">{iniciales(c)}</div>
+                                    <div className="mensajes-row-info">
+                                        <div className="chat-row-top">
+                                            <span className="mensajes-row-nombre">{c.nombre || c.username}</span>
+                                            {c.last && <span className="chat-row-time">{formatTime(c.last.created_at)}</span>}
+                                        </div>
+                                        <div className="chat-row-preview">
+                                            {c.last
+                                                ? `${c.last.sender_id === userId ? 'Vos: ' : ''}${c.last.routine_name}`
+                                                : 'Compartile tu primera rutina'}
+                                        </div>
+                                    </div>
+                                    {c.unread > 0 && <span className="mensajes-badge">{c.unread}</span>}
+
+                                    <button className='btn' onClick={() => setActiveThreadId(c.id)}><ChevronRight size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                        </>
+                    )
+                )}
+            </div>
 
             {/* ---------- MODAL: elegir rutina para enviar ---------- */}
             {shareModalFor && (
@@ -471,7 +580,7 @@ export default function Mensajes({ authSession, routines, onImportRoutine, onOpe
                                 onClick={confirmSendRoutine}
                                 disabled={!selectedRoutineId || sendingShare}
                             >
-                                {sendingShare ? <Loader2 size={16} className="login-spin" /> : <Send size={16} />}
+                                {sendingShare ? <Loader2 size={16} className="login-spin" /> : <SendIcon size={16} />}
                                 {sendingShare ? 'Enviando...' : 'Enviar'}
                             </button>
                         </div>

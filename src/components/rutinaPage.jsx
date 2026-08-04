@@ -1,11 +1,25 @@
 import React, { useMemo, useState } from 'react';
-import { Plus, Bell, Dumbbell, ChevronRight, Download, Upload, Send, Loader2, UserPlus, Check } from 'lucide-react';
+import {
+  Plus, Bell, Dumbbell, ChevronRight, Download, Upload, Loader2,
+  UserPlus, Check
+} from 'lucide-react';
 import "./rutina.css"
 import SwipeCard from "./SwipeCard.jsx"
 import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../lib/social';
+import { ExportIcon, ImportIcon, NotificationIcon, SendIcon } from '../icons/icons.jsx';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+const DIAS_CORTO = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+
+const eyebrowStyle = {
+  fontSize: '.7rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--texto-gris)',
+  fontFamily: "'Oswald', sans-serif",
+  fontWeight: 700,
+};
 
 export default function RutinaPage({
   routines = [], onNewRoutine, onSelectRoutine, onExport, onImport,
@@ -15,6 +29,7 @@ export default function RutinaPage({
   const hoy = new Date().getDay();
   const [showHoy, setShowHoy] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState(null); // 0-6 o null = todas
 
   // ---- envío masivo de rutinas ----
   const [sendAllModalOpen, setSendAllModalOpen] = useState(false);
@@ -30,6 +45,21 @@ export default function RutinaPage({
     return (routines ?? []).filter(r => r.days?.includes(hoy));
   }, [routines, hoy]);
 
+  const diasConRutina = useMemo(() => {
+    const s = new Set();
+    (routines ?? []).forEach(r => (r.days || []).forEach(d => s.add(d)));
+    return s;
+  }, [routines]);
+
+  const totalEjercicios = useMemo(() => {
+    return (routines ?? []).reduce((acc, r) => acc + (r.exercises?.length || 0), 0);
+  }, [routines]);
+
+  const listaMostrada = selectedDay === null
+    ? routines
+    : routines.filter(r => r.days?.includes(selectedDay));
+
+  const toggleDay = (i) => setSelectedDay(prev => (prev === i ? null : i));
   const cerrarFab = () => setFabOpen(false);
 
   async function openSendAllModal() {
@@ -80,7 +110,6 @@ export default function RutinaPage({
 
   const iniciales = (p) => (p?.nombre?.[0] || p?.username?.[0] || '?').toUpperCase();
 
-  // Items del FAB, en el orden en que aparecen (de arriba hacia abajo, debajo del +)
   const fabItems = [
     {
       key: 'nueva',
@@ -92,24 +121,60 @@ export default function RutinaPage({
     {
       key: 'enviar-todas',
       title: routines.length === 0 ? 'No hay rutinas para enviar' : 'Enviar todas a un amigo',
-      icon: <Send size={18} />,
+      icon: <SendIcon size={18} />,
       disabled: routines.length === 0,
       onClick: () => { if (routines.length > 0) openSendAllModal(); },
     },
     {
       key: 'export',
       title: routines.length === 0 ? 'No hay rutinas para exportar' : 'Exportar',
-      icon: <Upload size={18} />,
+      icon: <ExportIcon size={18} />,
       disabled: routines.length === 0,
       onClick: () => { if (routines.length > 0) { cerrarFab(); onExport(); } },
     },
     {
       key: 'import',
       title: 'Importar',
-      icon: <Download size={18} />,
+      icon: <ImportIcon size={18} />,
       onClick: () => { cerrarFab(); onImport(); },
     },
   ];
+
+  function renderCard(r) {
+    const muscles = [...new Set(r.exercises.map(e => e.muscle))].slice(0, 4);
+    const esHoy = r.days?.includes(hoy);
+    return (
+      <div
+        key={r.id}
+        className="rutina-card"
+        role="button"
+        tabIndex={0}
+        onClick={() => onSelectRoutine(r.id)}
+        onKeyDown={(e) => e.key === 'Enter' && onSelectRoutine(r.id)}
+        style={{ position: 'relative' }}
+      >
+        {esHoy && <span className="dot-hoy" title="Hoy toca" />}
+        <h3>{r.name}</h3>
+        <div className="card-ejercicios">{r.exercises.length} ejercicio{r.exercises.length !== 1 ? 's' : ''}</div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          {r.days?.length > 0 && (
+            <div className="card-dias">
+              {DIAS.map((d, i) => (
+                <span
+                  key={i}
+                  className={`card-dia-chip ${r.days.includes(i) ? 'activo' : 'no'} ${i === hoy ? 'es-hoy' : ''}`}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="card-musc">{muscles.map(m => <span key={m} className="musc-span">{m}</span>)}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -129,7 +194,7 @@ export default function RutinaPage({
                 style={{ position: 'relative' }}
                 onClick={() => setShowHoy(v => !v)}
               >
-                <Bell size={20} />
+                <NotificationIcon size={20} />
                 <span className="notif-dot" />
               </div>
               {showHoy && (
@@ -138,7 +203,7 @@ export default function RutinaPage({
                   <div className="notif-pop" onClick={(e) => e.stopPropagation()}>
 
                     <div className="notif-pop-head">
-                      <div className="notif-pop-icon"><Bell size={14} /></div>
+                      <div className="notif-pop-icon"><NotificationIcon size={14} /></div>
                       <div>
                         <div className="notif-pop-title">Hoy toca</div>
                         <div className="notif-pop-sub">
@@ -217,44 +282,70 @@ export default function RutinaPage({
             <h3>Aún no tienes rutinas</h3>
             <p>Crea tu primera rutina para organizar tus ejercicios, series y empezar a entrenar.</p>
           </div>
-        ) : routines.map(r => {
-          const muscles = [...new Set(r.exercises.map(e => e.muscle))].slice(0, 4);
-          const esHoy = r.days?.includes(hoy);
-          const leftAction = swipeLeftAction !== 'none' ? getSwipeActionFor?.(swipeLeftAction, r.id) : null;
-          const rightAction = swipeRightAction !== 'none' ? getSwipeActionFor?.(swipeRightAction, r.id) : null;
-          return (
-            <div
-              key={r.id}
-              className="rutina-card"
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelectRoutine(r.id)}
-              onKeyDown={(e) => e.key === 'Enter' && onSelectRoutine(r.id)}
-              style={{ position: 'relative' }}
-            >
-              {esHoy && <span className="dot-hoy" title="Hoy toca" />}
-              <h3>{r.name}</h3>
-              <div className="card-ejercicios">{r.exercises.length} ejercicio{r.exercises.length !== 1 ? 's' : ''}</div>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                {r.days?.length > 0 && (
-                  <div className="card-dias">
-                    {DIAS.map((d, i) => (
-                      <span
-                        key={i}
-                        className={`card-dia-chip ${r.days.includes(i) ? 'activo' : 'no'} ${i === hoy ? 'es-hoy' : ''}`}
-                      >
-                        {d}
-                      </span>
-                    ))}
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, marginTop:20}}>
+              {[
+                { n: routines.length, label: 'Rutinas' },
+                { n: rutinasDeHoy.length, label: 'Hoy' },
+                { n: totalEjercicios, label: 'Ejercicios' },
+              ].map(s => (
+                <div
+                  key={s.label}
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    background: 'var(--componente)',
+                    border: '1px solid var(--borde)',
+                    borderRadius: 12,
+                    padding: '14px 6px',
+                  }}
+                >
+                  <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '1.4rem', color: 'var(--acento)' }}>
+                    {s.n}
                   </div>
-                )}
+                  <div style={{ ...eyebrowStyle, fontSize: '.62rem', marginTop: 2 }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
 
-                <div className="card-musc">{muscles.map(m => <span key={m} className="musc-span">{m}</span>)}</div>
+            <div style={{ marginBottom: 22 }}>
+              <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Semana</div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => setSelectedDay(null)}
+                  className={`dia-chip ${selectedDay === null ? 'activo' : ''}`}
+                  style={{ width: 'auto', borderRadius: 16, padding: '0 12px' }}
+                  title="Todas"
+                >
+                  Todas
+                </button>
+                {DIAS_CORTO.map((d, i) => diasConRutina.has(i) && (
+                  <button
+                    key={i}
+                    onClick={() => toggleDay(i)}
+                    className={`dia-chip ${selectedDay === i ? 'activo' : ''} ${i === hoy ? 'esHoy' : ''}`}
+                    title={DIAS[i]}
+                  >
+                    {d}
+                  </button>
+                ))}
               </div>
             </div>
-          );
-        })}
+
+            <div style={{ marginBottom: 10 }}>
+              <div style={eyebrowStyle}>
+                {selectedDay === null ? 'Todas tus rutinas' : `Rutinas de ${DIAS[selectedDay]}`}
+              </div>
+            </div>
+
+            {listaMostrada.length === 0 ? (
+              <div className="mensajes-empty">No tenés rutinas programadas para {DIAS[selectedDay]}.</div>
+            ) : (
+              listaMostrada.map(renderCard)
+            )}
+          </>
+        )}
       </div>
 
       {sendAllModalOpen && (
@@ -302,7 +393,7 @@ export default function RutinaPage({
                 onClick={confirmSendAll}
                 disabled={!selectedFriendId || sending}
               >
-                {sending ? <Loader2 size={16} className="login-spin" /> : <Send size={16} />}
+                {sending ? <Loader2 size={16} className="login-spin" /> : ""}
                 {sending ? `Enviando ${sendProgress} de ${routines.length}...` : 'Enviar todas'}
               </button>
             </div>

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Dumbbell, Flame, Bell, PlayCircle, ChevronRight, Play } from 'lucide-react';
 import './OnboardingTour.css';
+import { NotificationIcon, PlayIcon } from '../icons/icons';
 
 // Contenido de las 4 pantallas del tour. Cambiá el texto/ícono acá nomás.
 const SLIDES = [
@@ -10,7 +11,7 @@ const SLIDES = [
         text: 'Creá rutinas a tu medida: ejercicios, series, pesos y reps. Todo queda guardado y listo para la próxima.',
     },
     {
-        icon: Play,
+        icon: PlayIcon,
         title: 'Entrená sin distracciones',
         text: 'Arrancá una sesión y anotá cada serie en el momento. El descanso entre series se controla solo.',
     },
@@ -20,7 +21,7 @@ const SLIDES = [
         text: 'Cada entrenamiento queda en tu historial: volumen, series y racha de días seguidos entrenando.',
     },
     {
-        icon: Bell,
+        icon: NotificationIcon,
         title: 'No te olvides de entrenar',
         text: 'Elegí los días de cada rutina y activá recordatorios para que TrainUp te avise a la hora que quieras.',
     },

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { X, Share2, Trophy, Check } from 'lucide-react';
 import { sileo } from 'sileo';
 import './resumenRutina.css';
+import { AirDrop } from '../icons/icons';
 
 function formatDuracion(ms) {
     const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -67,7 +68,7 @@ export default function ResumenRutina({ session, routineName, prs = [], onClose,
                     <h3 style={{ margin: 0 }}>Rutina terminada</h3>
                     <div className='acciones-cont'>
                         <button type="button" className="mini-btn" disabled={procesando} onClick={handleCompartir}>
-                            <Share2 size={14} />
+                            <AirDrop size={14} />
                         </button>
                         <button type="button" className="mini-btn" title="Cerrar" onClick={onClose}>
                             <X size={16} />

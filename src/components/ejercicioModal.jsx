@@ -3,6 +3,7 @@ import { X, Search, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import Select from "./select";
 import EjercicioCard from "./ejercicioCard";
 import ejerciciosLocal from "../data/ejerciciosData";
+import { SearchIcon } from "../icons/icons";
 
 const PAGE_SIZE = 12;
 
@@ -104,7 +105,7 @@ export default function EjercicioModal({
         <div className="modal-filters">
           <div className="modal-searchbar">
             <div className="modal-searchbar-inner">
-              <Search size={14} className="modal-search-icon" />
+              <SearchIcon size={14} className="modal-search-icon" />
               <input
                 ref={searchInputRef}
                 type="text"
@@ -158,7 +159,6 @@ export default function EjercicioModal({
               <strong>{selectedExercise.nombre}</strong>
             </div>
             <button className="btns primario ejercicio" onClick={handleSaveSelection}>
-              <Check size={15} />
               Guardar
             </button>
           </div>

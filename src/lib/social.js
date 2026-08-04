@@ -19,13 +19,39 @@ export async function fetchFriendships(userId) {
 }
 
 export async function sendFriendRequest(userId, addresseeId) {
+    // Buscamos si ya existe una fila entre estos dos usuarios (en cualquier dirección)
+    const { data: existing, error: findError } = await supabase
+        .from('friendships')
+        .select('id, status')
+        .or(
+            `and(requester_id.eq.${userId},addressee_id.eq.${addresseeId}),` +
+            `and(requester_id.eq.${addresseeId},addressee_id.eq.${userId})`
+        )
+        .maybeSingle();
+
+    if (findError) return { data: null, error: findError };
+
+    if (existing) {
+        // Ya existe una fila (rejected, removed, etc) -> la reactivamos
+        // como si el userId actual fuera el nuevo requester.
+        return supabase
+            .from('friendships')
+            .update({
+                requester_id: userId,
+                addressee_id: addresseeId,
+                status: 'pending',
+                updated_at: new Date().toISOString(),
+            })
+            .eq('id', existing.id);
+    }
+
+    // No existe -> insert normal
     return supabase.from('friendships').insert({
         requester_id: userId,
         addressee_id: addresseeId,
         status: 'pending',
     });
 }
-
 export async function respondFriendRequest(friendshipId, accept) {
     return supabase
         .from('friendships')

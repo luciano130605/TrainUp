@@ -8,11 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Dumbbell,
-  Eye,
-  EyeOff,
   Flame,
   Loader2,
-  Lock,
   LogIn,
   Mail,
   Ruler,
@@ -24,7 +21,10 @@ import {
 import { supabase, supabaseConfigured } from '../lib/supabaseClient';
 import { ensureUserProfile } from '../lib/profile';
 import './login.css';
+import UserIcon from "../icons/user";
+import {Password, Eye, EyeSlash, MailIcon, Balanza} from "../icons/icons";
 import Logo from "../../public/logo"
+import RutinaIcon from '../icons/rutinas';
 
 export const GENEROS = [
   { value: 'femenino', label: 'Femenino' },
@@ -34,9 +34,9 @@ export const GENEROS = [
 ];
 
 export const OBJETIVOS = [
-  { value: 'ganar_musculo', label: 'Ganar músculo', icon: Dumbbell },
+  { value: 'ganar_musculo', label: 'Ganar músculo', icon: RutinaIcon },
   { value: 'perder_grasa', label: 'Perder grasa', icon: Flame },
-  { value: 'mantener', label: 'Mantenerme', icon: Scale },
+  { value: 'mantener', label: 'Mantenerme', icon: Balanza },
   { value: 'mejorar_fuerza', label: 'Mejorar fuerza', icon: BicepsFlexed },
 ];
 
@@ -200,7 +200,6 @@ export default function Login({ onRegisteringChange } = {}) {
     }
   }
 
-  // ---------- REGISTRO: paso 1 ----------
   async function handleStep1Submit(event) {
     event.preventDefault();
     setError('');
@@ -429,7 +428,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Usuario o email</span>
               <div className="login-input">
-                <User size={18} />
+                <UserIcon size={18} />
                 <input
                   autoComplete="username"
                   onChange={(e) => setLoginIdentifier(e.target.value)}
@@ -443,7 +442,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Contraseña</span>
               <div className="login-input">
-                <Lock size={18} />
+                <Password size={18} />
                 <input
                   autoComplete="current-password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -457,7 +456,7 @@ export default function Login({ onRegisteringChange } = {}) {
                   onClick={() => setShowPassword((v) => !v)}
                   type="button"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </label>
@@ -524,7 +523,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Usuario</span>
               <div className="login-input">
-                <User size={18} />
+                <UserIcon size={18} />
                 <input
                   autoComplete="username"
                   onChange={(e) => { setUsername(normalizeUsername(e.target.value)); setUsernameStatus(null); }}
@@ -543,7 +542,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Nombre</span>
               <div className="login-input">
-                <User size={18} />
+                <UserIcon size={18} />
                 <input
                   autoComplete="given-name"
                   onChange={(e) => updateProfile('nombre', e.target.value)}
@@ -557,7 +556,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Email</span>
               <div className="login-input">
-                <Mail size={18} />
+                <MailIcon size={18} />
                 <input
                   autoComplete="email"
                   inputMode="email"
@@ -572,7 +571,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Contraseña</span>
               <div className="login-input">
-                <Lock size={18} />
+                <Password size={18} />
                 <input
                   autoComplete="new-password"
                   onChange={(e) => setPassword(e.target.value)}
@@ -586,7 +585,7 @@ export default function Login({ onRegisteringChange } = {}) {
                   onClick={() => setShowPassword((v) => !v)}
                   type="button"
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showPassword ? <EyeSlash size={18} /> : <Eye size={18} />}
                 </button>
               </div>
             </label>
@@ -594,7 +593,7 @@ export default function Login({ onRegisteringChange } = {}) {
             <label className="login-field">
               <span>Repetir contraseña</span>
               <div className="login-input">
-                <Lock size={18} />
+                <Password size={18} />
                 <input
                   autoComplete="new-password"
                   onChange={(e) => setPasswordConfirm(e.target.value)}
@@ -641,7 +640,6 @@ export default function Login({ onRegisteringChange } = {}) {
               <label className="login-field">
                 <span>Nombre</span>
                 <div className="login-input step3">
-                  <User size={18} />
                   <input
                     onChange={(e) => updateProfile('nombre', e.target.value)}
                     type="text"
@@ -652,7 +650,6 @@ export default function Login({ onRegisteringChange } = {}) {
               <label className="login-field">
                 <span>Apellido</span>
                 <div className="login-input step3">
-                  <User size={18} />
                   <input
                     onChange={(e) => updateProfile('apellido', e.target.value)}
                     placeholder="Opcional"
@@ -694,7 +691,6 @@ export default function Login({ onRegisteringChange } = {}) {
               <label className="login-field">
                 <span>Altura (cm)</span>
                 <div className="login-input step3">
-                  <Ruler size={18} />
                   <input
                     inputMode="decimal"
                     onChange={(e) => updateProfile('alturaCm', e.target.value.replace(/[^0-9.]/g, ''))}
@@ -707,7 +703,6 @@ export default function Login({ onRegisteringChange } = {}) {
               <label className="login-field">
                 <span>Peso (kg)</span>
                 <div className="login-input step3">
-                  <Scale size={18} />
                   <input
                     inputMode="decimal"
                     onChange={(e) => updateProfile('pesoKg', e.target.value.replace(/[^0-9.]/g, ''))}
@@ -758,7 +753,7 @@ export default function Login({ onRegisteringChange } = {}) {
                 Atrás
               </button>
               <button className="btns primario" disabled={loading} type="submit">
-                {loading ? <Loader2 size={18} className="login-spin" /> : <Check size={18} />}
+                {loading ? <Loader2 size={18} className="login-spin" /> : ""}
                 {loading ? 'Guardando...' : 'Guardar'}
               </button>
             </div>

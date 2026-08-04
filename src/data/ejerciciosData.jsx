@@ -3,7 +3,7 @@ const ejerciciosLocal = [
     { id: "0001", nombre: "Press de banca (Barra)", gif: "/gifs/press-banca-barra.gif", parteDelCuerpo: "Pecho", subMusculos: ["Triceps", "Hombros"], equipamiento: "Barra" },
     { id: "0002", nombre: "Press de banca inclinado (Mancuernas)", gif: "/gifs/press-banca-inclinado-manc.jpg", parteDelCuerpo: "Pecho", subMusculos: ["Triceps", "Hombros"], equipamiento: "Mancuernas" },
     { id: "0003", nombre: "Aperturas (Polea)", gif: "/gifs/aperturas-polea.jpg", parteDelCuerpo: "Pecho", subMusculos: [], equipamiento: "Polea" },
-    { id: "0060", nombre: "Press de banca smith (Maquina)", gif: "/gifs/press-banca-smith.mp4", parteDelCuerpo: "Pecho", subMusculos: ["Hombros", "triceps"], equipamiento: "Maquinas" },
+    { id: "0060", nombre: "Press de banca smith (Maquina)", gif: "/gifs/press-banca-smith.jpg", parteDelCuerpo: "Pecho", subMusculos: ["Hombros", "triceps"], equipamiento: "Maquinas" },
 
     /* triceps */
     { id: "0004", nombre: "Extensión de tríceps por encima de la cabeza (Polea)", gif: "/gifs/extension-cabeza-polea.gif", parteDelCuerpo: "Triceps", subMusculos: [], equipamiento: "Polea" },

@@ -6,6 +6,7 @@ import ResumenRutina from './ResumenRutina';
 import "./rutina.css"
 import { DescansoBotonFlotante, resetDescansoState } from './TiempoDescansoToast';
 import { sileo } from 'sileo';
+import { AddSquare, Edit, Maxime, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar, Rotate, TickIcon } from '../icons/icons';
 
 function formatElapsedFull(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -69,7 +70,7 @@ function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
           title={remaining === 0 ? 'Reiniciar' : 'Detener'}
           onClick={reset}
         >
-          {remaining === 0 ? <RotateCcw size={13} /> : <Pause size={13} />}
+          {remaining === 0 ? <Rotate size={13} /> : <PauseIcon size={13} />}
         </button>
       </div>
     );
@@ -85,7 +86,7 @@ function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
         onChange={e => onChange(e.target.value)}
       />
       <button className={`mini-btn`} title="Iniciar" disabled={disabled} onClick={start}>
-        <Play size={13} />
+        <PlayIcon size={13} />
       </button>
     </div>
   );
@@ -286,14 +287,14 @@ export default function RutinaCurso({
         <div style={{ display: 'flex', gap: 6 }}>
 
           <div className="btn" onClick={onCancel}><X size={18} /></div>
-          <div className="btn" title="Achicar y ver rutinas" onClick={onMinimize}><ChevronDown size={18} /></div>
+          <div className="btn" title="Achicar y ver rutinas" onClick={onMinimize}><Minimize size={18} /></div>
         </div>
         <div>
           <div className="tiempo" style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
             {formatElapsedFull(elapsedMs)}
             {onToggleSessionPause && (
               <span className={`mini-btn`} title={s.paused ? 'Reanudar' : 'Pausar'} onClick={onToggleSessionPause}>
-                {s.paused ? <Play size={13} /> : <Pause size={13} />}
+                {s.paused ? <PlayIcon size={13} /> : <PauseIcon size={13} />}
               </span>
             )}
           </div>
@@ -308,7 +309,7 @@ export default function RutinaCurso({
                 onClick={() => setShowDone(v => !v)}
                 style={{ position: 'relative' }}
               >
-                <CheckCircle2 size={16} color={showDone ? 'var(--acento)' : undefined} />
+                <TickIcon size={16} color={showDone ? 'var(--acento)' : undefined} />
                 <span
                   style={{
                     position: 'absolute', top: -4, right: -4,
@@ -322,7 +323,7 @@ export default function RutinaCurso({
               </div>
             )}
             <div className="btn" title={allCollapsed ? 'Expandir todo' : 'Colapsar todo'} onClick={toggleAll}>
-              {allCollapsed ? <ChevronsUpDown size={16} /> : <ChevronsDownUp size={16} />}
+              {allCollapsed ? <AddSquare size={16} /> : <MinusSquare size={16} />}
             </div>
           </div>
         ) : <div style={{ width: 40 }}></div>}
@@ -398,7 +399,7 @@ export default function RutinaCurso({
                       className="ejercicio-placeholder"
                       style={{ width: 44, height: 44, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      <Dumbbell size={20} strokeWidth={1.5} />
+                      
                     </div>
                   )}
 
@@ -425,17 +426,17 @@ export default function RutinaCurso({
                 <div className="ejercicio-acciones curso" onClick={e => e.stopPropagation()}>
                   {gif && (
                     <button className="mini-btn" title="Ver gif" onClick={() => setGifPreview({ src: gif, nombre })}>
-                      <Eye size={14} />
+                      <Maxime size={14} />
                     </button>
                   )}
                   {onEditExercise && (
                     <button className="mini-btn" title="Editar ejercicio" onClick={() => onEditExercise(exi)}>
-                      <Pencil size={14} />
+                      <Edit size={14} />
                     </button>
                   )}
                   {onOpenPicker && (
                     <button className="mini-btn" title="Cambiar ejercicio" onClick={() => onOpenPicker(exi)}>
-                      <Repeat size={14} />
+                      <Remplazar size={14} />
                     </button>
                   )}
                 </div>
@@ -449,7 +450,7 @@ export default function RutinaCurso({
                     const isTimed = esEjercicioDeTiempo(ex);
                     return (
                       <div className="ejercicio-inputs-header">
-                        <span></span>
+
                         {isTimed ? <span className='segs'>Segundos</span> : <><span>Kg</span><span>Reps</span></>}
                       </div>
                     );
@@ -459,7 +460,14 @@ export default function RutinaCurso({
                     const isTimed = esEjercicioDeTiempo(ex);
                     return (
                       <div key={set.id ?? si} className={`ejercicio-inputs-cont ${set.done ? 'done' : ''}`}>
-                        <span className="ejercicio-num">{si + 1}</span>
+                        <span
+                          style={{
+                            width: 22, height: 22, borderRadius: 6, flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: '', color: 'var(--texto)',
+                            fontFamily: "'JetBrains Mono', monospace", fontSize: '.7rem', fontWeight: 700,
+                          }}
+                        >{si + 1}</span>
                         {isTimed ? (
                           <TimerInput
                             value={set.reps}

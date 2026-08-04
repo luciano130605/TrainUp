@@ -1,17 +1,30 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
-  ChevronLeft, ChevronDown, MoreVertical, Filter, ChevronsUpDown, ChevronsDownUp,
-  Check, X, Bell, BellOff, TrendingUp, TrendingDown, BarChart3,
-  Play, Send, Loader2, UserPlus,
+  ChevronLeft, ChevronDown, ChevronsUpDown, ChevronsDownUp,
+  Check,
+  Loader2,
+  Upload,
 } from 'lucide-react';
 import "./rutina.css"
 import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../lib/social';
+import { Chart, PlayIcon, MoreHorizontal, TrenUp, TrenDown, MinusSquare, AddSquare } from '../icons/icons';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-// Paleta fija para el indicador de volumen por músculo (no depende del tema)
 const MUSCLE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+
+const eyebrowStyle = {
+  fontSize: '.7rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--texto-gris)',
+  fontFamily: "'Oswald', sans-serif",
+  fontWeight: 700,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+};
 
 function formatRelative(ts) {
   if (!ts) return '';
@@ -31,85 +44,39 @@ function formatRelative(ts) {
   return `hace ${years} año${years > 1 ? 's' : ''}`;
 }
 
-// Contenido de estadísticas compartido entre el sileo y el modal fallback
-function StatsContent({ routine, lastEntry, muscleVolume, exerciseHistoryMap }) {
+function MuscleChip({ active, color, onClick, children }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' }}>
-      <div>
-        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4 }}>Última sesión</div>
-        <div>
-          {lastEntry
-            ? `${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series · ${Math.round(lastEntry.totalVolume).toLocaleString('es-AR')} kg`
-            : 'Sin sesiones registradas todavía'}
-        </div>
-      </div>
-
-      {muscleVolume.length > 0 && (
-        <div>
-          <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>Volumen por músculo</div>
-          <div style={{ display: 'flex', width: '90%', height: 6, borderRadius: 4, overflow: 'hidden' }}>
-            {muscleVolume.map((mv, i) => (
-              <div
-                key={mv.muscle}
-                title={`${mv.muscle}: ${Math.round(mv.pct)}%`}
-                style={{ width: `${mv.pct}%`, background: MUSCLE_COLORS[i % MUSCLE_COLORS.length] }}
-              />
-            ))}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 6 }}>
-            {muscleVolume.map((mv, i) => (
-              <span key={mv.muscle} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, opacity: 0.85 }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: MUSCLE_COLORS[i % MUSCLE_COLORS.length], display: 'inline-block'
-                }} />
-                {mv.muscle} · {Math.round(mv.pct)}%
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-
-    </div>
-  );
-}
-
-// Fallback si sileo.action no puede mostrar este contenido (p.ej. layout demasiado rico para un toast)
-function EstadisticasModal({ routine, history, onClose, lastEntry, muscleVolume, exerciseHistoryMap }) {
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose(); };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  return (
-    <div
+    <button
+      type="button"
+      onClick={onClick}
       style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '8px 14px',
+        borderRadius: 20,
+        whiteSpace: 'nowrap',
+        flexShrink: 0,
+        fontSize: '.72rem',
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '.03em',
+        fontFamily: "'Oswald', sans-serif",
+        border: active ? '1px solid var(--acento)' : '1px solid var(--borde)',
+        background: active ? 'var(--acento)' : 'var(--componente)',
+        color: active ? 'var(--txt-btn)' : 'var(--texto)',
+        cursor: 'pointer',
+        transition: 'all .3s',
       }}
-      onClick={onClose}
     >
-      <div
-        className="sileo-cont"
-        style={{ maxWidth: 380, width: '90%', maxHeight: '80vh', overflowY: 'auto', padding: 20, position: 'relative' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <h3 style={{ margin: 0 }}>Estadísticas · {routine.name}</h3>
-          <button type="button" className="btn" onClick={onClose} title="Cerrar">
-            <X size={16} />
-          </button>
-        </div>
-        <StatsContent
-          routine={routine}
-          lastEntry={lastEntry}
-          muscleVolume={muscleVolume}
-          exerciseHistoryMap={exerciseHistoryMap}
-        />
-      </div>
-    </div>
+      {color && (
+        <span style={{
+          width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+          background: active ? 'var(--txt-btn)' : color,
+        }} />
+      )}
+      {children}
+    </button>
   );
 }
 
@@ -121,27 +88,12 @@ export default function RutinaDetalle({
   const [collapsed, setCollapsed] = useState(() => new Set());
   const [allCollapsed, setAllCollapsed] = useState(false);
   const [muscleFilter, setMuscleFilter] = useState(null);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [statsOpen, setStatsOpen] = useState(false);
-  const [reminderOpen, setReminderOpen] = useState(false);
-  const filterRef = useRef(null);
   const kebabRef = useRef(null);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [friends, setFriends] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
   const [selectedFriendId, setSelectedFriendId] = useState(null);
   const [sending, setSending] = useState(false);
-
-  useEffect(() => {
-    if (!filterOpen) return;
-    const handleClickOutside = (e) => {
-      if (filterRef.current && !filterRef.current.contains(e.target)) {
-        setFilterOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [filterOpen]);
 
   useEffect(() => {
     if (!kebabOpen) return;
@@ -160,6 +112,14 @@ export default function RutinaDetalle({
   const muscles = useMemo(() => {
     return Array.from(new Set(routine.exercises.map(ex => ex.muscle).filter(Boolean)));
   }, [routine.exercises]);
+
+  const muscleColorMap = useMemo(() => {
+    const map = {};
+    muscles.forEach((m, i) => { map[m] = MUSCLE_COLORS[i % MUSCLE_COLORS.length]; });
+    return map;
+  }, [muscles]);
+
+  const colorFor = (m) => muscleColorMap[m] || 'var(--texto-gris)';
 
   const exercises = useMemo(() => {
     if (!muscleFilter) return routine.exercises;
@@ -295,40 +255,6 @@ export default function RutinaDetalle({
 
   const iniciales = (p) => (p?.nombre?.[0] || p?.username?.[0] || '?').toUpperCase();
 
-  // NUEVO: estadísticas — intenta abrir un sileo.action; si falla, cae al modal
-  const handleOpenStats = () => {
-    onToggleKebab();
-    let toastId;
-    try {
-      toastId = sileo.action({
-        title: `Estadísticas · ${routine.name}`,
-        duration: null,
-        description: (
-          <StatsContent
-            routine={routine}
-            lastEntry={lastEntry}
-            muscleVolume={muscleVolume}
-            exerciseHistoryMap={exerciseHistoryMap}
-          />
-        ),
-        button: {
-          title: "Cerrar",
-          className: "btns agregar",
-          onClick: () => sileo.dismiss(toastId),
-        },
-        styles: {
-          container: "sileo-cont",
-          title: "sileo-title",
-          description: "sileo-description",
-          button: "btns agregar sileo",
-        },
-      });
-      if (!toastId) throw new Error('sileo.action no devolvió id');
-    } catch (e) {
-      setStatsOpen(true);
-    }
-  };
-
   const toggleCollapseAll = (e) => {
     e.stopPropagation();
     if (allCollapsed) {
@@ -340,27 +266,20 @@ export default function RutinaDetalle({
     }
   };
 
-  const selectMuscle = (m) => {
-    setMuscleFilter(m);
-    setFilterOpen(false);
-  };
-
   return (
     <>
       <div className="header-cont" ref={kebabRef}>
         <div className="btn" title='Volver' onClick={onBack}><ChevronLeft size={20} /></div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button className="btn primario" title='Empezar' onClick={onStartSession}><Play size={20} /></button>
-          <div className="btn" title='Opciones' onClick={onToggleKebab}><MoreVertical size={18} /></div>
+          <button className="btn primario" title='Empezar' onClick={onStartSession}><PlayIcon size={20} /></button>
+          <div className="btn" title='Opciones' onClick={onToggleKebab}
+          ><MoreHorizontal size={18} /></div>
         </div>
         {kebabOpen && (
           <div className="kebab-menu">
             <div className="item" onClick={onEdit}>Editar rutina</div>
             <div className="item" onClick={() => handleRenombrarRapido(routine.id, routine.name)}>Renombrar rápido</div>
-            <div className="item" onClick={handleOpenStats}>
-              Ver estadísticas
-            </div>
             <div className="item" onClick={onDuplicate}>Duplicar rutina</div>
             <div className="item" onClick={openSendModal}>Enviar a un amigo</div>
             <div className="item" onClick={() => onShare(routine.id)}>Compartir</div>
@@ -373,66 +292,92 @@ export default function RutinaDetalle({
       <div className="page-cont top">
         <h1>{routine.name}</h1>
 
-        <div className="header-sub" style={{ marginTop: 2, marginBottom: 12, fontSize: ".6rem" }}>
+        <div className="header-sub" style={{ marginTop: 2, marginBottom: 18, fontSize: ".6rem" }}>
           {lastEntry
-            ? `Última vez: ${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series`
+            ? `Última vez: ${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series · ${Math.round(lastEntry.totalVolume).toLocaleString('es-AR')} kg`
             : 'Todavía no registraste ninguna sesión de esta rutina'}
         </div>
 
-
-
-        <div
-          className="header-sub"
-          style={{ marginBottom: 20, display: "flex", alignItems: "center", justifyContent: "space-between" }}
-        >
-          <span>
-            {exercises.length} ejercicios · {exercises.reduce((s, e) => s + e.sets.length, 0)} series totales
-            {muscleFilter ? ` · filtrado: ${muscleFilter}` : ''}
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, position: "relative" }}>
-            <button
-              type="button"
-              className="btn"
-              title={allCollapsed ? "Expandir todo" : "Colapsar todo"}
-              onClick={toggleCollapseAll}
+        <div style={{ display: 'flex', gap: 10, marginBottom: 22 }}>
+          {[
+            { n: routine.exercises.length, label: 'Ejercicios' },
+            { n: totalSets, label: 'Series' },
+            { n: lastEntry ? Math.round(lastEntry.totalVolume).toLocaleString('es-AR') : '—', label: 'Último volumen' },
+          ].map(s => (
+            <div
+              key={s.label}
+              style={{
+                flex: 1,
+                textAlign: 'center',
+                background: 'var(--componente)',
+                border: '1px solid var(--borde)',
+                borderRadius: 12,
+                padding: '14px 6px',
+              }}
             >
-              {allCollapsed ? <ChevronsUpDown size={14} /> : <ChevronsDownUp size={14} />}
-            </button>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '1.3rem', color: 'var(--acento)' }}>
+                {s.n}
+              </div>
+              <div style={{ ...eyebrowStyle, fontSize: '.6rem', marginTop: 2, justifyContent: 'center' }}>{s.label}</div>
+            </div>
+          ))}
+        </div>
 
-            <div ref={filterRef} style={{ position: "relative" }}>
-              <button
-                type="button"
-                className="btn"
-                title="Filtrar por músculo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setFilterOpen(v => !v);
-                }}
-
-              >
-                <Filter size={14} />
-              </button>
-
-              {filterOpen && (
-                <div className="kebab-filter">
-                  <div onClick={() => selectMuscle(null)}>
-                    <span className={`span-kebap todos ${!muscleFilter ? "select" : ""}`}>
-                      Todos
-                      {!muscleFilter && <Check size={14} />}
-                    </span>
-                  </div>
-                  {muscles.map(m => (
-                    <div key={m} onClick={() => selectMuscle(m)}>
-                      <span className={`span-kebap todos ${muscleFilter === m ? "select" : ""}`}>
-                        {m}
-                        {muscleFilter === m && <Check size={14} />}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* ---- Distribución muscular ---- */}
+        {muscleVolume.length > 0 && (
+          <div style={{ marginBottom: 22 }}>
+            <div style={{ ...eyebrowStyle, marginBottom: 8 }}>
+              <Chart size={13} /> Distribución muscular
+            </div>
+            <div style={{ display: 'flex', width: '100%', height: 7, borderRadius: 4, overflow: 'hidden' }}>
+              {muscleVolume.map(mv => (
+                <div
+                  key={mv.muscle}
+                  title={`${mv.muscle}: ${Math.round(mv.pct)}%`}
+                  style={{ width: `${mv.pct}%`, background: colorFor(mv.muscle) }}
+                />
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+              {muscleVolume.map(mv => (
+                <span key={mv.muscle} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--texto-gris)' }}>
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: colorFor(mv.muscle), display: 'inline-block' }} />
+                  {mv.muscle} · {Math.round(mv.pct)}%
+                </span>
+              ))}
             </div>
           </div>
+        )}
+
+        {/* ---- Filtro por músculo + colapsar ---- */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+          <div style={eyebrowStyle}>
+            Ejercicios · {exercises.length}
+          </div>
+          <button
+            type="button"
+            className="mini-btn"
+            title={allCollapsed ? "Expandir todo" : "Colapsar todo"}
+            onClick={toggleCollapseAll}
+          >
+            {allCollapsed ? <AddSquare size={14} /> : <MinusSquare size={14} />}
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 18, paddingBottom: 2 }}>
+          <MuscleChip active={!muscleFilter} onClick={() => setMuscleFilter(null)}>
+            Todos
+          </MuscleChip>
+          {muscles.map(m => (
+            <MuscleChip
+              key={m}
+              active={muscleFilter === m}
+              color={colorFor(m)}
+              onClick={() => setMuscleFilter(prev => (prev === m ? null : m))}
+            >
+              {m}
+            </MuscleChip>
+          ))}
         </div>
 
         {exercises.map(ex => {
@@ -466,12 +411,21 @@ export default function RutinaDetalle({
                 <div
                   className="header-sub"
                   style={{
-                    display: 'flex', alignItems: 'center', gap: 6,
+                    display: 'flex', alignItems: 'center', gap: 8,
                     fontSize: 12, padding: '0 2px 6px', opacity: 0.85
                   }}
                 >
                   <span>{formatRelative(last.date)} · {Math.round(last.volume).toLocaleString('es-AR')} kg</span>
-
+                  {delta !== null && Math.round(delta) !== 0 && (
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 2,
+                      fontWeight: 700, fontSize: 11,
+                      color: delta > 0 ? 'var(--acento)' : 'var(--rojo)',
+                    }}>
+                      {delta > 0 ? <TrenUp size={18} /> : <TrenDown size={18} />}
+                      {Math.abs(Math.round(delta)).toLocaleString('es-AR')} kg
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -502,7 +456,9 @@ export default function RutinaDetalle({
         )}
 
         <div style={{ height: 10 }}></div>
-        <button className="btns primario fixed" onClick={onStartSession}>Empezar rutina</button>
+        <button className="btns primario fixed" onClick={onStartSession}>
+           Empezar rutina
+        </button>
       </div >
 
       {sendModalOpen && (
@@ -517,7 +473,6 @@ export default function RutinaDetalle({
 
             {!loadingFriends && friends.length === 0 && (
               <div className="header-sub" style={{ textAlign: 'center', padding: '20px 0' }}>
-                <UserPlus size={20} style={{ marginBottom: 8 }} />
                 <div>Todavía no tenés amigos agregados.</div>
                 <div style={{ fontSize: 12, color: "var(--texto-gris)" }}>Andá a Mensajes para agregar a alguien primero.</div>
               </div>
@@ -548,24 +503,12 @@ export default function RutinaDetalle({
                 onClick={confirmSendToFriend}
                 disabled={!selectedFriendId || sending}
               >
-                {sending ? <Loader2 size={16} className="login-spin" /> : <Send size={16} />}
+                {sending ? <Loader2 size={16} className="login-spin" /> : ""}
                 {sending ? 'Enviando...' : 'Enviar'}
               </button>
             </div>
           </div>
         </div>
-      )}
-
-
-      {statsOpen && (
-        <EstadisticasModal
-          routine={routine}
-          history={history}
-          lastEntry={lastEntry}
-          muscleVolume={muscleVolume}
-          exerciseHistoryMap={exerciseHistoryMap}
-          onClose={() => setStatsOpen(false)}
-        />
       )}
     </>
   );
