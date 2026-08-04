@@ -1,21 +1,91 @@
 import React, { useState, useEffect } from 'react';
 import {
     Lock, UserPlus, Check, X, Send, Dumbbell, Loader2, Copy,
-    ChevronLeft, MoreVertical, Share2, UserX
+    ChevronLeft, MoreVertical, Share2, UserX, Flame, Users
 } from 'lucide-react';
 import { sileo } from 'sileo';
 import {
     getProfileView, sendFriendRequest, respondFriendRequest,
     removeFriendship, sendRoutineShare, fetchFriendships,
+    getProfileVolumeByMonth, getMutualFriends,
 } from '../lib/social';
 import PerfilStats from './PerfilStats';
 import './perfil.css';
 import './mensajes.css';
-import { SendIcon, CopyIcon, Lockicon } from '../icons/icons';
+import { SendIcon, CopyIcon, Lockicon, UsersIcon } from '../icons/icons';
+import RutinaIcon from '../icons/rutinas';
+
+const MESES_LARGO = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+    'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+];
+const MESES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+function formatFechaIngreso(fecha) {
+    if (!fecha) return null;
+    const d = new Date(fecha);
+    if (isNaN(d.getTime())) return null;
+    return `${MESES_LARGO[d.getMonth()]} de ${d.getFullYear()}`;
+}
+
+function formatMesCorto(mesStr) {
+    const d = new Date(mesStr);
+    if (isNaN(d.getTime())) return '';
+    return MESES_CORTO[d.getUTCMonth()];
+}
+
+function nombreAmigo(f) {
+    return (f.mostrar_nombre && f.nombre) ? f.nombre : f.username;
+}
+
+function ProgresoChart({ data }) {
+    if (!data || data.length < 2) {
+        return (
+            <div className="mensajes-empty">
+                Todavía no hay suficientes entrenamientos registrados para mostrar el progreso.
+            </div>
+        );
+    }
+
+    const width = 300;
+    const height = 110;
+    const padding = 10;
+    const volumenes = data.map(d => Number(d.volumen) || 0);
+    const max = Math.max(...volumenes, 1);
+    const min = Math.min(...volumenes, 0);
+    const range = (max - min) || 1;
+    const stepX = (width - padding * 2) / (data.length - 1);
+
+    const points = data.map((d, i) => {
+        const x = padding + i * stepX;
+        const y = height - padding - ((Number(d.volumen) - min) / range) * (height - padding * 2);
+        return { x, y };
+    });
+
+    const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ');
+
+    return (
+        <div className="perfil-progreso-chart">
+            <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="perfil-progreso-svg">
+                <path d={pathD} fill="none" stroke="var(--acento)" strokeWidth="2" />
+                {points.map((p, i) => (
+                    <circle key={i} cx={p.x} cy={p.y} r="2.5" fill="var(--acento)" />
+                ))}
+            </svg>
+            <div className="perfil-progreso-labels">
+                {data.map((d, i) => (
+                    <span key={i}>{formatMesCorto(d.mes)}</span>
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export default function PerfilPublico({ userId, targetId, myRoutines, onBack, onImportRoutine }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
+    const [volumeData, setVolumeData] = useState([]);
+    const [mutualFriends, setMutualFriends] = useState([]);
     const [busy, setBusy] = useState(false);
     const [shareOpen, setShareOpen] = useState(false);
     const [selectedRoutineId, setSelectedRoutineId] = useState(null);
@@ -33,7 +103,16 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
             return;
         }
 
-        const { data: friendships } = await fetchFriendships(userId);
+        const [
+            { data: friendships },
+            { data: volume },
+            { data: mutuals },
+        ] = await Promise.all([
+            fetchFriendships(userId),
+            getProfileVolumeByMonth(targetId),
+            getMutualFriends(targetId),
+        ]);
+
         const row = (friendships || []).find(f =>
             (f.requester_id === userId && f.addressee_id === targetId) ||
             (f.requester_id === targetId && f.addressee_id === userId)
@@ -52,6 +131,8 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
             friendship_id: row?.id ?? null,
             friendship_status,
         });
+        setVolumeData(volume || []);
+        setMutualFriends(mutuals || []);
         setLoading(false);
     }
 
@@ -164,6 +245,8 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
     const nombreVisible = data.mostrar_nombre
         ? (data.nombre || data.username)
         : data.username;
+    const fechaIngreso = formatFechaIngreso(data.created_at);
+    const tieneResumen = data.mostrar_stats || (data.total_amigos != null);
 
 
 
@@ -198,8 +281,16 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                 </div>
             </div>
 
-            <div className="perfil-banner">
-                <div className="perfil-avatar-lg">{iniciales.toUpperCase()}</div>
+            <div
+                className="perfil-banner"
+                style={data.banner_color ? { background: `linear-gradient(135deg, ${data.banner_color}, ${data.banner_color}99 85%)` } : undefined}
+            >
+                <div
+                    className="perfil-avatar-lg"
+                    style={data.avatar_color ? { background: data.avatar_color } : undefined}
+                >
+                    {iniciales.toUpperCase()}
+                </div>
             </div>
 
             <div className="perfil-info">
@@ -210,8 +301,57 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                     )}
                 </div>
                 <span className="perfil-email">@{data.username}</span>
+                {fechaIngreso && (
+                    <span className="perfil-fecha-ingreso">Se unió en {fechaIngreso}</span>
+                )}
             </div>
 
+            {tieneResumen && (
+                <div className="perfil-resumen-row">
+                    {data.mostrar_stats && (
+                        <div className="perfil-resumen-item">
+                            <Flame size={15} />
+                            <span className="perfil-resumen-valor">{data.racha ?? 0}</span>
+                            <span className="perfil-resumen-label">racha</span>
+                        </div>
+                    )}
+                    {data.mostrar_stats && (
+                        <div className="perfil-resumen-item">
+                            <RutinaIcon size={15} />
+                            <span className="perfil-resumen-valor">{data.total_sesiones ?? 0}</span>
+                            <span className="perfil-resumen-label">entrenos</span>
+                        </div>
+                    )}
+                    {data.total_amigos != null && (
+                        <div className="perfil-resumen-item">
+                            <UsersIcon size={15} />
+                            <span className="perfil-resumen-valor">{data.total_amigos}</span>
+                            <span className="perfil-resumen-label">amigos</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {mutualFriends.length > 0 && (
+                <div className="perfil-mutuos">
+                    <div className="perfil-mutuos-avatares">
+                        {mutualFriends.slice(0, 5).map(f => (
+                            <div
+                                key={f.id}
+                                className="perfil-mutuo-avatar"
+                                title={nombreAmigo(f)}
+                            >
+                                {(nombreAmigo(f)?.[0] || '?').toUpperCase()}
+                            </div>
+                        ))}
+                    </div>
+                    <span className="perfil-mutuos-texto">
+                        {mutualFriends.length === 1
+                            ? `${nombreAmigo(mutualFriends[0])} es amigo en común`
+                            : `${nombreAmigo(mutualFriends[0])} y ${mutualFriends.length - 1} más son amigos en común`}
+                    </span>
+                </div>
+            )}
 
             {data.friendship_status === 'accepted' && (
                 <>
@@ -269,7 +409,11 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
 
             {activeTab === 'stats' && (
                 data.mostrar_stats ? (
-                    <PerfilStats data={data} />
+                    <>
+                        <PerfilStats data={data} />
+                        <div className="perfil-seccion-titulo">Progreso de volumen</div>
+                        <ProgresoChart data={volumeData} />
+                    </>
                 ) : (
                     <div className="mensajes-empty">
                         <Lockicon size={18} style={{ marginBottom: 6 }} />
@@ -290,10 +434,12 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                                 <div className="mensajes-row-username">{r.exerciseCount} ejercicios</div>
                             </div>
                             <button
-                                className="mini-btn"
+                                className="mini-btn tooltipe-left"
                                 type="button"
                                 onClick={() => onImportRoutine({ name: r.name, exercises: r.exercises })}
                                 aria-label={`Copiar rutina ${r.name}`}
+                                data-tooltip=
+                                {`Copiar rutina ${r.name}`}
                             >
                                 <CopyIcon size={16} />
                             </button>
@@ -305,58 +451,63 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                         <div>Rutinas privadas.</div>
                     </div>
                 )
-            )}
+            )
+            }
 
-            {shareOpen && (
-                <div className="modal-overlay" onClick={() => setShareOpen(false)}>
-                    <div className="modal-cont" onClick={e => e.stopPropagation()}>
-                        <h3>Enviar rutina a {nombreVisible}</h3>
-                        <p className="header-sub" style={{ marginBottom: 16 }}>Elegí qué rutina querés compartir.</p>
-                        {myRoutines.length === 0 && <div className="mensajes-empty">No tenés rutinas creadas.</div>}
-                        {myRoutines.map(r => (
-                            <div
-                                key={r.id}
-                                className={`mensajes-routine-pick${selectedRoutineId === r.id ? ' selected' : ''}`}
-                                onClick={() => setSelectedRoutineId(r.id)}
-                            >
-                                <span>{r.name}</span>
-                                {selectedRoutineId === r.id && <Check size={16} />}
+            {
+                shareOpen && (
+                    <div className="modal-overlay" onClick={() => setShareOpen(false)}>
+                        <div className="modal-cont" onClick={e => e.stopPropagation()}>
+                            <h3>Enviar rutina a {nombreVisible}</h3>
+                            <p className="header-sub" style={{ marginBottom: 16 }}>Elegí qué rutina querés compartir.</p>
+                            {myRoutines.length === 0 && <div className="mensajes-empty">No tenés rutinas creadas.</div>}
+                            {myRoutines.map(r => (
+                                <div
+                                    key={r.id}
+                                    className={`mensajes-routine-pick${selectedRoutineId === r.id ? ' selected' : ''}`}
+                                    onClick={() => setSelectedRoutineId(r.id)}
+                                >
+                                    <span>{r.name}</span>
+                                    {selectedRoutineId === r.id && <Check size={16} />}
+                                </div>
+                            ))}
+                            <div className="login-step-actions">
+                                <button className="btns agregar login-btn" onClick={() => setShareOpen(false)} disabled={sending}>
+                                    Cancelar
+                                </button>
+                                <button className="btns primario" onClick={confirmShareRoutine} disabled={!selectedRoutineId || sending}>
+                                    {sending ? <Loader2 size={16} className="login-spin" /> : ""}
+                                    {sending ? 'Enviando...' : 'Enviar'}
+                                </button>
                             </div>
-                        ))}
-                        <div className="login-step-actions">
-                            <button className="btns agregar login-btn" onClick={() => setShareOpen(false)} disabled={sending}>
-                                Cancelar
-                            </button>
-                            <button className="btns primario" onClick={confirmShareRoutine} disabled={!selectedRoutineId || sending}>
-                                {sending ? <Loader2 size={16} className="login-spin" /> : ""}
-                                {sending ? 'Enviando...' : 'Enviar'}
-                            </button>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-            {confirmRemoveOpen && (
-                <div className="modal-overlay" onClick={() => !busy && setConfirmRemoveOpen(false)}>
-                    <div className="modal-cont modal-cont--danger" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                        <div className="modal-icons-cont" >
-                        </div>
-                        <h3>¿Dejar de ser amigos?</h3>
-                        <p className="header-sub" style={{ marginBottom: 16 }}>
-                            Vas a dejar de ser amigo de {nombreVisible}. Vas a poder volver a enviarle una solicitud más adelante.
-                        </p>
-                        <div className="login-step-actions" style={{ justifyContent: 'center' }}>
-                            <button className="btns agregar login-btn" onClick={() => setConfirmRemoveOpen(false)} disabled={busy}>
-                                Cancelar
-                            </button>
-                            <button className="btns eliminar login-btn" onClick={handleRemove} disabled={busy}>
-                                {busy ? <Loader2 size={16} className="login-spin" /> : ""}
-                                {busy ? 'Procesando...' : 'Dejar de ser amigos'}
-                            </button>
+            {
+                confirmRemoveOpen && (
+                    <div className="modal-overlay" onClick={() => !busy && setConfirmRemoveOpen(false)}>
+                        <div className="modal-cont modal-cont--danger" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-icons-cont" >
+                            </div>
+                            <h3>¿Dejar de ser amigos?</h3>
+                            <p className="header-sub" style={{ marginBottom: 16 }}>
+                                Vas a dejar de ser amigo de {nombreVisible}. Vas a poder volver a enviarle una solicitud más adelante.
+                            </p>
+                            <div className="login-step-actions" style={{ justifyContent: 'center' }}>
+                                <button className="btns agregar login-btn" onClick={() => setConfirmRemoveOpen(false)} disabled={busy}>
+                                    Cancelar
+                                </button>
+                                <button className="btns eliminar login-btn" onClick={handleRemove} disabled={busy}>
+                                    {busy ? <Loader2 size={16} className="login-spin" /> : ""}
+                                    {busy ? 'Procesando...' : 'Dejar de ser amigos'}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }

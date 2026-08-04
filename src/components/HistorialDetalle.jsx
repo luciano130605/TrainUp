@@ -5,8 +5,9 @@ import { MoreHorizontal, TrenUp, TrenDown, PlayIcon } from '../icons/icons';
 import { sileo } from 'sileo';
 import "./rutina.css";
 import "./historial.css";
+import { MUSCLE_COLORS } from './rutinaDetalle';
 
-const MUSCLE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+
 
 const eyebrowStyle = {
   fontSize: '.7rem',
@@ -154,7 +155,11 @@ export default function HistorialDetalle({ entry, onBack, onDelete, onRepeat, hi
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {onRepeat && (
-            <button className="btn primario" title="Repetir entrenamiento" onClick={() => onRepeat(entry)}>
+            <button className="btn primario tooltipe" title="Repetir entrenamiento" onClick={() => onRepeat(entry)}
+            data-tooltip={
+                  "Repetir entrenamiento"
+              }
+            >
               <PlayIcon size={20} />
             </button>
           )}

@@ -1,12 +1,13 @@
 import React from 'react';
-import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, Eye, CheckCircle2, ChevronDown, RotateCcw } from 'lucide-react';
+import { X, Check, Plus, Copy, Repeat, Pencil, ChevronsUpDown, ChevronsDownUp, Pause, Play, Award, Dumbbell, CheckCircle2, ChevronDown, RotateCcw } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
 import EjercicioModal from './ejercicioModal';
 import ResumenRutina from './ResumenRutina';
 import "./rutina.css"
 import { DescansoBotonFlotante, resetDescansoState } from './TiempoDescansoToast';
 import { sileo } from 'sileo';
-import { AddSquare, Edit, Maxime, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar, Rotate, TickIcon } from '../icons/icons';
+import { AddSquare, Edit, Maxime, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar, Rotate, TickIcon, Eye, EyeSlash } from '../icons/icons';
+import { MUSCLE_COLORS } from './rutinaDetalle';
 
 function formatElapsedFull(ms) {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -18,6 +19,21 @@ function formatElapsedFull(ms) {
   return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function vibrar(pattern) {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(pattern);
+}
+
+// Patrones de vibración diferenciados
+const VIBRACION_SERIE = 25;                 // toque corto: se marcó una serie suelta
+const VIBRACION_EJERCICIO_COMPLETO = [40, 30, 40, 30, 90]; // patrón más largo: se terminó el ejercicio
 
 const EJERCICIOS_TIEMPO = ['Plancha'];
 
@@ -25,6 +41,19 @@ function esEjercicioDeTiempo(ex) {
   const nombre = ex.nombre ?? ex.name ?? '';
   return !!ex.esTiempo || EJERCICIOS_TIEMPO.includes(nombre);
 }
+
+// ---- Auto-completado de series al terminar una ----
+const AUTOFILL_OPTIONS = [
+  { value: 'vacio', label: 'Dejar vacío' },
+  { value: 'ultima', label: 'Copiar última serie' },
+  { value: 'rutina', label: 'Copiar de la rutina' },
+];
+const AUTOFILL_LABELS = {
+  vacio: 'Auto: vacío',
+  ultima: 'Auto: última serie',
+  rutina: 'Auto: rutina',
+};
+
 function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
   const [running, setRunning] = React.useState(false);
   const [remaining, setRemaining] = React.useState(null);
@@ -91,6 +120,54 @@ function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
     </div>
   );
 }
+
+// // Menú desplegable de modo de auto-completado por ejercicio
+// function AutofillMenu({ mode, open, onToggle, onSelect }) {
+//   return (
+//     <div style={{ position: 'relative' }}>
+//       <button
+//         type="button"
+//         className="btns agregar"
+//         onClick={onToggle}
+//       >
+//         <Repeat size={12} /> {AUTOFILL_LABELS[mode]}
+//       </button>
+//       {open && (
+//         <>
+//           <div
+//             style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+//             onClick={() => onToggle()}
+//           />
+//           <div
+//             style={{
+//               position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
+//               background: 'var(--fondo-tarjeta, #1c1c1e)', border: '1px solid var(--borde, #333)',
+//               borderRadius: 8, zIndex: 41, minWidth: 190, overflow: 'hidden',
+//               boxShadow: '0 4px 16px rgba(0,0,0,.35)',
+//             }}
+//           >
+//             {AUTOFILL_OPTIONS.map(opt => (
+//               <button
+//                 key={opt.value}
+//                 type="button"
+//                 onClick={() => onSelect(opt.value)}
+//                 style={{
+//                   display: 'block', width: '100%', textAlign: 'left',
+//                   padding: '9px 12px', background: opt.value === mode ? 'var(--acento-suave, rgba(255,255,255,.06))' : 'transparent',
+//                   border: 'none', color: opt.value === mode ? 'var(--acento)' : 'var(--texto)',
+//                   fontSize: 13, cursor: 'pointer',
+//                 }}
+//               >
+//                 {opt.label}
+//               </button>
+//             ))}
+//           </div>
+//         </>
+//       )}
+//     </div>
+//   );
+// }
+
 export default function RutinaCurso({
   session, restTimer, restDefault, history = [], routineName,
   onCancel, onToggleSet, onUpdateField, onAddSet, onFinish,
@@ -111,6 +188,14 @@ export default function RutinaCurso({
   const [resumenOpen, setResumenOpen] = React.useState(false);
   const [prsSesion, setPrsSesion] = React.useState([]);
   const [finishingKeys, setFinishingKeys] = React.useState(new Set());
+  const [autofillModeByExercise, setAutofillModeByExercise] = React.useState({});
+  const [autofillMenuOpen, setAutofillMenuOpen] = React.useState(null);
+  const [soloActualMode, setSoloActualMode] = React.useState(false);
+
+  const getAutofillMode = React.useCallback(
+    (key) => autofillModeByExercise[key] || 'vacio',
+    [autofillModeByExercise]
+  );
 
   React.useEffect(() => {
     if (s?.paused) return;
@@ -152,6 +237,41 @@ export default function RutinaCurso({
     return map;
   }, [history]);
 
+
+
+
+  const [musculosOpen, setMusculosOpen] = React.useState(false);
+
+  const muscleStats = React.useMemo(() => {
+    const exs = s?.exercises || [];
+    const counts = {}; // muscle -> {total, done}
+    let totalAll = 0;
+    exs.forEach(ex => {
+      const m = (ex.parteDelCuerpo ?? ex.muscle) || 'Otro';
+      const total = ex.sets.length;
+      const done = ex.sets.filter(st => st.done).length;
+      if (!counts[m]) counts[m] = { total: 0, done: 0 };
+      counts[m].total += total;
+      counts[m].done += done;
+      totalAll += total;
+    });
+    return Object.entries(counts)
+      .map(([muscle, v]) => ({
+        muscle,
+        total: v.total,
+        done: v.done,
+        pct: totalAll ? (v.total / totalAll) * 100 : 0,
+        donePct: v.total ? (v.done / v.total) * 100 : 0,
+      }))
+      .sort((a, b) => b.total - a.total);
+  }, [s?.exercises]);
+
+  const muscleColorMap = React.useMemo(() => {
+    const map = {};
+    muscleStats.forEach((mv, i) => { map[mv.muscle] = MUSCLE_COLORS[i % MUSCLE_COLORS.length]; });
+    return map;
+  }, [muscleStats]);
+
   const { totalSets, doneSets } = React.useMemo(() => {
     if (!s) return { totalSets: 0, doneSets: 0 };
     let total = 0, done = 0;
@@ -189,7 +309,11 @@ export default function RutinaCurso({
     const ex = s.exercises[exi];
     const set = ex.sets[si];
     if (set.done) return; // ya está marcada (evita doble disparo si el timer completa dos veces)
+    const key = ex.id ?? exi;
     const willComplete = !set.done && ex.sets.every((st, idx) => idx === si || st.done);
+
+    // Vibración: distinta según si esto termina el ejercicio o es una serie suelta
+    vibrar(willComplete ? VIBRACION_EJERCICIO_COMPLETO : VIBRACION_SERIE);
 
     let weightVal = set.weight;
     let repsVal = set.reps;
@@ -235,9 +359,30 @@ export default function RutinaCurso({
       });
     }
 
-    if (!willComplete) return;
+    // Auto-completar la siguiente serie pendiente del mismo ejercicio, según el modo elegido
+    const nextSi = si + 1;
+    const nextSet = ex.sets[nextSi];
+    if (nextSet && !nextSet.done) {
+      const mode = getAutofillMode(key);
+      if (mode === 'ultima') {
+        if (nextSet.weight === '' || nextSet.weight == null) {
+          onUpdateField(exi, nextSi, 'weight', weightVal ?? '');
+        }
+        if (nextSet.reps === '' || nextSet.reps == null) {
+          onUpdateField(exi, nextSi, 'reps', repsVal ?? '');
+        }
+      } else if (mode === 'rutina') {
+        if ((nextSet.weight === '' || nextSet.weight == null) && nextSet.placeholderWeight) {
+          onUpdateField(exi, nextSi, 'weight', nextSet.placeholderWeight);
+        }
+        if ((nextSet.reps === '' || nextSet.reps == null) && nextSet.placeholderReps) {
+          onUpdateField(exi, nextSi, 'reps', nextSet.placeholderReps);
+        }
+      }
+      // mode === 'vacio' -> no se toca nada
+    }
 
-    const currentKey = ex.id ?? exi;
+    if (!willComplete) return;
 
     let nextKey = null;
     for (let i = exi + 1; i < s.exercises.length; i++) {
@@ -251,17 +396,17 @@ export default function RutinaCurso({
 
     setCollapsedIds(prev => {
       const next = new Set(prev);
-      next.add(currentKey);
+      next.add(key);
       if (nextKey !== null) next.delete(nextKey);
       return next;
     });
 
     // Animamos la salida del ejercicio recién completado antes de sacarlo de la vista principal
-    setFinishingKeys(prev => new Set(prev).add(currentKey));
+    setFinishingKeys(prev => new Set(prev).add(key));
     setTimeout(() => {
       setFinishingKeys(prev => {
         const next = new Set(prev);
-        next.delete(currentKey);
+        next.delete(key);
         return next;
       });
     }, 380);
@@ -279,15 +424,35 @@ export default function RutinaCurso({
   const pendingEntries = exercisesWithIndex.filter(
     ({ ex, exi }) => !(ex.sets.length > 0 && ex.sets.every(st => st.done)) || finishingKeys.has(ex.id ?? exi)
   );
-  const visibleEntries = showDone ? exercisesWithIndex : pendingEntries;
+
+  let visibleEntries;
+  if (showDone) {
+    visibleEntries = exercisesWithIndex;
+  } else if (soloActualMode) {
+    // El "actual" es el primer pendiente que no está en animación de salida.
+    const actual = pendingEntries.find(({ ex, exi }) => !finishingKeys.has(ex.id ?? exi));
+    const actualKey = actual ? (actual.ex.id ?? actual.exi) : null;
+    visibleEntries = pendingEntries.filter(({ ex, exi }) => {
+      const k = ex.id ?? exi;
+      return finishingKeys.has(k) || k === actualKey;
+    });
+  } else {
+    visibleEntries = pendingEntries;
+  }
+
   return (
     <>
       <DescansoBotonFlotante />
       <div className="header-cont">
         <div style={{ display: 'flex', gap: 6 }}>
 
-          <div className="btn" onClick={onCancel}><X size={18} /></div>
-          <div className="btn" title="Achicar y ver rutinas" onClick={onMinimize}><Minimize size={18} /></div>
+          <div className="btn" onClick={onCancel}
+          ><X size={18} /></div>
+          <div className="btn tooltipe" title="Achicar y ver rutinas"
+            data-tooltip={
+              "Achicar"
+            }
+            onClick={onMinimize}><Minimize size={18} /></div>
         </div>
         <div>
           <div className="tiempo" style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'center' }}>
@@ -302,10 +467,26 @@ export default function RutinaCurso({
         </div>
         {s.exercises.length > 0 ? (
           <div style={{ display: 'flex', gap: 6 }}>
+            <div
+              className="btn tooltipe"
+              onClick={() => setSoloActualMode(v => !v)}
+              data-tooltip={
+                soloActualMode
+                  ? "Ver todos los ejercicios"
+                  : "Ver solo el ejercicio actual"
+              }
+            >
+              {soloActualMode ? <Eye size={18} /> : <EyeSlash size={18} />}
+            </div>
             {doneEntries.length > 0 && (
               <div
-                className="btn"
+                className="btn tooltipe"
                 title={showDone ? 'Ocultar terminados' : 'Ver terminados'}
+                data-tooltip={
+                  showDone
+                    ? "Ocultar terminados"
+                    : "Ver terminados"
+                }
                 onClick={() => setShowDone(v => !v)}
                 style={{ position: 'relative' }}
               >
@@ -322,7 +503,13 @@ export default function RutinaCurso({
                 </span>
               </div>
             )}
-            <div className="btn" title={allCollapsed ? 'Expandir todo' : 'Colapsar todo'} onClick={toggleAll}>
+            <div className="btn tooltipe" title={allCollapsed ? 'Expandir todo' : 'Colapsar todo'} onClick={toggleAll}
+              data-tooltip={
+                showDone
+                  ? "Expandir todo"
+                  : "Colapsar todo"
+              }
+            >
               {allCollapsed ? <AddSquare size={16} /> : <MinusSquare size={16} />}
             </div>
           </div>
@@ -345,6 +532,71 @@ export default function RutinaCurso({
               }}
             />
           </div>
+        </div>
+      )}
+
+      {muscleStats.length > 0 && (
+        <div style={{ padding: '0 16px', marginBottom: 12, marginTop: 25 }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}
+            onClick={() => setMusculosOpen(v => !v)}
+          >
+            <span style={{
+              fontSize: '.7rem', textTransform: 'uppercase', letterSpacing: '.06em',
+              color: 'var(--texto-gris)', fontFamily: "'Oswald', sans-serif", fontWeight: 700,
+            }}>
+              Músculos trabajados
+            </span>
+            <ChevronDown
+              size={14}
+              style={{ transform: musculosOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .15s ease' }}
+            />
+          </div>
+
+          <div style={{ display: 'flex', width: '100%', height: 7, borderRadius: 4, overflow: 'hidden', marginTop: 8, gap: 1 }}>
+
+            {muscleStats.map(mv => {
+              const color = muscleColorMap[mv.muscle];
+              return (
+                <div
+                  key={mv.muscle}
+                  title={`${mv.muscle}: ${mv.done}/${mv.total} series`}
+                  style={{ width: `${mv.pct}%`, background: hexToRgba(color, 0.28), position: 'relative' }}
+                >
+                  <div style={{ width: `${mv.donePct}%`, height: '100%', background: color, transition: 'width .25s ease' }} />
+                </div>
+              );
+            })}
+          </div>
+
+          {musculosOpen && (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: 14,
+                marginTop: 10,
+                overflowX: 'auto',
+                paddingBottom: 4,
+                WebkitOverflowScrolling: 'touch',
+              }}
+            >
+              {muscleStats.map(mv => (
+                <div
+                  key={mv.muscle}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap' }}
+                >
+                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: muscleColorMap[mv.muscle], flexShrink: 0 }} />
+                  <span style={{ fontSize: 12, color: 'var(--texto)' }}>
+                    {mv.muscle} · {Math.round(mv.pct)}%
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--texto-gris)', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {mv.done}/{mv.total} series
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -399,7 +651,7 @@ export default function RutinaCurso({
                       className="ejercicio-placeholder"
                       style={{ width: 44, height: 44, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                     >
-                      
+
                     </div>
                   )}
 
@@ -507,10 +759,21 @@ export default function RutinaCurso({
                       </div>
                     );
                   })}
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                     {ex.sets.length > 0 && onDuplicateLastSet && (
                       <button className="btns agregar" onClick={() => onDuplicateLastSet(exi)}><Copy size={12} /> Duplicar</button>
                     )}
+                    {/* {ex.sets.length > 1 && (
+                      <AutofillMenu
+                        mode={getAutofillMode(key)}
+                        open={autofillMenuOpen === key}
+                        onToggle={() => setAutofillMenuOpen(prev => prev === key ? null : key)}
+                        onSelect={(value) => {
+                          setAutofillModeByExercise(prev => ({ ...prev, [key]: value }));
+                          setAutofillMenuOpen(null);
+                        }}
+                      />
+                    )} */}
                   </div>
                   {onUpdateNotes && (
                     <input

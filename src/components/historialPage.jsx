@@ -118,20 +118,32 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
       <div className="header-cont">
         <div><h1 className='header-titulo'>Historial</h1><div className="header-sub">{history.length} entrenamiento{history.length !== 1 ? 's' : ''}</div></div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn" title="Ver recuperacion muscular" onClick={() => setProgresoOpen(true)}>
+          <button className="btn tooltipe" title="Ver recuperacion muscular" onClick={() => setProgresoOpen(true)}
+            data-tooltip={
+              "Ver recuperacion muscular"
+            }
+
+          >
             <BicepsFlexed size={18} />
           </button>
           <button
-            className="btn export"
+            className="btn export tooltipe"
             disabled={history.length === 0}
             title={history.length === 0 ? "No hay historial para exportar" : "Exportar"}
             onClick={() => history.length > 0 && onExport()}
+            data-tooltip={
+              history.length === 0 ? "No hay historial para exportar" : "Exportar"
+            }
           >
             <ExportIcon size={18} />
           </button>
-          <div className="btn" title="Importar" onClick={onImport}><ImportIcon size={18} /></div>
+          <div className="btn tooltipe" title="Importar" onClick={onImport}
+            data-tooltip={
+              "Importar"
+            }
+          ><ImportIcon size={18} /></div>
         </div>
-      </div>
+      </div >
 
       <div className="page-cont top">
 
@@ -164,7 +176,11 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
               </div>
 
               <div style={{ position: 'relative' }}>
-                <button className="mini-btn" title="Ordenar por" onClick={() => setSortOpen(v => !v)}>
+                <button className="mini-btn tooltipe" title="Ordenar por" onClick={() => setSortOpen(v => !v)}
+                  data-tooltip={
+                    "Ordenar"
+                  }
+                >
                   <Order size={16} />
                 </button>
                 {sortOpen && (
@@ -190,7 +206,11 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
               </div>
 
 
-              <button className={`mini-btn`} title="Filtrar por fecha" onClick={() => setCalendarOpen(true)}>
+              <button className={`mini-btn tooltipe`} title="Filtrar por fecha" onClick={() => setCalendarOpen(true)}
+                data-tooltip={
+                  "Filtrar"
+                }
+              >
                 <CalendarIcon size={16} />
               </button>
             </div>
@@ -244,17 +264,21 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
         })}
       </div>
 
-      {progresoOpen && (
-        <ProgresoModal history={history} onClose={() => setProgresoOpen(false)} />
-      )}
-      {calendarOpen && (
-        <CalendarRange
-          from={dateFrom}
-          to={dateTo}
-          onApply={(f, t) => { setDateFrom(f); setDateTo(t); setCalendarOpen(false); }}
-          onClose={() => setCalendarOpen(false)}
-        />
-      )}
+      {
+        progresoOpen && (
+          <ProgresoModal history={history} onClose={() => setProgresoOpen(false)} />
+        )
+      }
+      {
+        calendarOpen && (
+          <CalendarRange
+            from={dateFrom}
+            to={dateTo}
+            onApply={(f, t) => { setDateFrom(f); setDateTo(t); setCalendarOpen(false); }}
+            onClose={() => setCalendarOpen(false)}
+          />
+        )
+      }
     </>
   );
 }

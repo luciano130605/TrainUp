@@ -12,7 +12,7 @@ import { Chart, PlayIcon, MoreHorizontal, TrenUp, TrenDown, MinusSquare, AddSqua
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
-const MUSCLE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
+export const MUSCLE_COLORS = ['#22c55e', '#3b82f6', '#ff9a4a', '#ff5a4a', '#b28aff', '#b2d5e5', '#ff1493', '#c6ff34'];
 
 const eyebrowStyle = {
   fontSize: '.7rem',
@@ -105,6 +105,8 @@ export default function RutinaDetalle({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [kebabOpen, onToggleKebab]);
+
+  const hoy = new Date().getDay();
 
   if (!routine) return null;
   const totalSets = routine.exercises.reduce((s, e) => s + e.sets.length, 0);
@@ -272,7 +274,11 @@ export default function RutinaDetalle({
         <div className="btn" title='Volver' onClick={onBack}><ChevronLeft size={20} /></div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <button className="btn primario" title='Empezar' onClick={onStartSession}><PlayIcon size={20} /></button>
+          <button className="btn primario tooltipe"
+            data-tooltip={
+              "Empezar"
+            }
+            title='Empezar' onClick={onStartSession}><PlayIcon size={20} /></button>
           <div className="btn" title='Opciones' onClick={onToggleKebab}
           ><MoreHorizontal size={18} /></div>
         </div>
@@ -290,12 +296,29 @@ export default function RutinaDetalle({
       </div>
 
       <div className="page-cont top">
-        <h1>{routine.name}</h1>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h1>{routine.name}</h1>
+          {routine.days?.length > 0 && (
+            <div className="card-dias">
+              {DIAS.map((d, i) => (
+                <span
+                  key={i}
+                  className={`card-dia-chip-detalle ${routine.days.includes(i) ? 'activo' : 'no'} ${i === hoy ? 'es-hoy' : ''}`}
+                >
+                  {d}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="header-sub" style={{ marginTop: 2, marginBottom: 18, fontSize: ".6rem" }}>
           {lastEntry
             ? `Última vez: ${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series · ${Math.round(lastEntry.totalVolume).toLocaleString('es-AR')} kg`
             : 'Todavía no registraste ninguna sesión de esta rutina'}
+        </div>
+        <div className="header-sub" style={{ marginTop: 2, marginBottom: 18, fontSize: ".6rem" }}>
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 22 }}>
@@ -322,6 +345,8 @@ export default function RutinaDetalle({
             </div>
           ))}
         </div>
+
+
 
         {/* ---- Distribución muscular ---- */}
         {muscleVolume.length > 0 && (
@@ -356,9 +381,14 @@ export default function RutinaDetalle({
           </div>
           <button
             type="button"
-            className="mini-btn"
+            className="mini-btn tooltipe"
             title={allCollapsed ? "Expandir todo" : "Colapsar todo"}
             onClick={toggleCollapseAll}
+            data-tooltip={
+              allCollapsed
+                ? "Expandir todo"
+                : "Colapsar todo"
+            }
           >
             {allCollapsed ? <AddSquare size={14} /> : <MinusSquare size={14} />}
           </button>
@@ -457,7 +487,7 @@ export default function RutinaDetalle({
 
         <div style={{ height: 10 }}></div>
         <button className="btns primario fixed" onClick={onStartSession}>
-           Empezar rutina
+          Empezar rutina
         </button>
       </div >
 
@@ -509,7 +539,8 @@ export default function RutinaDetalle({
             </div>
           </div>
         </div>
-      )}
+      )
+      }
     </>
   );
 }

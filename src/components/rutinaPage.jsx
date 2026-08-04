@@ -9,7 +9,8 @@ import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../lib/social';
 import { ExportIcon, ImportIcon, NotificationIcon, SendIcon } from '../icons/icons.jsx';
 
-const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
+
+const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 const DIAS_CORTO = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
 
 const eyebrowStyle = {
@@ -29,9 +30,8 @@ export default function RutinaPage({
   const hoy = new Date().getDay();
   const [showHoy, setShowHoy] = useState(false);
   const [fabOpen, setFabOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState(null); // 0-6 o null = todas
+  const [selectedDay, setSelectedDay] = useState(null);
 
-  // ---- envío masivo de rutinas ----
   const [sendAllModalOpen, setSendAllModalOpen] = useState(false);
   const [friends, setFriends] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
@@ -114,29 +114,52 @@ export default function RutinaPage({
     {
       key: 'nueva',
       title: 'Agregar rutina',
+      tooltip: 'Agregar rutina',
       icon: <Plus size={20} />,
       className: 'acento',
-      onClick: () => { cerrarFab(); onNewRoutine(); },
+      onClick: () => {
+        cerrarFab();
+        onNewRoutine();
+      },
     },
     {
       key: 'enviar-todas',
-      title: routines.length === 0 ? 'No hay rutinas para enviar' : 'Enviar todas a un amigo',
+      title: routines.length === 0
+        ? 'No hay rutinas para enviar'
+        : 'Enviar todas a un amigo',
       icon: <SendIcon size={18} />,
       disabled: routines.length === 0,
-      onClick: () => { if (routines.length > 0) openSendAllModal(); },
+      onClick: () => {
+        if (routines.length > 0) openSendAllModal();
+      },
     },
     {
       key: 'export',
-      title: routines.length === 0 ? 'No hay rutinas para exportar' : 'Exportar',
+      title: routines.length === 0
+        ? 'No hay rutinas para exportar'
+        : 'Exportar',
+      tooltip: routines.length === 0
+        ? 'No hay rutinas para exportar'
+        : 'Exportar',
       icon: <ExportIcon size={18} />,
+
       disabled: routines.length === 0,
-      onClick: () => { if (routines.length > 0) { cerrarFab(); onExport(); } },
+      onClick: () => {
+        if (routines.length > 0) {
+          cerrarFab();
+          onExport();
+        }
+      },
     },
     {
       key: 'import',
       title: 'Importar',
+      tooltip: 'Importar',
       icon: <ImportIcon size={18} />,
-      onClick: () => { cerrarFab(); onImport(); },
+      onClick: () => {
+        cerrarFab();
+        onImport();
+      },
     },
   ];
 
@@ -243,7 +266,7 @@ export default function RutinaPage({
                 <div
                   key={item.key}
                   className={`btn fab-item ${item.className || ''} ${item.disabled ? 'disabled' : ''}`}
-                  title={item.title}
+                  data-tooltip={item.tooltip || item.title}
                   style={{
                     transitionDelay: fabOpen
                       ? `${idx * 45}ms`
@@ -265,9 +288,10 @@ export default function RutinaPage({
             </div>
           </div>
         </div>
-      </div>
+      </div >
 
-      {fabOpen && <div className="fab-backdrop" onClick={cerrarFab} />}
+      {fabOpen && <div className="fab-backdrop" onClick={cerrarFab} />
+      }
 
       <div className="page-cont">
         {routines.length === 0 ? (
@@ -284,7 +308,7 @@ export default function RutinaPage({
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, marginTop:20}}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, marginTop: 20 }}>
               {[
                 { n: routines.length, label: 'Rutinas' },
                 { n: rutinasDeHoy.length, label: 'Hoy' },
@@ -348,58 +372,59 @@ export default function RutinaPage({
         )}
       </div>
 
-      {sendAllModalOpen && (
-        <div className="modal-overlay" onClick={() => !sending && setSendAllModalOpen(false)}>
-          <div className="modal-cont" onClick={(e) => e.stopPropagation()}>
-            <h3>Enviar todas tus rutinas</h3>
-            <p className="header-sub" style={{ marginBottom: 16 }}>
-              Se van a enviar {routines.length} rutina{routines.length !== 1 ? 's' : ''}. Elegí a qué amigo.
-            </p>
+      {
+        sendAllModalOpen && (
+          <div className="modal-overlay" onClick={() => !sending && setSendAllModalOpen(false)}>
+            <div className="modal-cont" onClick={(e) => e.stopPropagation()}>
+              <h3>Enviar todas tus rutinas</h3>
+              <p className="header-sub" style={{ marginBottom: 16 }}>
+                Se van a enviar {routines.length} rutina{routines.length !== 1 ? 's' : ''}. Elegí a qué amigo.
+              </p>
 
-            {loadingFriends && (
-              <div className="header-sub"><Loader2 size={16} className="login-spin" /> Cargando amigos...</div>
-            )}
+              {loadingFriends && (
+                <div className="header-sub"><Loader2 size={16} className="login-spin" /> Cargando amigos...</div>
+              )}
 
-            {!loadingFriends && friends.length === 0 && (
-              <div className="header-sub" style={{ textAlign: 'center', padding: '20px 0' }}>
-                <UserPlus size={20} style={{ marginBottom: 8 }} />
-                <div>Todavía no tenés amigos agregados.</div>
-                <div style={{ fontSize: 12, color: "var(--texto-gris)" }}>Andá a Mensajes para agregar a alguien primero.</div>
-              </div>
-            )}
+              {!loadingFriends && friends.length === 0 && (
+                <div className="header-sub" style={{ textAlign: 'center', padding: '20px 0' }}>
+                  <div>Todavía no tenés amigos agregados.</div>
+                  <div style={{ fontSize: 12, color: "var(--texto-gris)" }}>Andá a Mensajes para agregar a alguien primero.</div>
+                </div>
+              )}
 
-            {!loadingFriends && friends.map(f => (
-              <div
-                key={f.id}
-                className={`mensajes-routine-pick${selectedFriendId === f.id ? ' selected' : ''}`}
-                onClick={() => !sending && setSelectedFriendId(f.id)}
-              >
-                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span className="mensajes-avatar" style={{ width: 28, height: 28, fontSize: 12 }}>
-                    {iniciales(f)}
+              {!loadingFriends && friends.map(f => (
+                <div
+                  key={f.id}
+                  className={`mensajes-routine-pick${selectedFriendId === f.id ? ' selected' : ''}`}
+                  onClick={() => !sending && setSelectedFriendId(f.id)}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className="mensajes-avatar" style={{ width: 28, height: 28, fontSize: 12 }}>
+                      {iniciales(f)}
+                    </span>
+                    {f.nombre || f.username}
                   </span>
-                  {f.nombre || f.username}
-                </span>
-                {selectedFriendId === f.id && <Check size={16} />}
-              </div>
-            ))}
+                  {selectedFriendId === f.id && <Check size={16} />}
+                </div>
+              ))}
 
-            <div className="btn-cont-modal">
-              <button className="btns agregar login-btn" onClick={() => setSendAllModalOpen(false)} disabled={sending}>
-                Cancelar
-              </button>
-              <button
-                className="btns primario m"
-                onClick={confirmSendAll}
-                disabled={!selectedFriendId || sending}
-              >
-                {sending ? <Loader2 size={16} className="login-spin" /> : ""}
-                {sending ? `Enviando ${sendProgress} de ${routines.length}...` : 'Enviar todas'}
-              </button>
+              <div className="btn-cont-modal">
+                <button className="btns agregar login-btn" onClick={() => setSendAllModalOpen(false)} disabled={sending}>
+                  Cancelar
+                </button>
+                <button
+                  className="btns primario m"
+                  onClick={confirmSendAll}
+                  disabled={!selectedFriendId || sending}
+                >
+                  {sending ? <Loader2 size={16} className="login-spin" /> : ""}
+                  {sending ? `Enviando ${sendProgress} de ${routines.length}...` : 'Enviar todas'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
     </>
   );
 }

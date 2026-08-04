@@ -2,21 +2,12 @@ Ajustes / Preferencias
 * KG o LB en settings
 * Configurar un descanso default para todos los ejercicios predeterminado
 
-Home 
-
-
 
 Rutina 
-page
-* en la card ult vez entrenada
-* Musculos principales con iconos (hasheados yo) (ambas, un btn para poner icons o txt.. q el user elija)
-* btn rapido para entrenar sin tener q entrar
-Detalle
-* agregar dias programado
 Curso
 * Cuando completo una serie que pueda las otras series: Copiar valores de la ult serie, copiar valores de la rutina o dejar vacio
-* agregar vibracion cuadno termina una serie
-* Modo solo ejercicio actual y en lugar de mostrar todos los ejercicios solo los q van tocando
+
+
 
 
 Perfo
@@ -28,14 +19,19 @@ Perfo
 Diseño 
 * agregar toast a todo
 
-
 Social / Comunidad
 * notificaciones push cuando te envian un msj
 * en linea o ult vez hace X minutos (poder sacar en el perfil)
 * bloquear usuario (no aparece mas)
-perfil
+
+
+
+perfil 
+mi perfil 
 * El banner en el perfil puede ser del color que prefiera y el avatar tb
 * Poder Editar el perfil desde ahi, compartir perfil 
+
+perfil publico
 * fecha de ingreso (Todos)
 * Agregar progreso      
 Peso corporal a lo largo del tiempo.

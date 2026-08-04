@@ -116,3 +116,32 @@ export async function setProfilePublic(userId, isPublic) {
 export async function setPrivacySettings(userId, fields) {
     return supabase.from('profiles').update(fields).eq('id', userId);
 }
+
+// Actualiza apariencia (colores) y/o visibilidad del propio perfil.
+// fields puede incluir: banner_color, avatar_color, mostrar_nombre,
+// mostrar_rutinas, mostrar_stats, is_public.
+export async function updateProfileCustomization(userId, fields) {
+    if (!supabase || !userId) return { error: null };
+    return supabase
+        .from('profiles')
+        .update({ ...fields, updated_at: new Date().toISOString() })
+        .eq('id', userId);
+}
+
+// --- Nuevas funciones para el perfil público extendido ---
+
+// Volumen total entrenado agrupado por mes, para el gráfico de "progreso de fuerza".
+// Devuelve [{ mes: '2026-03-01', volumen: 12345 }, ...] ordenado ascendente.
+export async function getProfileVolumeByMonth(targetId) {
+    if (!supabase || !targetId) return { data: [], error: null };
+    const { data, error } = await supabase.rpc('get_profile_volume_by_month', { p_target_id: targetId });
+    return { data: data || [], error };
+}
+
+// Amigos en común entre el usuario actual y targetId.
+// Se resuelve server-side (RPC) porque RLS no deja ver las friendships ajenas desde el cliente.
+export async function getMutualFriends(targetId) {
+    if (!supabase || !targetId) return { data: [], error: null };
+    const { data, error } = await supabase.rpc('get_mutual_friends', { p_target_id: targetId });
+    return { data: data || [], error };
+}

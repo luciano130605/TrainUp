@@ -46,6 +46,7 @@ const ejerciciosLocal = [
     /* gemelos */
     { id: "0026", nombre: "Elevacion de gemelos parado (Maquina)", gif: "/gifs/elevacion-gemelo-parado.jpg", parteDelCuerpo: "Gemelos", equipamiento: "Maquinas", subMusculos: [], },
     { id: "0027", nombre: "Elevacion de gemelos sentado (Maquina)", gif: "/gifs/elevacion-gemelo-sentado.jpg", parteDelCuerpo: "Gemelos", equipamiento: "Maquinas", subMusculos: [], },
+    { id: "0063", nombre: "Elevacion de gemelos parado smith (Maquina)", gif: "/gifs/elevacion-gemelo-smith.jpg", parteDelCuerpo: "Gemelos", equipamiento: "Maquinas", subMusculos: [], },
 
     /* gluteos */
     { id: "0028", nombre: "Patada de gluteo (Maquina)", gif: "/gifs/patada-gluteo-maquina.jpg", parteDelCuerpo: "Gluteos", equipamiento: "Maquinas", subMusculos: ["Isquiotibiales"] },

@@ -11,6 +11,7 @@ import { scheduleReminderPush, cancelReminderPush } from './utils/push';
 import BackupModal from './components/BackupModal';
 import { encodeBackup, decodeBackup, downloadJSON, readJSONFile } from './utils/backup';
 import HomePage from "./components/Homepage"
+import MiPerfil from './components/MiPerfil';
 import Login from './components/Login';
 import { supabase } from './lib/supabaseClient';
 import { ensureUserProfile } from './lib/profile';
@@ -1709,6 +1710,7 @@ export default function App() {
             authSession={authSession}
             routines={routines}
             onOpenProfile={openProfileScreen}
+            onOpenOwnProfile={() => setScreen('miPerfil')}
             onImportRoutine={importSharedRoutine}
           />
         )}
@@ -1723,6 +1725,12 @@ export default function App() {
           />
         )}
 
+        {screen === 'miPerfil' && (
+          <MiPerfil
+            userId={authSession.user.id}
+            onBack={() => setScreen('mensajes')}
+          />
+        )}
         {screen === 'routines' && (
           <RutinaPage
             routines={routines}

@@ -76,7 +76,7 @@ h3 {
 }
 
 .acento-celeste {
-  --acento: rgb(178, 213, 229);
+  --acento: #b2d5e5;
   --acento-transp: rgba(178, 213, 229, 0.675);
   --acento-transp-2: rgba(178, 213, 229, 0.3);
 

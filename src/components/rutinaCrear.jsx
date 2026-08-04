@@ -7,6 +7,7 @@ import { openDescansoToast } from './descansoToastModal';
 import "./rutina.css"
 import EjercicioModal from './ejercicioModal';
 import { AddSquare, CopyIcon, MinusSquare, Remplazar, TimerIcon } from '../icons/icons';
+import { MUSCLE_COLORS } from './rutinaDetalle';
 
 const DIAS = [
   { label: 'L', value: 1 },
@@ -18,9 +19,6 @@ const DIAS = [
   { label: 'D', value: 0 },
 ];
 
-// Misma paleta que RutinaDetalle, para que los músculos se identifiquen
-// con el mismo color en todas las pantallas de la rutina.
-const MUSCLE_COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#a855f7', '#06b6d4', '#ec4899', '#84cc16'];
 
 const eyebrowStyle = {
   fontSize: '.7rem',
