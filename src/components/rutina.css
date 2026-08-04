@@ -651,7 +651,7 @@
     position: absolute;
     width: 25px;
     height: 40px;
-    right: 40px;
+    right: 20px;
     background: none;
     color: var(--texto-gris);
     cursor: pointer;

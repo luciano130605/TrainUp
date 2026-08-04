@@ -1,5 +1,3 @@
-
-
 :root {
     --home-radius: 8px;
     --home-radius-sm: 6px;
@@ -146,6 +144,10 @@
 
 .home-cont>*:nth-child(5) {
     animation-delay: .16s;
+}
+
+.home-cont>*:nth-child(6) {
+    animation-delay: .2s;
 }
 
 .home-hoy-tag {
@@ -418,6 +420,130 @@
     margin-top: 2px;
 }
 
+/* ---------------- Tu semana (músculos + progreso) ---------------- */
+
+.home-week-carousel::-webkit-scrollbar {
+    display: none !important;
+}
+
+.home-week-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(2, 1fr);
+    grid-auto-columns: 100%;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.home-week-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--fondo-transp);
+    border: 1px solid var(--borde);
+    border-radius: var(--home-radius-sm);
+    padding: 8px 10px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.home-week-chip-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--componente);
+    color: var(--acento);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .62rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.home-week-chip-nombre {
+    flex: 1;
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .82rem;
+    text-transform: capitalize;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-week-chip-sets {
+    color: var(--texto-gris-oscuro);
+    font-size: .64rem;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+}
+
+.home-progress-carousel::-webkit-scrollbar {
+    display: none !important;
+}
+
+.home-progress-carousel {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(1, 1fr);
+    grid-auto-columns: 100%;
+    gap: 8px;
+    overflow-x: auto;
+    padding-top: 10px;
+    padding-bottom: 4px;
+    border-top: 1px solid var(--borde);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.home-progress-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--fondo-transp);
+    border: 1px solid var(--borde);
+    border-radius: var(--home-radius-sm);
+    padding: 8px 10px;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+}
+
+.home-progress-icon {
+    flex-shrink: 0;
+}
+
+.home-progress-icon.up {
+    color: #4ade80;
+}
+
+.home-progress-icon.flat {
+    color: var(--texto-gris);
+}
+
+.home-progress-nombre {
+    flex: 1;
+    color: var(--texto);
+    font-weight: 600;
+    font-size: .82rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.home-progress-sub {
+    color: var(--texto-gris-oscuro);
+    font-size: .64rem;
+    font-family: 'JetBrains Mono', monospace;
+    flex-shrink: 0;
+}
+
 /* ---------------- Recuperación muscular (gauge técnico) ---------------- */
 
 .home-recup-card {
@@ -433,6 +559,25 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 12px;
+}
+
+.home-recup-alert {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--acento-transp-2);
+    border: 1px solid var(--borde-hover);
+    border-radius: var(--home-radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--texto);
+    cursor: default;
+}
+
+.home-recup-alert-emoji {
+    flex-shrink: 0;
 }
 
 .home-recup-vacio {

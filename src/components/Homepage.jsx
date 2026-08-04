@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useRef, useEffect, useCallback } from 'react';
 import {
     Dumbbell, ChevronRight, Plus,
-    Check, X, Flame,
+    Check, X, Flame, TrendingUp, Minus,
 } from 'lucide-react';
 import ProgresoModal, { buildMuscleRecovery } from './ProgresoModal';
 import "./HomePage.css";
@@ -16,7 +16,7 @@ import {
     respondFriendRequest, respondRoutineShare,
 } from '../lib/social';
 import Logo from '../../public/logo';
-import { PlayIcon } from '../icons/icons';
+import { PlayIcon, TrenDown, TrenUp } from '../icons/icons';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
@@ -49,6 +49,109 @@ function formatFecha(ts) {
     if (d.toDateString() === hoy.toDateString()) return 'Hoy';
     if (d.toDateString() === ayer.toDateString()) return 'Ayer';
     return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
+// Lunes como inicio de semana (getDay(): 0=Domingo ... 6=Sábado)
+function startOfWeekMonday(d) {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    const day = x.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    x.setDate(x.getDate() - diff);
+    return x;
+}
+
+// Top 2 músculos más entrenados en lo que va de la semana actual, por cantidad de series.
+function buildWeeklyMuscleStats(history) {
+    const weekStart = startOfWeekMonday(new Date()).getTime();
+    const counts = new Map(); // muscle -> series
+
+    history.forEach(entry => {
+        if (entry.date < weekStart) return;
+        entry.exercises.forEach(ex => {
+            const muscle = ex.muscle;
+            if (!muscle) return;
+            const sets = ex.sets?.length || 0;
+            if (sets === 0) return;
+            counts.set(muscle, (counts.get(muscle) || 0) + sets);
+        });
+    });
+
+    return [...counts.entries()]
+        .map(([muscle, sets]) => ({ muscle, sets }))
+        .sort((a, b) => b.sets - a.sets)
+        .slice(0, 2);
+}
+
+function normalizeMuscle(m) {
+    return m.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+// Para cada músculo, en cuántos días (0 = hoy) le toca según las rutinas programadas.
+// Si un músculo aparece en varias rutinas programadas, se queda con la más próxima.
+function buildNextMuscleOffsets(routines) {
+    const todayDow = new Date().getDay();
+    const offsets = new Map(); // muscle normalizado -> offset en días
+
+    routines.forEach(r => {
+        if (!r.days || r.days.length === 0) return;
+        const routineOffset = Math.min(...r.days.map(d => (d - todayDow + 7) % 7));
+        r.exercises.forEach(ex => {
+            if (!ex.muscle) return;
+            const key = normalizeMuscle(ex.muscle);
+            const current = offsets.get(key);
+            if (current === undefined || routineOffset < current) {
+                offsets.set(key, routineOffset);
+            }
+        });
+    });
+
+    return offsets;
+}
+
+// Compara, para cada ejercicio, el peso máximo de la última sesión contra la anterior.
+// Devuelve como mucho 1 ejercicio progresando (el de mayor salto) y 1 estancado
+// (3 sesiones seguidas con el mismo peso máximo).
+function buildExerciseProgress(history) {
+    const sorted = [...history].sort((a, b) => a.date - b.date);
+    const byExercise = new Map(); // nombre -> [{date, maxWeight}]
+
+    sorted.forEach(entry => {
+        entry.exercises.forEach(ex => {
+            const weights = (ex.sets || [])
+                .map(s => +s.weight || 0)
+                .filter(w => w > 0);
+            if (weights.length === 0) return;
+            const maxWeight = Math.max(...weights);
+            if (!byExercise.has(ex.name)) byExercise.set(ex.name, []);
+            byExercise.get(ex.name).push({ date: entry.date, maxWeight });
+        });
+    });
+
+    const progresando = [];
+    const estancados = [];
+
+    byExercise.forEach((sesiones, name) => {
+        if (sesiones.length < 2) return;
+        const last = sesiones[sesiones.length - 1];
+        const prev = sesiones[sesiones.length - 2];
+
+        if (last.maxWeight > prev.maxWeight) {
+            progresando.push({ name, delta: last.maxWeight - prev.maxWeight });
+        } else if (sesiones.length >= 3) {
+            const ultimas3 = sesiones.slice(-3);
+            const igualSiempre = ultimas3.every(s => s.maxWeight === ultimas3[0].maxWeight);
+            if (igualSiempre) estancados.push({ name, sesiones: ultimas3.length });
+        }
+    });
+
+    progresando.sort((a, b) => b.delta - a.delta);
+    estancados.sort((a, b) => b.sesiones - a.sesiones);
+
+    const resultado = [];
+    if (progresando[0]) resultado.push({ type: 'up', ...progresando[0] });
+    if (estancados[0]) resultado.push({ type: 'flat', ...estancados[0] });
+    return resultado;
 }
 
 function DotsIndicator({ count, active, onDotClick }) {
@@ -116,6 +219,28 @@ export default function HomePage({
         [recovery]
     );
 
+    const nextMuscleOffsets = useMemo(() => buildNextMuscleOffsets(routines), [routines]);
+
+    // Entre los músculos recuperados, priorizamos el que corresponde a la rutina
+    // programada más próxima (pecho y tríceps recuperados, pero el próximo día
+    // toca pecho -> mostramos pecho). Si ninguno coincide con algo programado,
+    // caemos al que se recuperó hace menos tiempo.
+    const justRecovered = useMemo(() => {
+        const recuperados = recovery.filter(r => r.recovered);
+        if (recuperados.length === 0) return null;
+
+        const conOffset = recuperados
+            .map(r => ({ ...r, offset: nextMuscleOffsets.get(normalizeMuscle(r.muscle)) }))
+            .filter(r => r.offset !== undefined)
+            .sort((a, b) => a.offset - b.offset);
+        if (conOffset.length > 0) return conOffset[0];
+
+        return [...recuperados].sort((a, b) => a.daysSince - b.daysSince)[0];
+    }, [recovery, nextMuscleOffsets]);
+
+    const weeklyMuscles = useMemo(() => buildWeeklyMuscleStats(history), [history]);
+    const exerciseProgress = useMemo(() => buildExerciseProgress(history), [history]);
+
     const saludo = useMemo(() => {
         const h = new Date().getHours();
         if (h < 6) return 'Buenas noches';
@@ -135,6 +260,13 @@ export default function HomePage({
     // Recuperación: grid-template-rows: 2 -> páginas = ceil(items / 2)
     const recupPages = Math.max(1, Math.ceil(pendientes.length / 2));
     const recupCarousel = useCarouselDots(recupPages);
+
+    // Tu semana: grid-template-rows: 2 -> páginas = ceil(items / 2)
+    const weekPages = Math.max(1, Math.ceil(weeklyMuscles.length / 2));
+    const weekCarousel = useCarouselDots(weekPages);
+
+    // Progreso de ejercicios: 1 ejercicio por página
+    const progressCarousel = useCarouselDots(exerciseProgress.length);
 
     const userId = authSession?.user?.id;
     const [friendships, setFriendships] = useState([]);
@@ -283,12 +415,79 @@ export default function HomePage({
                     )}
                 </div>
 
+                {(weeklyMuscles.length > 0 || exerciseProgress.length > 0) && (
+                    <div className="home-msj-card">
+                        <span className="home-hoy-tag">Tu semana</span>
+
+                        {weeklyMuscles.length > 0 && (
+                            <>
+                                <div
+                                    className="home-week-carousel"
+                                    ref={weekCarousel.ref}
+                                    onScroll={weekCarousel.handleScroll}
+                                >
+                                    {weeklyMuscles.map((m, i) => (
+                                        <div key={m.muscle} className="home-week-chip">
+                                            <span className="home-week-chip-rank">{i + 1}</span>
+                                            <span className="home-week-chip-nombre">{m.muscle}</span>
+                                            <span className="home-week-chip-sets">
+                                                {m.sets} serie{m.sets !== 1 ? 's' : ''}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <DotsIndicator
+                                    count={weekPages}
+                                    active={weekCarousel.active}
+                                    onDotClick={weekCarousel.goTo}
+                                />
+                            </>
+                        )}
+
+                        {exerciseProgress.length > 0 && (
+                            <>
+                                <div
+                                    className="home-progress-carousel"
+                                    ref={progressCarousel.ref}
+                                    onScroll={progressCarousel.handleScroll}
+                                >
+                                    {exerciseProgress.map(p => (
+                                        <div key={p.name} className="home-progress-item">
+                                            {p.type === 'up' ? (
+                                                <TrenUp size={25} color='var(--acento)' />
+                                            ) : (
+                                                <TrenDown size={25} color='var(--rojo)' />
+                                            )}
+                                            <span className="home-progress-nombre">{p.name}</span>
+                                            <span className="home-progress-sub">
+                                                {p.type === 'up' ? `+${p.delta}kg` : 'Estancado'}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                                <DotsIndicator
+                                    count={exerciseProgress.length}
+                                    active={progressCarousel.active}
+                                    onDotClick={progressCarousel.goTo}
+                                />
+                            </>
+                        )}
+                    </div>
+                )}
+
                 {history.length > 0 && (
                     <div className="home-recup-card">
                         <div className="home-recup-head" onClick={() => setProgresoOpen(true)}>
                             <span className="home-hoy-tag">Recuperación muscular</span>
                             <ChevronRight size={16} className="home-quick-chev" />
                         </div>
+
+                        {justRecovered && pendientes.length > 0 && (
+                            <div className="home-recup-alert">
+                                <span className="home-recup-alert-emoji">💪</span>
+                                {justRecovered.muscle} recuperado, ¡listo para entrenar!
+                            </div>
+                        )}
 
                         {pendientes.length === 0 ? (
                             <p className="home-recup-vacio">Todos tus músculos están recuperados 💪</p>
