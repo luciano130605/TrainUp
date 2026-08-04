@@ -363,10 +363,45 @@ export default function RutinaDetalle({
                 />
               ))}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                marginTop: 8,
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                whiteSpace: 'nowrap',
+                paddingBottom: 4,
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+              className="muscle-scroll"
+            >
               {muscleVolume.map(mv => (
-                <span key={mv.muscle} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--texto-gris)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: colorFor(mv.muscle), display: 'inline-block' }} />
+                <span
+                  key={mv.muscle}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '7px 12px',
+                    borderRadius: 999,
+                    background: 'var(--componente)',
+                    border: '1px solid var(--borde)',
+                    fontSize: 11,
+                    color: 'var(--texto)',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: colorFor(mv.muscle),
+                      display: 'inline-block'
+                    }}
+                  />
                   {mv.muscle} · {Math.round(mv.pct)}%
                 </span>
               ))}

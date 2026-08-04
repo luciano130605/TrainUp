@@ -581,20 +581,46 @@ export default function RutinaCurso({
                 WebkitOverflowScrolling: 'touch',
               }}
             >
-              {muscleStats.map(mv => (
-                <div
-                  key={mv.muscle}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, whiteSpace: 'nowrap' }}
-                >
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: muscleColorMap[mv.muscle], flexShrink: 0 }} />
-                  <span style={{ fontSize: 12, color: 'var(--texto)' }}>
-                    {mv.muscle} · {Math.round(mv.pct)}%
-                  </span>
-                  <span style={{ fontSize: 11, color: 'var(--texto-gris)', fontFamily: "'JetBrains Mono', monospace" }}>
-                    {mv.done}/{mv.total} series
-                  </span>
-                </div>
-              ))}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: 10,
+                  marginTop: 8,
+                  overflowX: 'auto',
+                  overflowY: 'hidden',
+                  whiteSpace: 'nowrap',
+                  paddingBottom: 4,
+                  scrollbarWidth: 'none',
+                  msOverflowStyle: 'none',
+                }}
+                className="muscle-scroll"
+              >
+                {muscleStats.map(mv => (
+                  <div
+                    key={mv.muscle}
+                    style={{
+                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '7px 12px',
+                      borderRadius: 999,
+                      background: 'var(--componente)',
+                      border: '1px solid var(--borde)',
+                      fontSize: 11,
+                      color: 'var(--texto)',
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, borderRadius: '50%', background: muscleColorMap[mv.muscle], flexShrink: 0 }} />
+                    <span style={{ fontSize: 12, color: 'var(--texto)' }}>
+                      {mv.muscle} · {Math.round(mv.pct)}%
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--texto-gris)', fontFamily: "'JetBrains Mono', monospace" }}>
+                      {mv.done}/{mv.total} series
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

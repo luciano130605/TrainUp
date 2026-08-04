@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronLeft, X, Dumbbell } from 'lucide-react';
 import { formatElapsed } from '../utils/time';
-import { MoreHorizontal, TrenUp, TrenDown, PlayIcon } from '../icons/icons';
+import { MoreHorizontal, TrenUp, TrenDown, PlayIcon, Chart } from '../icons/icons';
 import { sileo } from 'sileo';
 import "./rutina.css";
 import "./historial.css";
@@ -156,8 +156,8 @@ export default function HistorialDetalle({ entry, onBack, onDelete, onRepeat, hi
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           {onRepeat && (
             <button className="btn primario tooltipe" title="Repetir entrenamiento" onClick={() => onRepeat(entry)}
-            data-tooltip={
-                  "Repetir entrenamiento"
+              data-tooltip={
+                "Repetir entrenamiento"
               }
             >
               <PlayIcon size={20} />
@@ -203,91 +203,130 @@ export default function HistorialDetalle({ entry, onBack, onDelete, onRepeat, hi
 
         {muscleVolume.length > 0 && (
           <div style={{ marginBottom: 22 }}>
-            <div style={{ ...eyebrowStyle, marginBottom: 8 }}>Distribución muscular</div>
+            <div style={{ ...eyebrowStyle, marginBottom: 8 }}>
+              <Chart size={13} /> Distribución muscular
+            </div>
             <div style={{ display: 'flex', width: '100%', height: 7, borderRadius: 4, overflow: 'hidden' }}>
               {muscleVolume.map(mv => (
                 <div key={mv.muscle} title={`${mv.muscle}: ${Math.round(mv.pct)}%`}
                   style={{ width: `${mv.pct}%`, background: colorFor(mv.muscle) }} />
               ))}
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: 10,
+                marginTop: 8,
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                whiteSpace: 'nowrap',
+                paddingBottom: 4,
+                scrollbarWidth: 'none',
+                msOverflowStyle: 'none',
+              }}
+              className="muscle-scroll"
+            >
               {muscleVolume.map(mv => (
-                <span key={mv.muscle} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--texto-gris)' }}>
-                  <span style={{ width: 7, height: 7, borderRadius: '50%', background: colorFor(mv.muscle), display: 'inline-block' }} />
-                  {mv.muscle} · {Math.round(mv.pct)}%
-                </span>
+                <div
+                  key={mv.muscle}
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '7px 12px',
+                    borderRadius: 999,
+                    background: 'var(--componente)',
+                    border: '1px solid var(--borde)',
+                    fontSize: 11,
+                    color: 'var(--texto)',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: colorFor(mv.muscle),
+                    }}
+                  />
+                  <span>{mv.muscle}</span>
+                  <span style={{ color: 'var(--texto-gris)' }}>
+                    {Math.round(mv.pct)}%
+                  </span>
+                </div>
               ))}
             </div>
           </div>
         )}
 
-        <div style={{ ...eyebrowStyle, marginBottom: 10 }}>
-          Ejercicios · {entry.exercises.length}
-        </div>
-
-        {entry.exercises.map((ex, i) => {
-          const nombre = nombreEx(ex);
-          const musculo = muscEx(ex);
-          const gif = ex.gif ?? ex.gifUrl;
-          const gifFailed = gifFailedIds.has(i);
-          const isCollapsed = collapsed.has(i);
-          const vol = ex.sets.reduce((s, st) => s + (+st.weight || 0) * (+st.reps || 0), 0);
-          const prevVol = prevOccurrenceMap[nombre];
-          const delta = prevVol !== undefined ? vol - prevVol : null;
-
-          return (
-            <div key={i} className="rutina-card">
-              <div className="rutina-card-cont" title={isCollapsed ? 'Expandir' : 'Colapsar'} onClick={() => toggleCollapse(i)}>
-                <div className="rutina-card-header">
-                  {gif && !gifFailed ? (
-                    <img
-                      src={gif} alt={nombre} loading="lazy"
-                      style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in', flexShrink: 0 }}
-                      onClick={(e) => { e.stopPropagation(); setGifPreview({ url: gif, nombre }); }}
-                      onError={() => markGifFailed(i)}
-                    />
-                  ) : (
-                    <div className="ejercicio-placeholder" style={{ width: 36, height: 36, borderRadius: 8, flexShrink: 0 }}>
-                      <Dumbbell size={16} strokeWidth={1.5} />
-                    </div>
-                  )}
-                  <h4 className="titulo-rutina">{nombre}</h4>
-                </div>
-                {musculo && <span className="musc-span">{musculo}</span>}
-              </div>
-
-              {delta !== null && Math.round(delta) !== 0 && (
-                <div className="header-sub" style={{
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  fontSize: 11, padding: '2px 2px 6px',
-                  color: delta > 0 ? 'var(--acento)' : 'var(--rojo)', fontWeight: 700,
-                }}>
-                  {delta > 0 ? <TrenUp size={16} /> : <TrenDown size={16} />}
-                  {Math.abs(Math.round(delta)).toLocaleString('es-AR')} kg vs. sesión anterior
-                </div>
-              )}
-
-              <div style={{
-                display: 'grid',
-                gridTemplateRows: isCollapsed ? '0fr' : '1fr',
-                transition: 'grid-template-rows .2s ease',
-              }}>
-                <div style={{ overflow: 'hidden', minHeight: 0 }}>
-                  {ex.sets.map((s, j) => (
-                    <div key={j} className="historial-detalle">
-                      <span>Serie {j + 1}</span>
-                      <span>{s.weight || 0} kg × {s.reps || 0} reps</span>
-                    </div>
-                  ))}
-                  {ex.notes && <div className="header-sub" style={{ marginTop: 6 }}>{ex.notes}</div>}
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ ...eyebrowStyle, marginBottom: 10 }}>
+        Ejercicios · {entry.exercises.length}
       </div>
 
-      {gifPreview && (
+      {entry.exercises.map((ex, i) => {
+        const nombre = nombreEx(ex);
+        const musculo = muscEx(ex);
+        const gif = ex.gif ?? ex.gifUrl;
+        const gifFailed = gifFailedIds.has(i);
+        const isCollapsed = collapsed.has(i);
+        const vol = ex.sets.reduce((s, st) => s + (+st.weight || 0) * (+st.reps || 0), 0);
+        const prevVol = prevOccurrenceMap[nombre];
+        const delta = prevVol !== undefined ? vol - prevVol : null;
+
+        return (
+          <div key={i} className="rutina-card">
+            <div className="rutina-card-cont" title={isCollapsed ? 'Expandir' : 'Colapsar'} onClick={() => toggleCollapse(i)}>
+              <div className="rutina-card-header">
+                {gif && !gifFailed ? (
+                  <img
+                    src={gif} alt={nombre} loading="lazy"
+                    style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', cursor: 'zoom-in', flexShrink: 0 }}
+                    onClick={(e) => { e.stopPropagation(); setGifPreview({ url: gif, nombre }); }}
+                    onError={() => markGifFailed(i)}
+                  />
+                ) : (
+                  <div className="ejercicio-placeholder" style={{ width: 36, height: 36, borderRadius: 8, flexShrink: 0 }}>
+                    <Dumbbell size={16} strokeWidth={1.5} />
+                  </div>
+                )}
+                <h4 className="titulo-rutina">{nombre}</h4>
+              </div>
+              {musculo && <span className="musc-span">{musculo}</span>}
+            </div>
+
+            {delta !== null && Math.round(delta) !== 0 && (
+              <div className="header-sub" style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                fontSize: 11, padding: '2px 2px 6px',
+                color: delta > 0 ? 'var(--acento)' : 'var(--rojo)', fontWeight: 700,
+              }}>
+                {delta > 0 ? <TrenUp size={16} /> : <TrenDown size={16} />}
+                {Math.abs(Math.round(delta)).toLocaleString('es-AR')} kg vs. sesión anterior
+              </div>
+            )}
+
+            <div style={{
+              display: 'grid',
+              gridTemplateRows: isCollapsed ? '0fr' : '1fr',
+              transition: 'grid-template-rows .2s ease',
+            }}>
+              <div style={{ overflow: 'hidden', minHeight: 0 }}>
+                {ex.sets.map((s, j) => (
+                  <div key={j} className="historial-detalle">
+                    <span>Serie {j + 1}</span>
+                    <span>{s.weight || 0} kg × {s.reps || 0} reps</span>
+                  </div>
+                ))}
+                {ex.notes && <div className="header-sub" style={{ marginTop: 6 }}>{ex.notes}</div>}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div >
+
+      { gifPreview && (
         <div className="modal-overlay" onClick={() => setGifPreview(null)}>
           <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }} onClick={(e) => e.stopPropagation()}>
             <button className="mini-btn" style={{ position: 'absolute', top: -14, right: -14, background: '#fff' }}
@@ -298,7 +337,8 @@ export default function HistorialDetalle({ entry, onBack, onDelete, onRepeat, hi
               style={{ maxWidth: '90vw', maxHeight: '90vh', borderRadius: 12, display: 'block' }} />
           </div>
         </div>
-      )}
+      )
+}
     </>
   );
 }

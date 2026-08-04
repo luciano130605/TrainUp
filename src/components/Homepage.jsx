@@ -80,12 +80,13 @@ function buildWeeklyMuscleStats(history) {
     return [...counts.entries()]
         .map(([muscle, sets]) => ({ muscle, sets }))
         .sort((a, b) => b.sets - a.sets)
-        .slice(0, 2);
 }
 
 function normalizeMuscle(m) {
     return m.toString().trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
+
+
 
 // Para cada músculo, en cuántos días (0 = hoy) le toca según las rutinas programadas.
 // Si un músculo aparece en varias rutinas programadas, se queda con la más próxima.
@@ -249,6 +250,14 @@ export default function HomePage({
         return 'Buenas noches';
     }, []);
 
+    const weeklyGroups = useMemo(() => {
+        const groups = [];
+        for (let i = 0; i < weeklyMuscles.length; i += 2) {
+            groups.push(weeklyMuscles.slice(i, i + 2));
+        }
+        return groups;
+    }, [weeklyMuscles]);
+
     const fechaLarga = useMemo(() => {
         const s = new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
         return s.charAt(0).toUpperCase() + s.slice(1);
@@ -261,8 +270,7 @@ export default function HomePage({
     const recupPages = Math.max(1, Math.ceil(pendientes.length / 2));
     const recupCarousel = useCarouselDots(recupPages);
 
-    // Tu semana: grid-template-rows: 2 -> páginas = ceil(items / 2)
-    const weekPages = Math.max(1, Math.ceil(weeklyMuscles.length / 2));
+    const weekPages = Math.max(1, weeklyGroups.length);
     const weekCarousel = useCarouselDots(weekPages);
 
     // Progreso de ejercicios: 1 ejercicio por página
@@ -426,13 +434,23 @@ export default function HomePage({
                                     ref={weekCarousel.ref}
                                     onScroll={weekCarousel.handleScroll}
                                 >
-                                    {weeklyMuscles.map((m, i) => (
-                                        <div key={m.muscle} className="home-week-chip">
-                                            <span className="home-week-chip-rank">{i + 1}</span>
-                                            <span className="home-week-chip-nombre">{m.muscle}</span>
-                                            <span className="home-week-chip-sets">
-                                                {m.sets} serie{m.sets !== 1 ? 's' : ''}
-                                            </span>
+                                    {weeklyGroups.map((group, page) => (
+                                        <div key={page} className="home-week-page">
+                                            {group.map((m, index) => (
+                                                <div key={m.muscle} className="home-week-chip">
+                                                    <span className="home-week-chip-rank">
+                                                        {page * 2 + index + 1}
+                                                    </span>
+
+                                                    <span className="home-week-chip-nombre">
+                                                        {m.muscle}
+                                                    </span>
+
+                                                    <span className="home-week-chip-sets">
+                                                        {m.sets} serie{m.sets !== 1 ? "s" : ""}
+                                                    </span>
+                                                </div>
+                                            ))}
                                         </div>
                                     ))}
                                 </div>
