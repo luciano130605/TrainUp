@@ -11,7 +11,7 @@ import { scheduleReminderPush, cancelReminderPush } from './utils/push';
 import BackupModal from './components/BackupModal';
 import { encodeBackup, decodeBackup, downloadJSON, readJSONFile } from './utils/backup';
 import HomePage from "./components/Homepage"
-import MiPerfil from './components/MiPerfil';
+import MiPerfil from './components/Miperfil';
 import Login from './components/Login';
 import { supabase } from './lib/supabaseClient';
 import { ensureUserProfile } from './lib/profile';
