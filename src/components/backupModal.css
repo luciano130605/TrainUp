@@ -27,6 +27,7 @@
 
 .input-link {
     width: 96%;
+    box-shadow: var(--box-shadow);
     margin-bottom: 20px;
     background: none;
     border: 1px solid var(--borde);
@@ -45,6 +46,7 @@
 .input-link:focus {
     outline: none;
     border-color: var(--acento);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .modal {
@@ -93,4 +95,3 @@
     gap: 8px;
     align-items: center;
 }
-

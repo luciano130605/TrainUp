@@ -78,15 +78,18 @@
 
 .hist-search-input input:hover {
     border-color: var(--borde-hover) !important;
+    box-shadow: var(--box-shadow-hover);
 }
 
 .hist-search-input input:focus {
     border-color: var(--acento) !important;
+    box-shadow: var(--box-shadow-hover);
 }
 
 .hist-search-input input {
     flex: 1;
     border-radius: 10px;
+    box-shadow: var(--box-shadow);
     background: var(--componente);
     border: 1px solid var(--borde);
     padding: 10px 0;
@@ -118,6 +121,7 @@
 .hist-card-compact {
     display: flex;
     flex-wrap: wrap;
+    box-shadow: var(--box-shadow);
     align-items: center;
     width: 90%;
     position: relative;
@@ -129,6 +133,12 @@
     background: var(--componente);
     margin-bottom: 8px;
     cursor: pointer;
+    transition: all .15s;
+}
+
+.hist-card-compact:hover {
+    border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .hist-card-main h4 {
@@ -197,6 +207,7 @@
 }
 
 .hist-stat-card {
+    box-shadow: var(--box-shadow);
     text-align: center;
     background: var(--componente);
     border: 1px solid var(--borde);
@@ -205,9 +216,7 @@
     transition: border-color .15s ease;
 }
 
-.hist-stat-card:hover {
-    border-color: var(--borde-hover);
-}
+
 
 .hist-stat-num {
     font-family: 'JetBrains Mono', monospace;

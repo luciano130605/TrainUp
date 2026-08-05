@@ -212,12 +212,18 @@
     background: var(--componente);
     border: 1px solid var(--borde);
     border-radius: 12px;
+    box-shadow: var(--box-shadow);
     padding: 16px 16px 14px;
     margin-bottom: 12px;
     margin-top: 12px;
+    transition: all .3s;
     cursor: pointer;
 }
 
+.rutina-card:hover {
+    box-shadow: var(--box-shadow-hover);
+    border-color: var(--borde-hover);
+}
 
 .rutina-card-header {
     display: flex;
@@ -267,6 +273,7 @@
 
 .crear-input {
     margin-bottom: 16px;
+
 }
 
 .crear-input label {
@@ -285,6 +292,7 @@
     background: var(--componente);
     border: 1px solid var(--borde);
     border-radius: 8px;
+    box-shadow: var(--box-shadow);
     padding: 14px 18px;
     color: var(--texto);
     font-size: 16px;
@@ -315,10 +323,12 @@
 
 .crear-input input:hover {
     border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .crear-input input:focus {
     outline: none;
+    box-shadow: var(--box-shadow-hover);
     border-color: var(--acento);
 }
 
@@ -329,6 +339,7 @@
     gap: 8px;
     padding: 14px 18px;
     border-radius: 8px;
+    box-shadow: var(--box-shadow);
     border: none;
     width: 100%;
     cursor: pointer;
@@ -338,6 +349,10 @@
     letter-spacing: 0.03em;
     text-transform: uppercase;
     transition: all .3s;
+}
+
+.btns:hover {
+    box-shadow: var(--box-shadow-hover);
 }
 
 .agregar {
@@ -553,7 +568,16 @@
 
 .ejercicio-inputs-cont.done {
     background: var(--acento-transp);
+}
 
+.ejercicio-inputs-cont input {
+    box-shadow: var(--box-shadow);
+}
+.ejercicio-inputs-cont input:hover {
+    box-shadow: var(--box-shadow-hover);
+}
+.ejercicio-inputs-cont input:focus {
+    box-shadow: var(--box-shadow-hover);
 }
 
 .ejercicio-inputs-cont.done input {
@@ -760,6 +784,50 @@
 
 
 
+.kebab-menu-rutina {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 4px;
+    background: var(--fondo);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    overflow: hidden;
+    z-index: 40;
+    min-width: 170px;
+}
+
+.kebab-rutina-titulo {
+    padding: 7px 12px;
+    font-size: .7rem;
+    color: var(--texto-gris);
+    text-align: center;
+    border-bottom: 1px solid var(--borde);
+}
+
+.kebab-rutina-item {
+    display: flex !important;
+    align-items: center;
+    gap: 8px !important;
+    background: none;
+    border: none;
+    font-size: .9rem;
+    padding: 13px 16px;
+    cursor: pointer;
+    color: var(--texto);
+    width: 100%;
+    transition: all .3s;
+}
+
+.kebab-rutina-item:hover {
+    background: var(--borde);
+}
+
+.kebab-rutina-item.active {
+    color: var(--acento);
+    background: var(--borde);
+}
+
 .kebab-menu {
     position: fixed;
     right: 18px;
@@ -790,6 +858,8 @@
 .kebab-menu .item:hover {
     background: var(--borde);
 }
+
+
 
 
 .kebab-filter {
@@ -1840,7 +1910,8 @@
     color: var(--txt-btn);
 }
 
-.tooltipe {
+.tooltipe,
+.tooltipe-fondo {
     position: relative;
     display: flex;
     align-items: center;
@@ -1848,13 +1919,13 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.tooltipe::after {
+.tooltipe-fondo::after {
     content: attr(data-tooltip);
     position: absolute;
     top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%) translateY(-4px);
-    background: var(--componente);
+    background: var(--fondo);
     backdrop-filter: blur(12px);
     color: var(--texto);
     font-size: .75rem;
@@ -1868,7 +1939,29 @@
     pointer-events: none;
 }
 
-.tooltipe-left {
+.tooltipe::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    background: var(--componente);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--borde);
+    color: var(--texto);
+    font-size: .75rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, transform .2s;
+    z-index: 999999 !important;
+    pointer-events: none;
+}
+
+.tooltipe-left,
+.tooltipe-fondo-left {
     position: relative;
     display: flex;
     align-items: center;
@@ -1876,11 +1969,33 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+.tooltipe-fondo-left::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: -30px;
+    border: 1px solid var(--borde);
+    top: calc(100% + 8px);
+    background: var(--fondo);
+    transform: translateX(-50%) translateY(-4px);
+    backdrop-filter: blur(12px);
+    color: var(--texto);
+    font-size: .75rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s, transform .2s;
+    z-index: 999999 !important;
+    pointer-events: none;
+}
+
 .tooltipe-left::after {
     content: attr(data-tooltip);
     position: absolute;
+    border: 1px solid var(--borde);
     top: calc(100% + 8px);
-    transform: translateX(-50%) translateY(-20px);
+    transform: translateX(-50%) translateY(-4px);
     background: var(--componente);
     backdrop-filter: blur(12px);
     color: var(--texto);
@@ -1899,7 +2014,11 @@
 @media (hover: hover) {
 
     .tooltipe:hover::after,
+    .tooltipe-fondo-left:hover::after,
+    .tooltipe-fondo:hover::after,
     .tooltipe-left:hover::after,
+    .tooltipe-fondo-left:focus-visible::after,
+    .tooltipe-fondo:focus-visible::after,
     .tooltipe-left:focus-visible::after,
     .tooltipe:focus-visible::after {
         opacity: 1;
@@ -1912,7 +2031,10 @@
 @media (hover: none) {
 
     .tooltipe:active::after,
-    .tooltipe-left:active::after,
+    .tooltipe-fondo-left:active::after .tooltipe-left:active::after,
+    .tooltipe-fondo:active::after,
+    .tooltipe-fondo:focus::after,
+    .tooltipe-fondo-left:focus::after,
     .tooltipe-left:focus::after,
     .tooltipe:focus::after {
         opacity: 1;
@@ -1994,6 +2116,7 @@
 .input-notas {
     margin-top: 10px;
     resize: none;
+    box-shadow: var(--box-shadow);
     text-align: start !important;
     width: 50% !important;
     background: none;
@@ -2004,6 +2127,7 @@
 
 .input-notas:focus {
     outline: none;
+    box-shadow: var(--box-shadow-hover);
     border-color: var(--acento);
 }
 
@@ -2105,4 +2229,102 @@
 .mini-sesion-acciones .mini-btn.acento {
     background: var(--acento);
     color: var(--txt-btn);
+}
+
+
+
+
+.descanso-barra-fija {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    z-index: 45;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    margin: 0 10px;
+    border-radius: 14px;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+    overflow: hidden;
+}
+
+.descanso-barra-progreso {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 3px;
+    background: var(--acento);
+    transition: width .3s linear;
+}
+
+.descanso-barra-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.descanso-barra-textos {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.descanso-barra-label {
+    font-size: .68rem;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--texto-gris);
+}
+
+.descanso-barra-tiempo {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--texto);
+}
+
+.descanso-barra-controles {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.descanso-barra-fija.compacta {
+    left: auto;
+    right: 14px;
+    bottom: calc(150px + env(safe-area-inset-bottom, 0px));
+    margin: 0;
+    background: var(--componente-transp-2);
+    backdrop-filter: blur(12px);
+    width: auto;
+    padding: 6px 8px 6px 10px;
+    border-radius: 999px;
+    gap: 8px;
+}
+
+.descanso-barra-fija.compacta .descanso-barra-progreso {
+    display: none;
+}
+
+.descanso-barra-fija.compacta .descanso-barra-info {
+    gap: 6px;
+}
+
+.descanso-barra-fija.compacta .descanso-barra-textos {}
+
+.descanso-barra-fija.compacta .descanso-barra-controles {
+    display: none;
+
+}
+
+.descanso-barra-fija.compacta .mini-btn {
+    width: 26px;
+    height: 26px;
 }

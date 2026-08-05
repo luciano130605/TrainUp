@@ -166,6 +166,7 @@
 
 .home-hoy-card {
     position: relative;
+    box-shadow: var(--box-shadow);
     background: var(--componente);
     border: 1px solid var(--borde-hover);
     border-radius: var(--home-radius);
@@ -320,6 +321,10 @@
     -webkit-overflow-scrolling: touch;
 }
 
+.home-quick-item:hover {
+    border-color: var(--borde-hover);
+}
+
 .home-quick-item {
     display: flex;
     align-items: center;
@@ -377,7 +382,7 @@
 }
 
 .home-ultimo-card:hover {
-    border-color: var(--acento);
+    border-color: var(--borde-hover);
 }
 
 .home-ultimo-icon {

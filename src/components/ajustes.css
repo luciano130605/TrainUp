@@ -161,6 +161,7 @@
     background: var(--componente);
     border: 1px solid var(--borde);
     border-radius: 8px;
+    box-shadow: var(--box-shadow);
     margin-top: 10px;
     padding: 6px 10px;
     width: 95%;
@@ -179,11 +180,11 @@
 .input-time-ajustes.disabled:hover {
     color: var(--texto-gris) !important;
     border: 1px solid var(--borde) !important;
-
 }
 
 .input-time-ajustes:hover {
     border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow);
 }
 
 .input-time-ajustes::-webkit-calendar-picker-indicator {

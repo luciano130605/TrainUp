@@ -10,6 +10,13 @@
   --texto: #f2f1ec;
   --dorado: #efb810;
   --dorado-transp: #d0a5242e;
+  --box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.35);
+
+  --box-shadow-hover:
+    0 2px 4px rgba(0, 0, 0, 0.4),
+    0 12px 32px rgba(0, 0, 0, 0.45);
+
   /* --acento: #c6ff34;
   --acento-transp: rgba(197, 255, 52, 0.675); */
   --acento2: #b2d5e5;
@@ -89,6 +96,8 @@ html.claro {
   --componente: rgb(248, 251, 248);
   --componente-transp: rgba(248, 251, 248, 0.388);
   --texto: #171717;
+  --box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 8px 24px rgba(0, 0, 0, 0.08);
   --borde: #dbdde0;
   --borde-hover: #c9cacb;
   --texto-gris: #757272;

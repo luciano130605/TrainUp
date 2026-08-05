@@ -7,14 +7,13 @@ import "./descanso.css";
 import "./rutina.css";
 import { scheduleServerPush, cancelServerPush } from '../utils/push';
 import { AgregarQuince, PauseIcon, PlayIcon, Retroceder15, TimerIcon } from '../icons/icons';
+import { X } from 'lucide-react';
 
 const stopAll = (e) => e.stopPropagation();
 
 let store = null;         // { total, running, endTime, pausedRemaining }
-let toastOpen = false;    // si el toast está actualmente visible
 let intervalId = null;
 let beeped = false;
-let realToastId = null;
 let wakeLock = null;
 const listeners = new Set();
 let serverTimerId = null;
@@ -29,15 +28,21 @@ function getRemaining() {
     if (!store.running) return store.pausedRemaining;
     return Math.max(0, Math.round((store.endTime - Date.now()) / 1000));
 }
-
 function tick() {
     if (!store) return;
     const remaining = getRemaining();
     if (remaining <= 0 && !beeped) {
         beeped = true;
         playBeep();
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            navigator.vibrate([200, 80, 200, 80, 200]);
+        }
         sileo.success({ title: "Tiempo terminado", duration: 3000 });
         showBrowserNotification();
+
+        setTimeout(() => {
+            dismiss();
+        }, 1000);
     }
     notify();
 }
@@ -109,64 +114,15 @@ function releaseWakeLock() {
     wakeLock = null;
 }
 
-// --- Crear / mostrar / ocultar el toast (independiente del timer) ---
-function createToast() {
-    realToastId = sileo.action({
-        title: <TituloDescanso />,
-        duration: null,
-        autopilot: false,
-        description: <ContenidoDescanso />,
-        button: {
-            title: "Cancelar",
-            className: "btns eliminar",
-            onClick: dismiss,
-        },
-        styles: {
-            container: "sileo-cont",
-            title: "sileo-title",
-            description: "sileo-description",
-            button: "btns eliminar sileo desc",
-        },
-    });
-}
 
-function hideToast() {
-    if (realToastId) {
-        try { sileo.dismiss(realToastId); } catch (e) { }
-        realToastId = null;
-    }
-    toastOpen = false;
-    notify();
-}
-
-function showToast() {
-    if (!store) return;
-    if (realToastId) {
-        try { sileo.dismiss(realToastId); } catch (e) { }
-        realToastId = null;
-    }
-    createToast();
-    toastOpen = true;
-    notify();
-}
-
-function toggleToast() {
-    if (toastOpen) hideToast(); else showToast();
-}
 
 function dismiss() {
     clearInterval(intervalId);
     intervalId = null;
-    cancelServerPush(serverTimerId); // 👈
-    serverTimerId = null;            // 👈
+    cancelServerPush(serverTimerId);
+    serverTimerId = null;
     store = null;
-    toastOpen = false;
     releaseWakeLock();
-    listeners.clear();
-    if (realToastId) {
-        try { sileo.dismiss(realToastId); } catch (e) { }
-    }
-    realToastId = null;
 }
 
 function useDescansoStore() {
@@ -268,90 +224,50 @@ function ContenidoDescanso() {
     );
 }
 
-// --- Botón circular fijo: abre/cierra el toast sin tocar el timer ---
-// --- Botón circular fijo: abre/cierra el toast sin tocar el timer, y es arrastrable ---
-export function DescansoBotonFlotante() {
-    const s = useDescansoStore();
-    const [pos, setPos] = useState(null); // null = usa la posición default (CSS); si no, {x, y} en px
-    const dragState = React.useRef({ dragging: false, moved: false, offsetX: 0, offsetY: 0 });
-    const btnRef = React.useRef(null);
 
+export function DescansoBarraFija({ compact = false }) {
+    const s = useDescansoStore();
     if (!s) return null;
 
-    const clamp = (x, y) => {
-        const el = btnRef.current;
-        const w = el ? el.offsetWidth : 48;
-        const h = el ? el.offsetHeight : 48;
-        const maxX = window.innerWidth - w - 8;
-        const maxY = window.innerHeight - h - 8;
-        return {
-            x: Math.min(Math.max(8, x), Math.max(8, maxX)),
-            y: Math.min(Math.max(8, y), Math.max(8, maxY)),
-        };
-    };
-
-    const handlePointerDown = (e) => {
-        const el = btnRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        dragState.current = {
-            dragging: true,
-            moved: false,
-            offsetX: e.clientX - rect.left,
-            offsetY: e.clientY - rect.top,
-        };
-        el.setPointerCapture(e.pointerId);
-    };
-
-    const handlePointerMove = (e) => {
-        if (!dragState.current.dragging) return;
-        const dx = e.clientX - dragState.current.offsetX;
-        const dy = e.clientY - dragState.current.offsetY;
-
-        if (!dragState.current.moved) {
-            // Umbral chico para no confundir un tap con un arrastre
-            const el = btnRef.current;
-            const rect = el.getBoundingClientRect();
-            const movedDist = Math.hypot(e.clientX - (rect.left + dragState.current.offsetX), e.clientY - (rect.top + dragState.current.offsetY));
-            if (movedDist < 4) return;
-            dragState.current.moved = true;
-        }
-
-        setPos(clamp(dx, dy));
-    };
-
-    const handlePointerUp = (e) => {
-        if (!dragState.current.dragging) return;
-        const wasMoved = dragState.current.moved;
-        dragState.current.dragging = false;
-        try { btnRef.current && btnRef.current.releasePointerCapture(e.pointerId); } catch (err) { }
-
-        if (!wasMoved) {
-            // No se movió -> fue un tap/click real: togglear el toast
-            toggleToast();
-        }
-    };
-
     const remaining = getRemaining();
+    const { running, total } = s;
+    const pct = total > 0 ? Math.min(100, Math.max(0, ((total - remaining) / total) * 100)) : 0;
 
-    const btn = (
-        <button
-            ref={btnRef}
-            type="button"
-            className="btn acento descanso-fab"
-            title={toastOpen ? 'Ocultar temporizador de descanso' : 'Mostrar temporizador de descanso'}
-            style={pos ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : undefined}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerUp}
-        >
-            <TimerIcon size={20} />
-        </button>
+    const bar = (
+        <div className={`descanso-barra-fija ${compact ? 'compacta' : ''}`}>
+            <div className="descanso-barra-progreso" style={{ width: `${pct}%` }} />
+            <div className="descanso-barra-info">
+                <RelojDescanso remaining={remaining} total={total} size={compact ? 16 : 22} />
+                <div className="descanso-barra-textos">
+                    {!compact && <span className="descanso-barra-label">Descanso</span>}
+                    <span className="descanso-barra-tiempo">{formatElapsed(remaining * 1000)}</span>
+                </div>
+            </div>
+            <div className="descanso-barra-controles">
+                {!compact && (
+                    <button type="button" className="mini-btn" title="Restar 15s" onClick={() => adjust(-15)}>
+                        <Retroceder15 size={16} />
+                    </button>
+                )}
+                <button type="button" className="mini-btn descanso" title={running ? 'Pausar' : 'Reanudar'} onClick={togglePause}>
+                    {running ? <PauseIcon size={compact ? 14 : 16} /> : <PlayIcon size={compact ? 14 : 16} />}
+                </button>
+                {!compact && (
+                    <button type="button" className="mini-btn" title="Sumar 15s" onClick={() => adjust(15)}>
+                        <AgregarQuince size={16} />
+                    </button>
+                )}
+                <button type="button" className="mini-btn" title="Cancelar descanso" onClick={dismiss}>
+                    <X size={compact ? 14 : 16} />
+                </button>
+            </div>
+        </div>
     );
 
-    return ReactDOM.createPortal(btn, document.body);
+    return ReactDOM.createPortal(bar, document.body);
 }
+
+
 export default function openTiempoDescansoToast(seconds) {
     beeped = false;
     requestNotificationPermission();
@@ -359,25 +275,19 @@ export default function openTiempoDescansoToast(seconds) {
     if (store) {
         clearInterval(intervalId);
         intervalId = null;
-        cancelServerPush(serverTimerId); // 👈 cancela el anterior si había uno
+        cancelServerPush(serverTimerId);
         serverTimerId = null;
-        if (realToastId) { try { sileo.dismiss(realToastId); } catch (e) { } }
         store = null;
-        realToastId = null;
     }
 
     const endTime = Date.now() + seconds * 1000;
     store = { total: seconds, running: true, endTime, pausedRemaining: seconds };
     intervalId = setInterval(tick, 1000);
 
-    scheduleServerPush(endTime).then(id => { serverTimerId = id; }); // 👈 nuevo
+    scheduleServerPush(endTime).then(id => { serverTimerId = id; });
 
-    createToast();
-    toastOpen = true;
     requestWakeLock();
     notify();
-
-    return realToastId;
 }
 
 export function resetDescansoState() {

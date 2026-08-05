@@ -57,6 +57,7 @@
     border-radius: 8px;
     margin-top: 18px !important;
     background: var(--componente);
+    box-shadow: var(--box-shadow);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -112,6 +113,7 @@
 .input-eliminar {
     display: flex;
     align-items: center;
+    box-shadow: var(--box-shadow);
     background: var(--fondo-transp);
     border: 1px solid var(--rojo);
     border-radius: 8px;
@@ -124,10 +126,12 @@
 
 .input-eliminar:hover {
     border-color: var(--rojo);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .input-eliminar:focus-within {
     border-color: var(--rojo);
+    box-shadow: var(--box-shadow-hover);
 }
 
 

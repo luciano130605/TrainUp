@@ -330,12 +330,13 @@ export default function RutinaDetalle({
             <div
               key={s.label}
               style={{
+
                 flex: 1,
                 textAlign: 'center',
                 background: 'var(--componente)',
                 border: '1px solid var(--borde)',
                 borderRadius: 12,
-                padding: '14px 6px',
+                padding: '14px 6px', boxShadow: "var(--box-shadow)"
               }}
             >
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 700, fontSize: '1.3rem', color: 'var(--acento)' }}>

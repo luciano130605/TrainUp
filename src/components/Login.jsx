@@ -380,9 +380,7 @@ export default function Login({ onRegisteringChange } = {}) {
             {isRegister && step === 3 && 'Contanos de vos'}
           </h1>
 
-          <div className="home-logo">
-            <Logo />
-          </div>
+          
         </div>
 
         <div className="login-tabs" role="tablist" aria-label="Modo de acceso">

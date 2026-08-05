@@ -62,6 +62,7 @@
 
 .mensajes-row {
     display: flex;
+    box-shadow: var(--box-shadow);
     align-items: center;
     gap: 12px;
     background: var(--componente-transp);
@@ -69,8 +70,13 @@
     border: 1px solid var(--borde);
     padding: 12px;
     border-bottom: 1px solid var(--borde);
+    transition: all .15s;
 }
 
+.mensajes-row:hover {
+    border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow-hover);
+}
 
 .mensajes-avatar {
     width: 40px;
@@ -295,6 +301,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    box-shadow: var(--box-shadow);
     padding: 12px 14px;
     border-radius: 8px;
     background: var(--componente);
@@ -305,6 +312,12 @@
     position: fixed;
     width: 80%;
     bottom: 80px;
+    transition: all .15s;
+}
+
+.rutina-chat-composer:hover {
+    border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow-hover);
 }
 
 .rutina-chat-composer svg {

@@ -33,7 +33,7 @@ import Ajustes from './components/ajustes';
 import ProximamentePage from './components/proximamente';
 import Perfil from './components/perfil';
 import { openDescansoToast } from './components/descansoToastModal';
-import openTiempoDescansoToast, { resetDescansoState } from './components/TiempoDescansoToast';
+import openTiempoDescansoToast, { resetDescansoState, DescansoBarraFija } from './components/TiempoDescansoToast';
 import MiniSesionBar from './components/MiniSesionBar';
 import PageSkeleton from './components/PageSkeleton';
 import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
@@ -1072,6 +1072,7 @@ export default function App() {
     setSession(null);
     lastSavedSessionRef.current = null;
     window.storage.delete('gym_active_session', false).catch(() => { });
+    resetDescansoState();
     setScreen('routines');
     showToast(debeGuardar ? 'Rutina guardada' : 'Rutina descartada');
   }
@@ -1089,6 +1090,7 @@ export default function App() {
           lastSavedSessionRef.current = null;
           window.storage.delete('gym_active_session', false).catch(() => { });
           setScreen('routines');
+          resetDescansoState();
           sileo.dismiss(toastId);
         },
       },
@@ -1921,6 +1923,7 @@ export default function App() {
             onFinish={quickFinishFromBar}
           />
         )}
+        <DescansoBarraFija compact={showTabs} />
 
         {showTabs && (
           <TabBar

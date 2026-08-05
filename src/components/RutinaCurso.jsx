@@ -4,9 +4,8 @@ import { formatElapsed } from '../utils/time';
 import EjercicioModal from './ejercicioModal';
 import ResumenRutina from './ResumenRutina';
 import "./rutina.css"
-import { DescansoBotonFlotante, resetDescansoState } from './TiempoDescansoToast';
+import { AddSquare, Edit, Maxime, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar, Rotate, TickIcon, Eye, EyeSlash, CopyIcon } from '../icons/icons';
 import { sileo } from 'sileo';
-import { AddSquare, Edit, Maxime, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar, Rotate, TickIcon, Eye, EyeSlash } from '../icons/icons';
 import { MUSCLE_COLORS } from './rutinaDetalle';
 
 function formatElapsedFull(ms) {
@@ -42,17 +41,6 @@ function esEjercicioDeTiempo(ex) {
   return !!ex.esTiempo || EJERCICIOS_TIEMPO.includes(nombre);
 }
 
-// ---- Auto-completado de series al terminar una ----
-const AUTOFILL_OPTIONS = [
-  { value: 'vacio', label: 'Dejar vacío' },
-  { value: 'ultima', label: 'Copiar última serie' },
-  { value: 'rutina', label: 'Copiar de la rutina' },
-];
-const AUTOFILL_LABELS = {
-  vacio: 'Auto: vacío',
-  ultima: 'Auto: última serie',
-  rutina: 'Auto: rutina',
-};
 
 function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
   const [running, setRunning] = React.useState(false);
@@ -121,52 +109,16 @@ function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
   );
 }
 
-// // Menú desplegable de modo de auto-completado por ejercicio
-// function AutofillMenu({ mode, open, onToggle, onSelect }) {
-//   return (
-//     <div style={{ position: 'relative' }}>
-//       <button
-//         type="button"
-//         className="btns agregar"
-//         onClick={onToggle}
-//       >
-//         <Repeat size={12} /> {AUTOFILL_LABELS[mode]}
-//       </button>
-//       {open && (
-//         <>
-//           <div
-//             style={{ position: 'fixed', inset: 0, zIndex: 40 }}
-//             onClick={() => onToggle()}
-//           />
-//           <div
-//             style={{
-//               position: 'absolute', bottom: '100%', left: 0, marginBottom: 4,
-//               background: 'var(--fondo-tarjeta, #1c1c1e)', border: '1px solid var(--borde, #333)',
-//               borderRadius: 8, zIndex: 41, minWidth: 190, overflow: 'hidden',
-//               boxShadow: '0 4px 16px rgba(0,0,0,.35)',
-//             }}
-//           >
-//             {AUTOFILL_OPTIONS.map(opt => (
-//               <button
-//                 key={opt.value}
-//                 type="button"
-//                 onClick={() => onSelect(opt.value)}
-//                 style={{
-//                   display: 'block', width: '100%', textAlign: 'left',
-//                   padding: '9px 12px', background: opt.value === mode ? 'var(--acento-suave, rgba(255,255,255,.06))' : 'transparent',
-//                   border: 'none', color: opt.value === mode ? 'var(--acento)' : 'var(--texto)',
-//                   fontSize: 13, cursor: 'pointer',
-//                 }}
-//               >
-//                 {opt.label}
-//               </button>
-//             ))}
-//           </div>
-//         </>
-//       )}
-//     </div>
-//   );
-// }
+const AUTOFILL_CYCLE = ['ultima', 'rutina'];
+const AUTOFILL_LABELS = {
+  ultima: 'Última serie',
+  rutina: 'Rutina',
+};
+function autofillIcon(mode, size = 12) {
+  if (mode === 'ultima') return <CopyIcon size={size} />;
+  if (mode === 'rutina') return <Remplazar size={size} />;
+  return <X size={size} />;
+}
 
 export default function RutinaCurso({
   session, restTimer, restDefault, history = [], routineName,
@@ -181,6 +133,8 @@ export default function RutinaCurso({
   const s = session;
   const [collapsedIds, setCollapsedIds] = React.useState(new Set());
   const [, forceTick] = React.useState(0);
+  const [autofillModeByExercise, setAutofillModeByExercise] = React.useState({});
+  const [autofillMenuOpen, setAutofillMenuOpen] = React.useState(null);
   const [gifPreview, setGifPreview] = React.useState(null);
   const [gifFailedIds, setGifFailedIds] = React.useState(new Set());
   const exerciseRefs = React.useRef({});
@@ -188,14 +142,21 @@ export default function RutinaCurso({
   const [resumenOpen, setResumenOpen] = React.useState(false);
   const [prsSesion, setPrsSesion] = React.useState([]);
   const [finishingKeys, setFinishingKeys] = React.useState(new Set());
-  const [autofillModeByExercise, setAutofillModeByExercise] = React.useState({});
-  const [autofillMenuOpen, setAutofillMenuOpen] = React.useState(null);
   const [soloActualMode, setSoloActualMode] = React.useState(false);
 
   const getAutofillMode = React.useCallback(
     (key) => autofillModeByExercise[key] || 'vacio',
     [autofillModeByExercise]
   );
+
+  const cycleAutofillMode = React.useCallback((key) => {
+    setAutofillModeByExercise(prev => {
+      const current = prev[key] || 'vacio';
+      const idx = AUTOFILL_CYCLE.indexOf(current);
+      const next = AUTOFILL_CYCLE[(idx + 1) % AUTOFILL_CYCLE.length];
+      return { ...prev, [key]: next };
+    });
+  }, []);
 
   React.useEffect(() => {
     if (s?.paused) return;
@@ -210,11 +171,7 @@ export default function RutinaCurso({
     }
   }, [autoOpenResumen]);
 
-  React.useEffect(() => {
-    return () => {
-      resetDescansoState();
-    };
-  }, []);
+
 
   // ---- Estos dos hooks estaban DESPUÉS del "if (!s) return null" ----
   // ---- Eso rompía las reglas de los hooks cuando session pasaba a null ----
@@ -442,7 +399,6 @@ export default function RutinaCurso({
 
   return (
     <>
-      <DescansoBotonFlotante />
       <div className="header-cont">
         <div style={{ display: 'flex', gap: 6 }}>
 
@@ -708,14 +664,61 @@ export default function RutinaCurso({
                     </button>
                   )}
                   {onEditExercise && (
-                    <button className="mini-btn" title="Editar ejercicio" onClick={() => onEditExercise(exi)}>
+                    <button className="mini-btn tooltipe-fondo" title="Editar ejercicio" onClick={() => onEditExercise(exi)} data-tooltip=
+                      {`Editar`}>
                       <Edit size={14} />
                     </button>
                   )}
                   {onOpenPicker && (
-                    <button className="mini-btn" title="Cambiar ejercicio" onClick={() => onOpenPicker(exi)}>
+                    <button className="mini-btn tooltipe-fondo" title="Cambiar ejercicio" onClick={() => onOpenPicker(exi)} data-tooltip=
+                      {`Remplazar`}>
                       <Remplazar size={14} />
                     </button>
+                  )}
+
+                  {ex.sets.length > 1 && (
+                    <div style={{ position: 'relative' }}>
+                      <button
+                        type="button"
+                        className="mini-btn tooltipe-fondo-left"
+                        title={`Autocompletado: ${AUTOFILL_LABELS[getAutofillMode(key)]}`}
+                        data-tooltip={`Autocompletar serie`}
+                        onClick={() => setAutofillMenuOpen(prev => prev === key ? null : key)}
+                      >
+                        {autofillIcon(getAutofillMode(key))}
+                      </button>
+
+                      {autofillMenuOpen === key && (
+                        <>
+                          <div
+                            style={{ position: 'fixed', inset: 0, zIndex: 40 }}
+                            onClick={() => setAutofillMenuOpen(null)}
+                          />
+                          <div
+                            className='kebab-menu-rutina'
+
+                          >
+                            <div className='kebab-rutina-titulo'>
+                              Autocompletar siguiente la serie
+                            </div>
+                            {AUTOFILL_CYCLE.map(mode => (
+                              <button
+                                key={mode}
+                                type="button"
+                                onClick={() => {
+                                  setAutofillModeByExercise(prev => ({ ...prev, [key]: mode }));
+                                  setAutofillMenuOpen(null);
+                                }}
+                                className={`kebab-rutina-item ${mode === getAutofillMode(key) ? "active" : ""}`}
+
+                              >
+                                {autofillIcon(mode)} {AUTOFILL_LABELS[mode]}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -785,21 +788,12 @@ export default function RutinaCurso({
                       </div>
                     );
                   })}
+
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                     {ex.sets.length > 0 && onDuplicateLastSet && (
                       <button className="btns agregar" onClick={() => onDuplicateLastSet(exi)}><Copy size={12} /> Duplicar</button>
                     )}
-                    {/* {ex.sets.length > 1 && (
-                      <AutofillMenu
-                        mode={getAutofillMode(key)}
-                        open={autofillMenuOpen === key}
-                        onToggle={() => setAutofillMenuOpen(prev => prev === key ? null : key)}
-                        onSelect={(value) => {
-                          setAutofillModeByExercise(prev => ({ ...prev, [key]: value }));
-                          setAutofillMenuOpen(null);
-                        }}
-                      />
-                    )} */}
+
                   </div>
                   {onUpdateNotes && (
                     <input

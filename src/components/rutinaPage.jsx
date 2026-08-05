@@ -308,7 +308,7 @@ export default function RutinaPage({
           </div>
         ) : (
           <>
-            <div style={{ display: 'flex', gap: 10, marginBottom: 20, marginTop: 20 }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 20, marginTop: 20, }}>
               {[
                 { n: routines.length, label: 'Rutinas' },
                 { n: rutinasDeHoy.length, label: 'Hoy' },
@@ -319,6 +319,7 @@ export default function RutinaPage({
                   style={{
                     flex: 1,
                     textAlign: 'center',
+                    boxShadow: "var(--box-shadow)",
                     background: 'var(--componente)',
                     border: '1px solid var(--borde)',
                     borderRadius: 12,

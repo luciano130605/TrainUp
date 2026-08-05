@@ -165,6 +165,7 @@
   gap: 10px;
   background: var(--fondo-transp);
   border: 1px solid var(--borde);
+  box-shadow: var(--box-shadow);
   border-radius: 8px;
   padding: 0 12px;
   color: var(--texto);
@@ -173,10 +174,12 @@
 
 .login-input:hover {
   border-color: var(--borde-hover);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .login-input:focus-within {
   border-color: var(--acento);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .login-input input,
@@ -395,6 +398,7 @@
 
 .login-objetivo-card {
   display: flex;
+  box-shadow: var(--box-shadow);
   align-items: center;
   gap: 8px;
   border: 1px solid var(--borde);
@@ -411,10 +415,12 @@
 
 .login-objetivo-card:hover {
   border-color: var(--borde-hover);
+  box-shadow: var(--box-shadow-hover);
 }
 
 .login-objetivo-card.active {
   border-color: var(--acento);
+  box-shadow: var(--box-shadow-hover);
   background: var(--acento-transp);
   color: var(--txt-btn);
 }
