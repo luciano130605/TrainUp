@@ -8,6 +8,7 @@ import {
     getProfileView, sendFriendRequest, respondFriendRequest,
     removeFriendship, sendRoutineShare, fetchFriendships,
     getProfileVolumeByMonth, getMutualFriends,
+    blockUser,
 } from '../lib/social';
 import PerfilStats from './PerfilStats';
 import './perfil.css';
@@ -81,6 +82,19 @@ function ProgresoChart({ data }) {
     );
 }
 
+function formatLastSeen(ts) {
+    if (!ts) return null;
+    const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
+    if (mins < 1) return 'Justo ahora';
+    if (mins < 60) return `${mins} min`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days === 1) return 'Ayer';
+    if (days < 7) return `${days} días`;
+    return new Date(ts).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
 export default function PerfilPublico({ userId, targetId, myRoutines, onBack, onImportRoutine }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState(null);
@@ -93,6 +107,19 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
     const [menuOpen, setMenuOpen] = useState(false);
     const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('stats');
+
+    const [confirmBlockOpen, setConfirmBlockOpen] = useState(false);
+
+
+    async function handleBlock() {
+        setBusy(true);
+        const { error } = await blockUser(targetId);
+        setBusy(false);
+        if (error) { sileo.error({ title: 'No se pudo bloquear' }); return; }
+        sileo.success({ title: 'Usuario bloqueado' });
+        setConfirmBlockOpen(false);
+        onBack();
+    }
 
     async function load() {
         setLoading(true);
@@ -275,6 +302,12 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                                         Dejar de ser amigos
                                     </button>
                                 )}
+                                <button
+                                    className="perfil-menu-item perfil-menu-item--danger"
+                                    onClick={() => { setMenuOpen(false); setConfirmBlockOpen(true); }}
+                                >
+                                    Bloquear usuario
+                                </button>
                             </div>
                         </>
                     )}
@@ -285,25 +318,45 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                 className="perfil-banner"
                 style={data.banner_color ? { background: `linear-gradient(135deg, ${data.banner_color}, ${data.banner_color}99 85%)` } : undefined}
             >
-                <div
-                    className="perfil-avatar-lg"
-                    style={data.avatar_color ? { background: data.avatar_color } : undefined}
-                >
-                    {iniciales.toUpperCase()}
+
+                <div className="perfil-avatar-wrap">
+                    <div
+                        className="perfil-avatar-lg"
+                        style={data.avatar_color ? { background: data.avatar_color } : undefined}
+                    >
+                        {iniciales.toUpperCase()}
+                    </div>
+
+                    {data.mostrar_actividad && data.is_online && (
+                        <span className="perfil-avatar-online" title={
+                            "En linea"
+                        } />
+                    )}
                 </div>
             </div>
 
             <div className="perfil-info">
                 <div className="perfil-nombre-row">
                     <h2 className="perfil-nombre">{nombreVisible}</h2>
+
                     {data.friendship_status === 'accepted' && (
                         <span className="perfil-chip perfil-chip--amigos">Amigos</span>
                     )}
                 </div>
-                <span className="perfil-email">@{data.username}</span>
+                <div className='space'>
+                    <span className="perfil-email">@{data.username}</span>
+                    {data.mostrar_actividad && (
+                        data.is_online ? (
+                            <span className="perfil-chip perfil-chip--amigos" >● En línea</span>
+                        ) : data.last_seen_at ? (
+                            <span className="perfil-chip">Últ vez: {formatLastSeen(data.last_seen_at)}</span>
+                        ) : null
+                    )}
+                </div>
                 {fechaIngreso && (
                     <span className="perfil-fecha-ingreso">Se unió en {fechaIngreso}</span>
                 )}
+
             </div>
 
             {tieneResumen && (
@@ -394,13 +447,13 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
 
             <div className="perfil-tabbar">
                 <button
-                    className={`perfil-tab${activeTab === 'stats' ? ' activo' : ''}`}
+                    className={`mensajes-tab${activeTab === 'stats' ? ' activo' : ''}`}
                     onClick={() => setActiveTab('stats')}
                 >
                     Stats
                 </button>
                 <button
-                    className={`perfil-tab${activeTab === 'rutinas' ? ' activo' : ''}`}
+                    className={`mensajes-tab${activeTab === 'rutinas' ? ' activo' : ''}`}
                     onClick={() => setActiveTab('rutinas')}
                 >
                     Rutinas
@@ -484,6 +537,26 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                     </div>
                 )
             }
+
+            {confirmBlockOpen && (
+                <div className="modal-overlay" onClick={() => !busy && setConfirmBlockOpen(false)}>
+                    <div className="modal-cont modal-cont--danger" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <h3>¿Bloquear a {nombreVisible}?</h3>
+                        <p className="header-sub" style={{ marginBottom: 16 }}>
+                            No va a poder ver tu perfil ni enviarte solicitudes. Se rompe la amistad si la tenían.
+                        </p>
+                        <div className="login-step-actions" style={{ justifyContent: 'center' }}>
+                            <button className="btns agregar login-btn" onClick={() => setConfirmBlockOpen(false)} disabled={busy}>
+                                Cancelar
+                            </button>
+                            <button className="btns eliminar login-btn" onClick={handleBlock} disabled={busy}>
+                                {busy ? <Loader2 size={16} className="login-spin" /> : ''}
+                                {busy ? 'Bloqueando...' : 'Bloquear'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {
                 confirmRemoveOpen && (

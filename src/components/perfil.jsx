@@ -8,10 +8,10 @@ import { sileo } from 'sileo';
 import { supabase } from '../lib/supabaseClient';
 import { GENEROS, OBJETIVOS, DIAS, normalizeUsername } from './Login';
 import './perfil.css';
-import { setPrivacySettings } from '../lib/social';
+import { getBlockedUsers, setPrivacySettings, unblockUser } from '../lib/social';
 import UserIcon from '../icons/user';
 import UserFillIcon from '../icons/userFill';
-import { GlobalIcon, Lockicon, LogOutIcon, NotificationIcon, TrashIcon } from '../icons/icons';
+import { GlobalIcon, Lockicon, LogOutIcon, NotificationIcon, TrashIcon, UnlockIcon } from '../icons/icons';
 
 const emptyProfile = {
     nombre: '',
@@ -24,6 +24,7 @@ const emptyProfile = {
     diasEntrenamiento: '',
     mostrarNombre: true,
     mostrarRutinas: true,
+    mostrarActividad: true,
     mostrarStats: true,
 };
 
@@ -80,6 +81,15 @@ export default function Perfil({
 
     const racha = useMemo(() => calcularRacha(history), [history]);
 
+
+    const [blocked, setBlocked] = useState([]);
+
+    useEffect(() => {
+        if (!userId) return;
+        getBlockedUsers().then(({ data }) => setBlocked(data || []));
+    }, [userId]);
+
+
     useEffect(() => {
         if (!supabase || !userId) return;
         (async () => {
@@ -95,6 +105,7 @@ export default function Perfil({
                     nombre: data.nombre || '',
                     apellido: data.apellido || '',
                     username: data.username || '',
+                    mostrarActividad: data.mostrar_actividad ?? true,
                     fechaNacimiento: data.fecha_nacimiento || '',
                     genero: data.genero || '',
                     alturaCm: data.altura_cm != null ? String(data.altura_cm) : '',
@@ -137,6 +148,14 @@ export default function Perfil({
         const { data, error: rpcError } = await supabase.rpc('username_available', { p_username: u });
         if (rpcError) { setUsernameStatus(null); return; }
         setUsernameStatus(data ? 'available' : 'taken');
+    }
+
+
+    async function handleUnblock(id) {
+        const { error } = await unblockUser(id);
+        if (error) { sileo.error({ title: 'No se pudo desbloquear' }); return; }
+        setBlocked(b => b.filter(u => u.id !== id));
+        sileo.success({ title: 'Usuario desbloqueado' });
     }
 
     async function handleSave(event) {
@@ -448,6 +467,7 @@ export default function Perfil({
 
                 { key: 'mostrarRutinas', db: 'mostrar_rutinas', label: 'Mis rutinas' },
                 { key: 'mostrarStats', db: 'mostrar_stats', label: 'Mis stats y racha' },
+                { key: 'mostrarActividad', db: 'mostrar_actividad', label: 'En línea / última vez' },
             ].map(({ key, db, label }) => (
                 <div className="perfil-row" key={key}>
                     <div className="perfil-row-label">
@@ -483,6 +503,27 @@ export default function Perfil({
                 onChange={(e) => onChangeReminderTime(e.target.value)}
                 disabled={!reminderEnabled}
             />
+
+            <h3 className="perfil-seccion-titulo">Bloqueados</h3>
+            {blocked.length === 0 ? (
+                <p className="header-sub" style={{ marginBottom: 10, display: "flex", alignItems: "center", justifyContent: "center" }}>                                <UnlockIcon size={18} />
+                </p>
+            ) : (
+                <div className="perfil-bloqueados-scroll">
+                    {blocked.map(u => (
+                        <div className="perfil-row" key={u.id}>
+                            <div className="perfil-row-label">
+                                <span>{u.nombre || u.username}</span>
+                            </div>
+                            <button className="btn tooltipe" data-tooltip={
+                                "Desbloquear"
+                            } onClick={() => handleUnblock(u.id)}>
+                                <UnlockIcon size={18} />
+                            </button>
+                        </div>
+                    ))}
+                </div>
+            )}
 
             <h3 className="perfil-seccion-titulo">Cuenta</h3>
             <button className="btns agregar perfil-cuenta-btn" onClick={onSignOut} type="button">

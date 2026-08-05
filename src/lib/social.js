@@ -145,3 +145,25 @@ export async function getMutualFriends(targetId) {
     const { data, error } = await supabase.rpc('get_mutual_friends', { p_target_id: targetId });
     return { data: data || [], error };
 }
+
+
+export async function heartbeat() {
+    if (!supabase) return;
+    return supabase.rpc('heartbeat');
+}
+
+export async function blockUser(targetId) {
+    if (!supabase || !targetId) return { error: null };
+    return supabase.rpc('block_user', { p_blocked_id: targetId });
+}
+
+export async function unblockUser(targetId) {
+    if (!supabase || !targetId) return { error: null };
+    return supabase.rpc('unblock_user', { p_blocked_id: targetId });
+}
+
+export async function getBlockedUsers() {
+    if (!supabase) return { data: [], error: null };
+    const { data, error } = await supabase.rpc('get_blocked_users');
+    return { data: data || [], error };
+}

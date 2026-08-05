@@ -238,7 +238,7 @@
 
 .todo {
     grid-column: span 2;
-    width: 105%;
+    width: 100%;
 }
 
 b {
@@ -791,4 +791,56 @@ b {
     background: var(--componente);
     padding: 3px;
     cursor: pointer;
+}
+
+
+.perfil-bloqueados-scroll {
+    max-height: 260px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.space {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+
+.perfil-avatar-online {
+    position: absolute;
+    left: 75px;
+    bottom: -30px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #22c55e;
+    z-index: 2;
+}
+
+.perfil-avatar-online::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: inherit;
+    animation: onlinePulse 1.6s ease-out infinite;
+}
+
+@keyframes onlinePulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.8;
+    }
+
+    70% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1.4);
+        opacity: 0;
+    }
 }

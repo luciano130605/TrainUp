@@ -11,9 +11,8 @@ Curso
 
 
 Perfo
-* Que funcione sin wifi, todo local y que se guarde en la BD cuando tenga wifi.. que avise con un icon
 * Cuando achico una rutina el tiempo no vuelve
-* agregar q dias entreno para q no se corta la racha, si entreno de l a v que la racha solo cuenta de L a V
+* Que funcione sin wifi, todo local y que se guarde en la BD cuando tenga wifi.. que avise con un icon
 
 
 Diseño 
@@ -21,95 +20,6 @@ Diseño
 
 Social / Comunidad
 * notificaciones push cuando te envian un msj
-* en linea o ult vez hace X minutos (poder sacar en el perfil)
-* bloquear usuario (no aparece mas)
-
-
-
-perfil 
-mi perfil 
-* El banner en el perfil puede ser del color que prefiera y el avatar tb
-* Poder Editar el perfil desde ahi, compartir perfil 
-
-perfil publico
-* fecha de ingreso (Todos)
-* Agregar progreso      
-Peso corporal a lo largo del tiempo.
-Evolución de fuerza.
-PRs por mes.
-Entrenamientos por semana.
-Racha de entrenamiento.
-Progreso de fuerza
-
-  100kg ┤             ●
-   80kg ┤        ●────
-   60kg ┤   ●────
-   40kg ┤●──
-        └──────────────
-         Ene Feb Mar Abr
-
-* mis rutinas
-┌──────────────────────────┐
-│ 💪 Push                  │
-│ 6 ejercicios · 18 series │
-│ Última vez: hace 2 días  │
-│                          │
-│ [Ver rutina] [Copiar]    │
-└──────────────────────────┘
-
-* parte social, cuantos amigos, cuantas rutinas,etc
-* amigos un par y un btn para ver todos (todos)
-* Amigos en comun
-
-algo asi
-┌────────────────────────────┐
-│       [ FOTO ]             │
-│      Luciano               │
-│      @luciano              │
-│      "Entrenando 💪"       │
-│                            │
-│ [Editar] [Compartir]       │
-└────────────────────────────┘
-
-🔥 24        🏋️ 87       🏆 32
-Racha        Entrenos     PRs
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📊 ESTADÍSTICAS
-
-Tiempo entrenado
-Series completadas
-Peso levantado
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 MI PROGRESO
-
-[ Gráfico ]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🏆 LOGROS
-
-🥇  💪  🔥  🏋️  ⚡
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-🏋️ MIS RUTINAS
-
-Push
-Pull
-Piernas
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📅 ACTIVIDAD RECIENTE
-
-🏆 Nuevo PR...
-💪 Completó rutina...
-🔥 Nueva racha...
-
 
 
 Notificaciones

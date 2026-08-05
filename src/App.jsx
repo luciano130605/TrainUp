@@ -43,6 +43,7 @@ import Mensajes from './components/Mensajes';
 import ResetPassword from './components/ResetPassword';
 import PerfilPublico from './components/perfilPublico';
 import Logo from '../public/logo';
+import { heartbeat } from './lib/social';
 
 export default function App() {
   const [authSession, setAuthSession] = useState(null);
@@ -487,6 +488,15 @@ export default function App() {
     }
   }, [screen, history, activeHistoryId]);
 
+  useEffect(() => {
+    if (!supabase || !authSession?.user?.id) return;
+
+    const send = () => heartbeat().catch(() => { });
+    send();
+    const id = setInterval(send, 2 * 60 * 1000); // cada 2 minutos
+
+    return () => clearInterval(id);
+  }, [authSession?.user?.id]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -1860,6 +1870,7 @@ export default function App() {
         {screen === 'history' && (
           <HistorialPage
             history={history}
+            routines={routines}
             onSelectEntry={(id) => { setActiveHistoryId(id); setScreen('historyDetail'); }}
             onDeleteEntry={deleteHistoryEntry}
             onExport={() => setBackupModal({ mode: 'export', kind: 'history' })}

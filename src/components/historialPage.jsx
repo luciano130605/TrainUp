@@ -30,23 +30,58 @@ function startOfWeek(d) {
   return x;
 }
 
-function calcStreak(history) {
-  if (history.length === 0) return 0;
-  const days = [...new Set(history.map(e => startOfDay(new Date(e.date)).getTime()))].sort((a, b) => b - a);
-  const today = startOfDay(new Date()).getTime();
-  const oneDay = 86400000;
-  let streak = 0;
-  let cursor = today;
+function calcStreak(routines, history) {
+  const scheduledDays = new Set();
+  routines.forEach(r => (r.days || []).forEach(d => scheduledDays.add(d)));
+  if (scheduledDays.size === 0) return 0;
 
-  if (days[0] !== today) cursor = today - oneDay;
-  for (const d of days) {
-    if (d === cursor) { streak++; cursor -= oneDay; }
-    else if (d < cursor) break;
+  const historyDates = new Set(history.map(h => startOfDay(new Date(h.date)).getTime()));
+  const hoy = startOfDay(new Date());
+  const inicioSemanaActual = startOfWeek(hoy).getTime();
+
+  let racha = 0;
+  let weekStart = startOfWeek(hoy);
+
+  while (true) {
+    let huboDiaProgramado = false;
+    let semanaCompleta = true;
+
+    for (let i = 0; i < 7; i++) {
+      const dia = new Date(weekStart);
+      dia.setDate(weekStart.getDate() + i);
+      dia.setHours(0, 0, 0, 0);
+
+      if (dia > hoy) continue;
+      if (!scheduledDays.has(dia.getDay())) continue;
+
+      const entrenado = historyDates.has(dia.getTime());
+
+      if (dia.getTime() === hoy.getTime() && !entrenado) {
+        continue; // hoy todavía puede entrenar más tarde
+      }
+
+      huboDiaProgramado = true;
+      if (!entrenado) semanaCompleta = false;
+    }
+
+    if (!huboDiaProgramado) {
+      if (weekStart.getTime() === inicioSemanaActual) {
+        weekStart.setDate(weekStart.getDate() - 7);
+        continue;
+      }
+      break;
+    }
+
+    if (!semanaCompleta) break;
+
+    racha++;
+    weekStart.setDate(weekStart.getDate() - 7);
   }
-  return streak;
+
+  return racha;
 }
 
-export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, onExport, onImport }) {
+export default function HistorialPage({ routines = [], history, onSelectEntry, onDeleteEntry, onExport, onImport }) {
   const [query, setQuery] = useState('');
   const [progresoOpen, setProgresoOpen] = useState(false);
   const [selectedMuscles, setSelectedMuscles] = useState(new Set());
@@ -90,7 +125,7 @@ export default function HistorialPage({ history, onSelectEntry, onDeleteEntry, o
     return list;
   }, [history, query, selectedMuscles, dateFrom, dateTo, sortBy]);
 
-  const streak = useMemo(() => calcStreak(history), [history]);
+  const streak = useMemo(() => calcStreak(routines, history), [routines, history]);
 
   // Semana calendario: lunes 00:00 -> ahora
   const weekly = useMemo(() => {

@@ -337,13 +337,6 @@
     transition: border-color .15s ease, transform .1s ease;
 }
 
-.home-quick-item:hover {
-    border-color: var(--acento);
-}
-
-.home-quick-item:active {
-    transform: scale(.98);
-}
 
 .home-quick-item span {
     flex: 1;

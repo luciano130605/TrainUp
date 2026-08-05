@@ -20,17 +20,56 @@ import { PlayIcon, TrenDown, TrenUp } from '../icons/icons';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miercoles', 'Jueves', 'Viernes', 'Sabado'];
 
-function calcRacha(history) {
-    if (!history?.length) return 0;
-    const dias = new Set(history.map(h => new Date(h.date).toDateString()));
-    let cursor = new Date();
+function calcRacha(routines, history) {
+    const scheduledDays = new Set();
+    routines.forEach(r => (r.days || []).forEach(d => scheduledDays.add(d)));
+    if (scheduledDays.size === 0) return 0;
 
-    if (!dias.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
+    const historyDates = new Set(history.map(h => new Date(h.date).toDateString()));
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const inicioSemanaActual = startOfWeekMonday(hoy).getTime();
+
     let racha = 0;
-    while (dias.has(cursor.toDateString())) {
+    let weekStart = startOfWeekMonday(hoy);
+
+    while (true) {
+        let huboDiaProgramado = false;
+        let semanaCompleta = true;
+
+        for (let i = 0; i < 7; i++) {
+            const dia = new Date(weekStart);
+            dia.setDate(weekStart.getDate() + i);
+            dia.setHours(0, 0, 0, 0);
+
+            if (dia > hoy) continue; // día futuro, todavía no cuenta
+            if (!scheduledDays.has(dia.getDay())) continue; // no era día de rutina
+
+            const entrenado = historyDates.has(dia.toDateString());
+
+            if (dia.getTime() === hoy.getTime() && !entrenado) {
+                continue; // hoy toca pero puede entrenar más tarde, no corta la racha todavía
+            }
+
+            huboDiaProgramado = true;
+            if (!entrenado) semanaCompleta = false;
+        }
+
+        if (!huboDiaProgramado) {
+            if (weekStart.getTime() === inicioSemanaActual) {
+                // semana actual sin días vencidos todavía: no corta, seguimos con la anterior
+                weekStart.setDate(weekStart.getDate() - 7);
+                continue;
+            }
+            break;
+        }
+
+        if (!semanaCompleta) break;
+
         racha++;
-        cursor.setDate(cursor.getDate() - 1);
+        weekStart.setDate(weekStart.getDate() - 7);
     }
+
     return racha;
 }
 
@@ -211,7 +250,7 @@ export default function HomePage({
         [routines, hoy]
     );
 
-    const racha = useMemo(() => calcRacha(history), [history]);
+    const racha = useMemo(() => calcRacha(routines, history), [routines, history]);
     const ultimoEntreno = history[0] || null;
 
     const recovery = useMemo(() => buildMuscleRecovery(history), [history]);

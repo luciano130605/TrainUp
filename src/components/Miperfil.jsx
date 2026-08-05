@@ -242,13 +242,13 @@ export default function MiPerfil({ userId, onBack }) {
 
             <div className="perfil-tabbar">
                 <button
-                    className={`perfil-tab${activeTab === 'stats' ? ' activo' : ''}`}
+                    className={`mensajes-tab${activeTab === 'stats' ? ' activo' : ''}`}
                     onClick={() => setActiveTab('stats')}
                 >
                     Stats
                 </button>
                 <button
-                    className={`perfil-tab${activeTab === 'rutinas' ? ' activo' : ''}`}
+                    className={`mensajes-tab${activeTab === 'rutinas' ? ' activo' : ''}`}
                     onClick={() => setActiveTab('rutinas')}
                 >
                     Rutinas

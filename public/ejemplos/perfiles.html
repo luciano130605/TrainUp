@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rediseño de Perfil</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16171a;
+    --ink-2:#1c1d20;
+    --surface:#1f2023;
+    --surface-2:#27282c;
+    --paper:#efebe2;
+    --muted:#8d8d93;
+    --muted-2:#5f6065;
+    --hot:#ff5233;
+    --hot-dim:#5c2b22;
+    --brass:#c9a24b;
+    --brass-dim:#4a3f27;
+    --line:#313236;
+    --good:#59c98e;
+    --radius:18px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #202124 0%, var(--ink) 55%);
+    min-height:100vh;
+    font-family:'Inter',sans-serif;
+    color:var(--paper);
+    padding:40px 16px 80px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:24px;
+  }
+  .lab-header{
+    text-align:center;
+    max-width:520px;
+  }
+  .lab-header .eyebrow{
+    font-family:'Bebas Neue',sans-serif;
+    letter-spacing:.14em;
+    color:var(--brass);
+    font-size:13px;
+  }
+  .lab-header h1{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:34px;
+    letter-spacing:.02em;
+    margin:4px 0 8px;
+  }
+  .lab-header p{
+    color:var(--muted);
+    font-size:13.5px;
+    line-height:1.5;
+    margin:0;
+  }
+  .view-toggle{
+    display:flex;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:4px;
+    gap:4px;
+  }
+  .view-toggle button{
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    padding:9px 18px;
+    border-radius:999px;
+    cursor:pointer;
+    transition:.18s;
+  }
+  .view-toggle button.active{
+    background:var(--hot);
+    color:#1a0d08;
+  }
+
+  .phone{
+    width:390px;
+    max-width:94vw;
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:36px;
+    padding:10px 10px 26px;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.02) inset;
+    position:relative;
+  }
+  .screen{
+    background:var(--ink);
+    border-radius:26px;
+    overflow:hidden;
+    min-height:640px;
+  }
+
+  /* Topbar */
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 16px 0;
+  }
+  .icon-btn{
+    width:34px;height:34px;
+    border-radius:11px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--paper);
+    cursor:pointer;
+    position:relative;
+  }
+  .icon-btn:hover{border-color:var(--muted-2);}
+
+  .menu-pop{
+    position:absolute;
+    top:42px; right:0;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    width:200px;
+    padding:6px;
+    box-shadow:0 20px 40px -10px rgba(0,0,0,.5);
+    z-index:20;
+    display:none;
+  }
+  .menu-pop.open{display:block;}
+  .menu-item{
+    padding:10px 12px;
+    font-size:13px;
+    border-radius:9px;
+    cursor:pointer;
+  }
+  .menu-item:hover{background:var(--surface-2);}
+  .menu-item.danger{color:var(--hot);}
+
+  /* Hero */
+  .hero{
+    padding:22px 18px 0;
+    position:relative;
+  }
+  .banner{
+    height:74px;
+    border-radius:20px;
+    background:
+      repeating-linear-gradient(135deg, rgba(255,82,51,.10) 0 10px, transparent 10px 20px),
+      linear-gradient(135deg, #2a2b2f, #1c1d20 70%);
+    border:1px solid var(--line);
+    position:relative;
+  }
+  .avatar-wrap{
+    position:absolute;
+    left:18px; top:44px;
+  }
+  .avatar{
+    width:74px;height:74px;
+    border-radius:20px;
+    background:linear-gradient(160deg,#3a3b40,#222327);
+    border:3px solid var(--ink);
+    outline:1px solid var(--brass-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;
+    letter-spacing:.03em;
+  }
+  .online-dot{
+    position:absolute;
+    right:2px; bottom:2px;
+    width:14px;height:14px;
+    border-radius:50%;
+    background:var(--good);
+    border:3px solid var(--ink);
+  }
+  .hero-body{
+    padding:44px 2px 0;
+  }
+  .name-row{
+    display:flex; align-items:center; gap:8px;
+  }
+  .name{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;
+    letter-spacing:.01em;
+  }
+  .chip{
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:3px 9px;
+    border-radius:999px;
+    background:var(--brass-dim);
+    color:var(--brass);
+    border:1px solid rgba(201,162,75,.35);
+  }
+  .handle{
+    color:var(--muted);
+    font-size:13px;
+    display:block;
+    margin-top:2px;
+  }
+  .status-line{
+    color:var(--paper);
+    font-size:13px;
+    font-style:italic;
+    opacity:.85;
+    margin-top:6px;
+  }
+  .meta-line{
+    color:var(--muted-2);
+    font-size:11.5px;
+    margin-top:8px;
+    display:flex; gap:6px; align-items:center;
+  }
+
+  .actions-row{
+    display:flex; gap:8px;
+    margin-top:16px;
+  }
+  .btn{
+    flex:1;
+    border:none;
+    padding:11px 12px;
+    border-radius:13px;
+    font-family:'Inter',sans-serif;
+    font-weight:700;
+    font-size:13px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    cursor:pointer;
+    transition:.15s;
+  }
+  .btn-primary{
+    background:var(--hot);
+    color:#20100b;
+  }
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-ghost{
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--paper);
+  }
+  .btn-ghost:hover{border-color:var(--muted-2);}
+  .btn-icon-only{flex:0 0 44px;}
+  .btn-pending{
+    background:var(--surface);
+    color:var(--muted);
+    border:1px dashed var(--line);
+    cursor:default;
+  }
+
+  /* Scoreboard */
+  .scoreboard{
+    display:flex;
+    margin:20px 18px 0;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 6px;
+  }
+  .score-item{
+    flex:1;
+    text-align:center;
+    position:relative;
+  }
+  .score-item + .score-item{
+    border-left:1px solid var(--line);
+  }
+  .score-icon{margin-bottom:4px;opacity:.9;}
+  .score-num{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:26px;
+    line-height:1;
+    display:block;
+  }
+  .score-num.hot{color:var(--hot);}
+  .score-underline{
+    width:22px;height:2px;
+    background:var(--brass);
+    margin:6px auto 5px;
+    border-radius:2px;
+  }
+  .score-label{
+    font-size:10px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+  }
+
+  /* Friends */
+  .friends-row{
+    margin:16px 18px 0;
+    padding:12px 14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .stack{
+    display:flex;
+  }
+  .stack .mini-avatar{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:linear-gradient(160deg,#3a3b40,#222327);
+    border:2px solid var(--surface);
+    margin-left:-8px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:10px;
+    font-weight:700;
+  }
+  .stack .mini-avatar:first-child{margin-left:0;}
+  .friends-text{
+    font-size:12px;
+    color:var(--muted);
+    flex:1;
+  }
+  .friends-text b{color:var(--paper); font-weight:600;}
+  .see-all{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--brass);
+    background:none;
+    border:none;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+
+  /* Tabs */
+  .tabbar{
+    display:flex;
+    margin:20px 18px 0;
+    border-bottom:1px solid var(--line);
+    gap:22px;
+  }
+  .tab{
+    background:none;border:none;
+    color:var(--muted);
+    font-family:'Bebas Neue',sans-serif;
+    font-size:15px;
+    letter-spacing:.03em;
+    padding:0 0 10px;
+    cursor:pointer;
+    position:relative;
+  }
+  .tab.active{color:var(--paper);}
+  .tab.active::after{
+    content:'';
+    position:absolute;
+    left:0;right:0;bottom:-1px;
+    height:2px;
+    background:var(--hot);
+    border-radius:2px;
+  }
+
+  .panel{padding:16px 18px 6px;}
+  .panel[hidden]{display:none;}
+
+  /* Stats grid */
+  .stat-cards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-bottom:18px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:12px;
+  }
+  .stat-card .k{
+    font-size:10.5px;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+  .stat-card .v{
+    font-family:'Bebas Neue',sans-serif;
+    font-size:19px;
+    margin-top:4px;
+  }
+  .stat-card .v span{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    color:var(--muted-2);
+    font-weight:600;
+  }
+
+  .section-title{
+    font-family:'Bebas Neue',sans-serif;
+    letter-spacing:.06em;
+    font-size:14px;
+    color:var(--brass);
+    margin:2px 0 10px;
+  }
+
+  .chart-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 12px 10px;
+  }
+  .chart-card svg{width:100%;height:auto;display:block;}
+  .chart-labels{
+    display:flex;justify-content:space-between;
+    font-size:10.5px;color:var(--muted-2);
+    padding:0 4px;margin-top:2px;
+  }
+
+  /* Routines */
+  .routine-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px;
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:10px;
+  }
+  .routine-icon{
+    width:42px;height:42px;
+    border-radius:12px;
+    background:var(--hot-dim);
+    color:var(--hot);
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .routine-info{flex:1;min-width:0;}
+  .routine-name{font-weight:700;font-size:14.5px;}
+  .routine-meta{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .routine-last{font-size:10.5px;color:var(--muted-2);margin-top:2px;}
+  .routine-actions{display:flex;gap:6px;flex-shrink:0;}
+  .routine-actions button{
+    width:34px;height:34px;
+    border-radius:10px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--paper);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+  }
+  .routine-actions button.wide{
+    width:auto;padding:0 12px;
+    font-size:11.5px;font-weight:700;
+    gap:6px;
+  }
+  .routine-actions button:hover{border-color:var(--muted-2);}
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:30px 10px;
+  }
+
+  ::selection{background:var(--hot);color:#20100b;}
+</style>
+</head>
+<body>
+
+  <div class="lab-header">
+    <div class="eyebrow">PROTOTIPO — SISTEMA "SCOREBOARD"</div>
+    <h1>Rediseño de perfil</h1>
+    <p>Grafito cálido + acento óxido para el esfuerzo, latón para logros. Tipografía condensada tipo marcador de gimnasio para números, Inter para el resto. Datos de ejemplo.</p>
+  </div>
+
+  <div class="view-toggle">
+    <button class="active" data-view="publico">Perfil público</button>
+    <button data-view="propio">Mi perfil</button>
+  </div>
+
+  <!-- ===================== PERFIL PÚBLICO ===================== -->
+  <div class="phone" id="phone-publico">
+    <div class="screen">
+      <div class="topbar">
+        <div class="icon-btn">‹</div>
+        <div class="icon-btn" id="menuBtn">⋮
+          <div class="menu-pop" id="menuPop">
+            <div class="menu-item">Compartir perfil</div>
+            <div class="menu-item danger">Dejar de ser amigos</div>
+            <div class="menu-item danger">Bloquear usuario</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="banner"></div>
+        <div class="avatar-wrap">
+          <div class="avatar">JP</div>
+          <div class="online-dot"></div>
+        </div>
+        <div class="hero-body">
+          <div class="name-row">
+            <span class="name">Juli Paredes</span>
+            <span class="chip">Amigos</span>
+          </div>
+          <span class="handle">@juliparedes · ● En línea</span>
+          <div class="meta-line">Se unió en marzo de 2024</div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn btn-primary">Enviar rutina</button>
+        </div>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-item">
+          <div class="score-icon">🔥</div>
+          <span class="score-num hot">24</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Racha</span>
+        </div>
+        <div class="score-item">
+          <div class="score-icon">🏋️</div>
+          <span class="score-num">87</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Entrenos</span>
+        </div>
+        <div class="score-item">
+          <div class="score-icon">👥</div>
+          <span class="score-num">31</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Amigos</span>
+        </div>
+      </div>
+
+      <div class="friends-row">
+        <div class="stack">
+          <div class="mini-avatar">MG</div>
+          <div class="mini-avatar">FT</div>
+          <div class="mini-avatar">RL</div>
+        </div>
+        <div class="friends-text"><b>Mica</b> y 4 más son amigos en común</div>
+        <button class="see-all">Ver todos</button>
+      </div>
+
+      <div class="tabbar">
+        <button class="tab active" data-tab="stats" data-scope="publico">Stats</button>
+        <button class="tab" data-tab="rutinas" data-scope="publico">Rutinas</button>
+      </div>
+
+      <div class="panel" data-panel="stats" data-scope="publico">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="k">Volumen total</div><div class="v">18.4<span>ton</span></div></div>
+          <div class="stat-card"><div class="k">Ejercicio favorito</div><div class="v" style="font-size:15px;font-family:Inter;font-weight:700;">Press banca</div></div>
+        </div>
+        <div class="section-title">PROGRESO DE VOLUMEN</div>
+        <div class="chart-card">
+          <svg viewBox="0 0 300 110" preserveAspectRatio="none" id="chartPublico"></svg>
+          <div class="chart-labels"><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span></div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="rutinas" data-scope="publico" hidden>
+        <div class="routine-card">
+          <div class="routine-icon">💪</div>
+          <div class="routine-info">
+            <div class="routine-name">Push</div>
+            <div class="routine-meta">6 ejercicios · 18 series</div>
+            <div class="routine-last">Última vez: hace 2 días</div>
+          </div>
+          <div class="routine-actions">
+            <button class="wide">Copiar</button>
+          </div>
+        </div>
+        <div class="routine-card">
+          <div class="routine-icon">🦵</div>
+          <div class="routine-info">
+            <div class="routine-name">Piernas</div>
+            <div class="routine-meta">8 ejercicios · 22 series</div>
+            <div class="routine-last">Última vez: hace 5 días</div>
+          </div>
+          <div class="routine-actions">
+            <button class="wide">Copiar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== MI PERFIL ===================== -->
+  <div class="phone" id="phone-propio" style="display:none;">
+    <div class="screen">
+      <div class="topbar">
+        <div class="icon-btn">‹</div>
+        <div></div>
+      </div>
+
+      <div class="hero">
+        <div class="banner"></div>
+        <div class="avatar-wrap">
+          <div class="avatar">LU</div>
+        </div>
+        <div class="hero-body">
+          <div class="name-row">
+            <span class="name">Luciano</span>
+          </div>
+          <span class="handle">@luciano</span>
+          <div class="status-line">"Entrenando 💪"</div>
+          <div class="meta-line">Se unió en marzo de 2024</div>
+        </div>
+
+        <div class="actions-row">
+          <button class="btn btn-ghost">✎ Editar</button>
+          <button class="btn btn-ghost">⇧ Compartir</button>
+        </div>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-item">
+          <div class="score-icon">🔥</div>
+          <span class="score-num hot">24</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Racha</span>
+        </div>
+        <div class="score-item">
+          <div class="score-icon">🏋️</div>
+          <span class="score-num">87</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Entrenos</span>
+        </div>
+        <div class="score-item">
+          <div class="score-icon">👥</div>
+          <span class="score-num">31</span>
+          <div class="score-underline"></div>
+          <span class="score-label">Amigos</span>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <button class="tab active" data-tab="stats" data-scope="propio">Stats</button>
+        <button class="tab" data-tab="rutinas" data-scope="propio">Rutinas</button>
+      </div>
+
+      <div class="panel" data-panel="stats" data-scope="propio">
+        <div class="stat-cards">
+          <div class="stat-card"><div class="k">Volumen total</div><div class="v">18.4<span>ton</span></div></div>
+          <div class="stat-card"><div class="k">PR reciente</div><div class="v" style="font-size:15px;font-family:Inter;font-weight:700;">Sentadilla 100kg</div></div>
+        </div>
+        <div class="section-title">MI PROGRESO</div>
+        <div class="chart-card">
+          <svg viewBox="0 0 300 110" preserveAspectRatio="none" id="chartPropio"></svg>
+          <div class="chart-labels"><span>Ene</span><span>Feb</span><span>Mar</span><span>Abr</span></div>
+        </div>
+      </div>
+
+      <div class="panel" data-panel="rutinas" data-scope="propio" hidden>
+        <div class="routine-card">
+          <div class="routine-icon">💪</div>
+          <div class="routine-info">
+            <div class="routine-name">Push</div>
+            <div class="routine-meta">6 ejercicios · 18 series</div>
+          </div>
+          <div class="routine-actions">
+            <button class="wide">Ver</button>
+          </div>
+        </div>
+        <div class="routine-card">
+          <div class="routine-icon">🔙</div>
+          <div class="routine-info">
+            <div class="routine-name">Pull</div>
+            <div class="routine-meta">7 ejercicios · 20 series</div>
+          </div>
+          <div class="routine-actions">
+            <button class="wide">Ver</button>
+          </div>
+        </div>
+        <div class="routine-card">
+          <div class="routine-icon">🦵</div>
+          <div class="routine-info">
+            <div class="routine-name">Piernas</div>
+            <div class="routine-meta">8 ejercicios · 22 series</div>
+          </div>
+          <div class="routine-actions">
+            <button class="wide">Ver</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // View toggle
+  document.querySelectorAll('.view-toggle button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.querySelectorAll('.view-toggle button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const v = btn.dataset.view;
+      document.getElementById('phone-publico').style.display = v==='publico' ? 'block' : 'none';
+      document.getElementById('phone-propio').style.display = v==='propio' ? 'block' : 'none';
+    });
+  });
+
+  // Tabs
+  document.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click',()=>{
+      const scope = tab.dataset.scope;
+      document.querySelectorAll(`.tab[data-scope="${scope}"]`).forEach(t=>t.classList.remove('active'));
+      tab.classList.add('active');
+      document.querySelectorAll(`.panel[data-scope="${scope}"]`).forEach(p=>p.hidden = p.dataset.panel !== tab.dataset.tab);
+    });
+  });
+
+  // Menu
+  const menuBtn = document.getElementById('menuBtn');
+  const menuPop = document.getElementById('menuPop');
+  menuBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    menuPop.classList.toggle('open');
+  });
+  document.addEventListener('click', ()=> menuPop.classList.remove('open'));
+
+  // Chart renderer (mirrors ProgresoChart logic)
+  function renderChart(id, data){
+    const width=300, height=110, padding=10;
+    const max = Math.max(...data), min = Math.min(...data, 0);
+    const range = (max-min) || 1;
+    const stepX = (width - padding*2) / (data.length-1);
+    const pts = data.map((v,i)=>{
+      const x = padding + i*stepX;
+      const y = height - padding - ((v-min)/range)*(height-padding*2);
+      return [x,y];
+    });
+    const path = pts.map((p,i)=> `${i===0?'M':'L'} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(' ');
+    const svg = document.getElementById(id);
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="grad-${id}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c9a24b" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#c9a24b" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      ${[0.25,0.5,0.75].map(f=>`<line x1="10" x2="290" y1="${100*f+5}" y2="${100*f+5}" stroke="#313236" stroke-dasharray="3 4"/>`).join('')}
+      <path d="${path} L ${pts[pts.length-1][0]} ${height-padding} L ${pts[0][0]} ${height-padding} Z" fill="url(#grad-${id})" stroke="none"/>
+      <path d="${path}" fill="none" stroke="#c9a24b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      ${pts.map(p=>`<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="#ff5233" stroke="#16171a" stroke-width="2"/>`).join('')}
+    `;
+  }
+  renderChart('chartPublico', [4000,5200,6100,7300]);
+  renderChart('chartPropio', [4000,5200,6100,7300]);
+</script>
+</body>
+</html>
