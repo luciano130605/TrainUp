@@ -2031,7 +2031,7 @@
 @media (hover: none) {
 
     .tooltipe:active::after,
-    .tooltipe-fondo-left:active::after .tooltipe-left:active::after,
+    .tooltipe-fondo-left:active::after, .tooltipe-left:active::after,
     .tooltipe-fondo:active::after,
     .tooltipe-fondo:focus::after,
     .tooltipe-fondo-left:focus::after,
