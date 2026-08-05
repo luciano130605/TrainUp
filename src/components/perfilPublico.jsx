@@ -421,7 +421,7 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
                     </div>
                 </>
             )}
-            {data.friendship_status === 'sent' && (<div className="perfil-cta-row"> <button className="perfil-cta perfil-cta--fantasma solicitud-pendiente" disabled style={{ flex: 1 }} > <span>Solicitud pendiente</span> </button> </div>)}
+            {data.friendship_status === 'sent' && (<div className="perfil-cta-row"> <button className="btns agregar perfil-cta--fantasma solicitud-pendiente" disabled style={{ flex: 1 }} > <span>Solicitud pendiente</span> </button> </div>)}
             {data.friendship_status === 'received' && (
                 <div className="perfil-cta-row">
                     <button className="perfil-cta perfil-cta--primario" onClick={() => handleRespond(true)} disabled={busy}>
@@ -439,7 +439,7 @@ export default function PerfilPublico({ userId, targetId, myRoutines, onBack, on
             )}
             {!data.friendship_status && (
                 <div className="perfil-cta-row">
-                    <button className="perfil-cta perfil-cta--primario" onClick={handleAddFriend} disabled={busy}>
+                    <button className="btns primario" onClick={handleAddFriend} disabled={busy}>
                         Agregar amigo
                     </button>
                 </div>
