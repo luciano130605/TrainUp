@@ -1,13 +1,15 @@
 import React, { useMemo, useState } from 'react';
 import {
   Plus, Bell, Dumbbell, ChevronRight, Download, Upload, Loader2,
-  UserPlus, Check
+  UserPlus, Check,
+  Clipboard,
+  Image
 } from 'lucide-react';
 import "./rutina.css"
 import SwipeCard from "./SwipeCard.jsx"
 import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../lib/social';
-import { ExportIcon, ImportIcon, NotificationIcon, SendIcon } from '../icons/icons.jsx';
+import { CopyIcon, ExportIcon, ImgIcon, ImportIcon, NotificationIcon, SendIcon } from '../icons/icons.jsx';
 
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
@@ -41,6 +43,220 @@ export default function RutinaPage({
 
   const userId = authSession?.user?.id;
 
+  const DIAS_ORDEN_SEMANA = [1, 2, 3, 4, 5, 6, 0]; // lunes a domingo
+
+  function buildWeekRows() {
+    const conDia = DIAS_ORDEN_SEMANA
+      .map(dayIdx => ({ day: DIAS[dayIdx], routines: routines.filter(r => r.days?.includes(dayIdx)) }))
+      .filter(row => row.routines.length > 0);
+
+    const sinDia = routines.filter(r => !r.days || r.days.length === 0);
+    if (sinDia.length > 0) conDia.push({ day: 'Sin día fijo', routines: sinDia });
+    return conDia;
+  }
+
+  function buildWeekText() {
+    const rows = buildWeekRows();
+    if (rows.length === 0) return '';
+
+    const lines = ['Mi semana de entrenamiento', ''];
+    rows.forEach(row => {
+      lines.push(row.day.toUpperCase());
+      row.routines.forEach(r => {
+        lines.push(`  ${r.name} (${r.exercises.length} ejercicio${r.exercises.length !== 1 ? 's' : ''})`);
+        r.exercises.forEach(ex => {
+          lines.push(`    · ${ex.name}${ex.muscle ? ' — ' + ex.muscle : ''}`);
+        });
+      });
+      lines.push('');
+    });
+    return lines.join('\n').trim();
+  }
+
+  async function copyWeekAsText() {
+    cerrarFab();
+    const text = buildWeekText();
+    if (!text) {
+      sileo.error({ title: 'No tenés rutinas programadas por día para copiar' });
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      sileo.success({ title: 'Semana copiada al portapapeles' });
+    } catch (e) {
+      sileo.error({ title: 'No se pudo copiar' });
+    }
+  }
+
+  function drawRoundedRect(ctx, x, y, w, h, r) {
+    const radius = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.arcTo(x + w, y, x + w, y + h, radius);
+    ctx.arcTo(x + w, y + h, x, y + h, radius);
+    ctx.arcTo(x, y + h, x, y, radius);
+    ctx.arcTo(x, y, x + w, y, radius);
+    ctx.closePath();
+  }
+
+  function downloadWeekAsImage() {
+    cerrarFab();
+    if (routines.length === 0) {
+      sileo.error({ title: 'No tenés rutinas para descargar' });
+      return;
+    }
+
+    const cs = getComputedStyle(document.documentElement);
+    const colorFondo = cs.getPropertyValue('--fondo').trim() || '#0d0d10';
+    const colorComponente = cs.getPropertyValue('--componente').trim() || '#17171c';
+    const colorTexto = cs.getPropertyValue('--texto').trim() || '#ffffff';
+    const colorTextoGris = cs.getPropertyValue('--texto-gris').trim() || 'rgba(255,255,255,0.55)';
+    const colorBorde = cs.getPropertyValue('--borde').trim() || 'rgba(255,255,255,0.12)';
+    const colorAcento = cs.getPropertyValue('--acento').trim() || '#7dd3a0';
+    const colorTxtBtn = cs.getPropertyValue('--txt-btn').trim() || '#0d0d10';
+
+    const diasColumnas = DIAS_ORDEN_SEMANA.map(dayIdx => ({
+      dayIdx,
+      label: DIAS[dayIdx],
+      esHoy: dayIdx === hoy,
+      routines: routines.filter(r => r.days?.includes(dayIdx)),
+    }));
+
+    const scale = 2;
+    const padding = 26;
+    const colWidth = 168;
+    const colGap = 12;
+    const cardHeight = 78;
+    const cardGap = 10;
+    const colHeaderHeight = 42;
+    const topHeight = 96;
+
+    const width = padding * 2 + colWidth * 7 + colGap * 6;
+    const maxCards = Math.max(1, ...diasColumnas.map(c => c.routines.length));
+    const columnsHeight = colHeaderHeight + 6 + (maxCards * (cardHeight + cardGap));
+    const height = topHeight + columnsHeight + padding;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+
+    // fondo
+    ctx.fillStyle = colorFondo;
+    ctx.fillRect(0, 0, width, height);
+
+    // título
+    ctx.fillStyle = colorTexto;
+    ctx.font = "700 24px 'Oswald', sans-serif";
+    ctx.fillText('MI SEMANA DE ENTRENAMIENTO', padding, 44);
+
+    ctx.fillStyle = colorTextoGris;
+    ctx.font = "500 12px 'JetBrains Mono', monospace";
+    ctx.fillText(
+      `${routines.length} rutina${routines.length !== 1 ? 's' : ''} guardada${routines.length !== 1 ? 's' : ''}`,
+      padding, 66
+    );
+
+    function truncate(text, maxWidth) {
+      if (ctx.measureText(text).width <= maxWidth) return text;
+      let t = text;
+      while (t.length > 1 && ctx.measureText(t + '…').width > maxWidth) t = t.slice(0, -1);
+      return t + '…';
+    }
+
+    diasColumnas.forEach((col, i) => {
+      const x = padding + i * (colWidth + colGap);
+      const headerY = topHeight;
+
+      // header de columna (resaltado si es hoy)
+      if (col.esHoy) {
+        ctx.fillStyle = colorAcento;
+        drawRoundedRect(ctx, x, headerY, colWidth, colHeaderHeight, 10);
+        ctx.fill();
+      } else {
+        ctx.strokeStyle = colorBorde;
+        ctx.lineWidth = 1;
+        drawRoundedRect(ctx, x + 0.5, headerY + 0.5, colWidth - 1, colHeaderHeight - 1, 10);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = col.esHoy ? colorTxtBtn : colorTexto;
+      ctx.font = "700 13px 'Oswald', sans-serif";
+      ctx.textAlign = 'center';
+      ctx.fillText(col.label.toUpperCase(), x + colWidth / 2, headerY + colHeaderHeight / 2 + 5);
+      ctx.textAlign = 'left';
+
+      // cards de rutinas de ese día
+      let y = headerY + colHeaderHeight + 10;
+      if (col.routines.length === 0) {
+        ctx.fillStyle = colorTextoGris;
+        ctx.font = "400 20px 'JetBrains Mono', monospace";
+        ctx.textAlign = 'center';
+        ctx.fillText('—', x + colWidth / 2, y + 30);
+        ctx.textAlign = 'left';
+      } else {
+        col.routines.forEach(r => {
+          ctx.fillStyle = colorComponente;
+          drawRoundedRect(ctx, x, y, colWidth, cardHeight, 10);
+          ctx.fill();
+          ctx.strokeStyle = colorBorde;
+          ctx.lineWidth = 1;
+          drawRoundedRect(ctx, x + 0.5, y + 0.5, colWidth - 1, cardHeight - 1, 10);
+          ctx.stroke();
+
+          // barra de acento
+          ctx.fillStyle = colorAcento;
+          drawRoundedRect(ctx, x, y, 4, cardHeight, 2);
+          ctx.fill();
+
+          // nombre de la rutina
+          ctx.fillStyle = colorTexto;
+          ctx.font = "700 13px 'Oswald', sans-serif";
+          ctx.fillText(truncate(r.name, colWidth - 24), x + 14, y + 24);
+
+          // cantidad de ejercicios
+          ctx.fillStyle = colorTextoGris;
+          ctx.font = "400 11px 'JetBrains Mono', monospace";
+          ctx.fillText(
+            `${r.exercises.length} ejercicio${r.exercises.length !== 1 ? 's' : ''}`,
+            x + 14, y + 42
+          );
+
+          // chip con el primer músculo trabajado
+          const primerMusculo = r.exercises.find(e => e.muscle)?.muscle;
+          if (primerMusculo) {
+            const chipText = primerMusculo.toUpperCase();
+            ctx.font = "600 10px 'JetBrains Mono', monospace";
+            const chipWidth = Math.min(ctx.measureText(chipText).width + 16, colWidth - 28);
+            ctx.fillStyle = colorFondo;
+            drawRoundedRect(ctx, x + 14, y + 52, chipWidth, 18, 9);
+            ctx.fill();
+            ctx.fillStyle = colorAcento;
+            ctx.fillText(truncate(chipText, chipWidth - 12), x + 22, y + 64);
+          }
+
+          y += cardHeight + cardGap;
+        });
+      }
+    });
+
+    canvas.toBlob(blob => {
+      if (!blob) {
+        sileo.error({ title: 'No se pudo generar la imagen' });
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mi-semana-${Date.now()}.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      sileo.success({ title: 'Imagen descargada' });
+    }, 'image/png');
+  }
   const rutinasDeHoy = useMemo(() => {
     return (routines ?? []).filter(r => r.days?.includes(hoy));
   }, [routines, hoy]);
@@ -160,6 +376,23 @@ export default function RutinaPage({
         cerrarFab();
         onImport();
       },
+    },
+
+    {
+      key: 'copiar-semana',
+      title: diasConRutina.size === 0 ? 'No hay rutinas programadas por día' : 'Copiar semana como texto',
+      tooltip: 'Copiar semana',
+      icon: <CopyIcon size={18} />,
+      disabled: diasConRutina.size === 0,
+      onClick: copyWeekAsText,
+    },
+    {
+      key: 'descargar-semana',
+      title: diasConRutina.size === 0 ? 'No hay rutinas programadas por día' : 'Descargar semana como imagen',
+      tooltip: 'Descargar semana',
+      icon: <ImgIcon size={18} />,
+      disabled: diasConRutina.size === 0,
+      onClick: downloadWeekAsImage,
     },
   ];
 

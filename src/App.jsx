@@ -87,6 +87,8 @@ export default function App() {
   const allExercises = [...EXERCISES_DB, ...customExercises];
   const findExercise = (id) => allExercises.find(e => e.id === id);
 
+  const [pendingSaveChoice, setPendingSaveChoice] = useState(null);
+
   const [modoOscuro, setModoOscuro] = useState(true);
   const [acento, setAcento] = useState('acento-rosa');
   const [toasterPosition, setToasterPosition] = useState('bottom');
@@ -541,12 +543,13 @@ export default function App() {
     setRestTimer(null);
   }
 
-  // ---------- routine editor (rutina completa) ----------
   function openEditor(routineId) {
     if (routineId) {
       const r = routines.find(x => x.id === routineId);
+      const baseExercises = r.tempOverride?.exercises || r.exercises;
       setEditorDraft({
         ...JSON.parse(JSON.stringify(r)),
+        exercises: JSON.parse(JSON.stringify(baseExercises)),
         mode: 'full',
         days: r.days || [],
       });
@@ -556,7 +559,7 @@ export default function App() {
     setKebabOpen(false);
     setScreen('routineEditor');
   }
-  // ---------- routine editor (un solo ejercicio, dentro de una sesión en curso) ----------
+
   function openSessionExerciseEditor(exi) {
     if (!session) return;
     const ex = session.exercises[exi];
@@ -574,6 +577,7 @@ export default function App() {
     const d = editorDraft;
 
     if (d.mode === 'single') {
+      // ... esto queda exactamente igual, no cambia nada
       const editedEx = d.exercises[0];
       if (!editedEx.sets || editedEx.sets.length === 0) {
         sileo.error({ title: 'Añade al menos una serie.' });
@@ -609,16 +613,45 @@ export default function App() {
       sileo.error({ title: 'Añade al menos un ejercicio.' });
       return;
     }
-    const { mode, ...toSave } = d; // days y reminderTime quedan DENTRO de toSave, se guardan con la rutina
-    if (toSave.id) {
-      setRoutines(rs => rs.map(r => r.id === toSave.id ? toSave : r));
-    } else {
+    const { mode, ...toSave } = d;
+
+    // rutina nueva -> se guarda derecho, no aplica lo de "para siempre / solo hoy"
+    if (!toSave.id) {
       toSave.id = uid();
       setRoutines(rs => [...rs, toSave]);
+      setActiveRoutineId(toSave.id);
+      setEditorDraft(null);
+      showToast('Rutina guardada');
+      setScreen('routineDetail');
+      return;
     }
+
+    // rutina existente -> preguntamos el alcance del cambio
+    setPendingSaveChoice(toSave);
+  }
+
+  function confirmSavePermanent() {
+    const toSave = pendingSaveChoice;
+    if (!toSave) return;
+    setRoutines(rs => rs.map(r => r.id === toSave.id ? { ...toSave, tempOverride: null } : r));
     setActiveRoutineId(toSave.id);
     setEditorDraft(null);
+    setPendingSaveChoice(null);
     showToast('Rutina guardada');
+    setScreen('routineDetail');
+  }
+
+  function confirmSaveTemporary() {
+    const toSave = pendingSaveChoice;
+    if (!toSave) return;
+    setRoutines(rs => rs.map(r => r.id === toSave.id
+      ? { ...r, tempOverride: { exercises: toSave.exercises } }
+      : r
+    ));
+    setActiveRoutineId(toSave.id);
+    setEditorDraft(null);
+    setPendingSaveChoice(null);
+    showToast('Cambios guardados solo para la próxima vez');
     setScreen('routineDetail');
   }
 
@@ -896,20 +929,20 @@ export default function App() {
   }
 
 
-
-  // ---------- session ----------
   function startSession(routineId) {
     const r = routines.find(x => x.id === routineId);
     if (!r) return;
 
     if (session) {
       if (session.routineId === routineId) {
-        setScreen('session'); // ya está en curso esta misma rutina -> la reabrimos
+        setScreen('session');
         return;
       }
       showToast('Ya tenés una rutina en curso. Finalizala o cancelala antes de empezar otra.', 'error');
       return;
     }
+
+    const exercisesSource = r.tempOverride?.exercises || r.exercises;
 
     setSession({
       routineId: r.id,
@@ -918,7 +951,7 @@ export default function App() {
       paused: false,
       pausedAt: null,
       pausedMs: 0,
-      exercises: r.exercises.map(ex => ({
+      exercises: exercisesSource.map(ex => ({
         id: uid(), name: ex.name, muscle: ex.muscle, gif: ex.gif, rest: ex.rest || '',
         notes: '',
         sets: ex.sets.map(s => ({
@@ -931,6 +964,12 @@ export default function App() {
         }))
       }))
     });
+
+    // si había un cambio "solo para la próxima", ya se usó: la rutina vuelve a la normal
+    if (r.tempOverride) {
+      setRoutines(rs => rs.map(x => x.id === r.id ? { ...x, tempOverride: null } : x));
+    }
+
     setRestTimer(null);
     setScreen('session');
   }
@@ -1962,6 +2001,23 @@ export default function App() {
 
         {loaded && !onboardingSeen && (
           <OnboardingTour onFinish={finishOnboarding} />
+        )}
+
+        {pendingSaveChoice && (
+          <div className="modal-overlay" onClick={() => setPendingSaveChoice(null)}>
+            <div className="modal-cont" onClick={e => e.stopPropagation()}>
+              <h3>¿Cómo guardamos estos cambios?</h3>
+              <p className="header-sub" style={{ marginBottom: 16 }}>
+                "Para siempre" actualiza la rutina de forma permanente. "Solo la próxima vez" aplica
+                estos cambios nada más para la próxima sesión — después vuelve a quedar como estaba.
+              </p>
+              <div className='btn-cont-modal'>
+                <button className="btns agregar m" onClick={confirmSavePermanent}>Para siempre</button>
+                <button className="btns agregar m" onClick={confirmSaveTemporary}>Solo la próxima vez</button>
+              </div>
+              <button className="btns eliminar m" onClick={() => setPendingSaveChoice(null)}>Cancelar</button>
+            </div>
+          </div>
         )}
 
         {pendingImport && (

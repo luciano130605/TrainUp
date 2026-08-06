@@ -1,6 +1,5 @@
 import { supabase } from './supabaseClient';
 
-// ---------- mapeo fila supabase -> objeto que ya usa la app ----------
 function rowToRoutine(r) {
     return {
         id: r.id,
@@ -8,6 +7,7 @@ function rowToRoutine(r) {
         exercises: r.exercises || [],
         days: r.days || [],
         reminderTime: r.reminder_time || '',
+        tempOverride: r.temp_override || null,
     };
 }
 function rowToHistory(h) {
@@ -26,12 +26,12 @@ function rowToExercise(e) {
     return { id: e.id, name: e.name, muscle: e.muscle || '' };
 }
 
-// ---------- mapeo objeto app -> fila supabase ----------
 function toRoutineRow(userId, r) {
     return {
         id: r.id,
         user_id: userId,
         name: r.name,
+        temp_override: r.tempOverride || null,
         exercises: r.exercises || [],
         days: r.days || [],
         reminder_time: r.reminderTime || null,

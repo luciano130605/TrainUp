@@ -85,7 +85,9 @@
 .fab-item.disabled {
     pointer-events: none !important;
     color: var(--texto-gris);
+    display: none;
 }
+
 
 .titulo {
     font-size: 1rem;
@@ -573,9 +575,11 @@
 .ejercicio-inputs-cont input {
     box-shadow: var(--box-shadow);
 }
+
 .ejercicio-inputs-cont input:hover {
     box-shadow: var(--box-shadow-hover);
 }
+
 .ejercicio-inputs-cont input:focus {
     box-shadow: var(--box-shadow-hover);
 }
@@ -786,6 +790,7 @@
 
 .kebab-menu-rutina {
     position: absolute;
+    box-shadow: var(--box-shadow);
     right: 0;
     top: 100%;
     margin-top: 4px;
@@ -831,6 +836,7 @@
 .kebab-menu {
     position: fixed;
     right: 18px;
+    box-shadow: var(--box-shadow);
     top: 70px;
     background: var(--componente);
     border: 1px solid var(--borde);
@@ -2031,7 +2037,8 @@
 @media (hover: none) {
 
     .tooltipe:active::after,
-    .tooltipe-fondo-left:active::after, .tooltipe-left:active::after,
+    .tooltipe-fondo-left:active::after,
+    .tooltipe-left:active::after,
     .tooltipe-fondo:active::after,
     .tooltipe-fondo:focus::after,
     .tooltipe-fondo-left:focus::after,
@@ -2238,7 +2245,7 @@
     position: fixed;
     left: 0;
     right: 0;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(50px + env(safe-area-inset-bottom, 0px));
     z-index: 45;
     display: flex;
     align-items: center;
@@ -2252,6 +2259,7 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
     overflow: hidden;
 }
+
 
 .descanso-barra-progreso {
     position: absolute;

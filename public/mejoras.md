@@ -10,7 +10,6 @@ Perfo
 
 Diseño 
 * agregar toast a todo
-* agregar box shadow
 
 Social / Comunidad
 * notificaciones push cuando te envian un msj
@@ -32,3 +31,9 @@ Alarm:
 17:01:30
 
 → push instantáneo
+
+
+
+
+
+

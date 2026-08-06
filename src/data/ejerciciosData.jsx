@@ -26,6 +26,7 @@ const ejerciciosLocal = [
     { id: "0015", nombre: "Remo inclinado (Barra)", gif: "/gifs/remo-parado.gif", parteDelCuerpo: "Espalda", equipamiento: "Barra", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"] },
     { id: "0016", nombre: "Remo sentado - Agarre V (Maquina)", gif: "/gifs/remo-sentado-v.gif", parteDelCuerpo: "Espalda", equipamiento: "Maquinas", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"] },
     { id: "0056", nombre: "Remo sentado - Agarre abierto (Maquina)", gif: "/gifs/remo-sentado-abierto.jpg", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Maquinas" },
+    { id: "0064", nombre: "Remo unilateral (Polea)", gif: "/gifs/remo-uni-polea.jpg", parteDelCuerpo: "Espalda", subMusculos: ["Dorsales", "Bíceps", "Antebrazos"], equipamiento: "Polea" },
 
 
     /* cuadriceps */
