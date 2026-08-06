@@ -4,11 +4,12 @@ import {
   Check,
   Loader2,
   Upload,
+  Info,
 } from 'lucide-react';
 import "./rutina.css"
 import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../lib/social';
-import { Chart, PlayIcon, MoreHorizontal, TrenUp, TrenDown, MinusSquare, AddSquare } from '../icons/icons';
+import { Chart, PlayIcon, MoreHorizontal, TrenUp, TrenDown, MinusSquare, AddSquare, InfoIcon } from '../icons/icons';
 
 const DIAS = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 
@@ -82,13 +83,14 @@ function MuscleChip({ active, color, onClick, children }) {
 
 export default function RutinaDetalle({
   routine, kebabOpen, onToggleKebab, onBack, onEdit, onDuplicate, onDelete, onStartSession,
-  authSession,
+  authSession, onRevertTempOverride,
   onRename, onShare, onCopyText, history, reminder, onSaveReminder, onClearReminder
 }) {
   const [collapsed, setCollapsed] = useState(() => new Set());
   const [allCollapsed, setAllCollapsed] = useState(false);
   const [muscleFilter, setMuscleFilter] = useState(null);
   const kebabRef = useRef(null);
+  const [infoCollapsed, setInfoCollapsed] = useState(false);
   const [sendModalOpen, setSendModalOpen] = useState(false);
   const [friends, setFriends] = useState([]);
   const [loadingFriends, setLoadingFriends] = useState(false);
@@ -109,11 +111,14 @@ export default function RutinaDetalle({
   const hoy = new Date().getDay();
 
   if (!routine) return null;
-  const totalSets = routine.exercises.reduce((s, e) => s + e.sets.length, 0);
+  const hasTempOverride = !!routine.tempOverride;
+  const effectiveExercises = routine.tempOverride?.exercises || routine.exercises;
+
+  const totalSets = effectiveExercises.reduce((s, e) => s + e.sets.length, 0);
 
   const muscles = useMemo(() => {
-    return Array.from(new Set(routine.exercises.map(ex => ex.muscle).filter(Boolean)));
-  }, [routine.exercises]);
+    return Array.from(new Set(effectiveExercises.map(ex => ex.muscle).filter(Boolean)));
+  }, [effectiveExercises]);
 
   const muscleColorMap = useMemo(() => {
     const map = {};
@@ -124,9 +129,9 @@ export default function RutinaDetalle({
   const colorFor = (m) => muscleColorMap[m] || 'var(--texto-gris)';
 
   const exercises = useMemo(() => {
-    if (!muscleFilter) return routine.exercises;
-    return routine.exercises.filter(ex => ex.muscle === muscleFilter);
-  }, [routine.exercises, muscleFilter]);
+    if (!muscleFilter) return effectiveExercises;
+    return effectiveExercises.filter(ex => ex.muscle === muscleFilter);
+  }, [effectiveExercises, muscleFilter]);
 
   const lastEntry = useMemo(() => {
     return history
@@ -137,7 +142,7 @@ export default function RutinaDetalle({
   const muscleVolume = useMemo(() => {
     const counts = {};
     let total = 0;
-    routine.exercises.forEach(ex => {
+    effectiveExercises.forEach(ex => {
       const m = ex.muscle || 'Sin músculo';
       counts[m] = (counts[m] || 0) + ex.sets.length;
       total += ex.sets.length;
@@ -145,14 +150,14 @@ export default function RutinaDetalle({
     return Object.entries(counts)
       .map(([muscle, count]) => ({ muscle, count, pct: total ? (count / total) * 100 : 0 }))
       .sort((a, b) => b.count - a.count);
-  }, [routine.exercises]);
+  }, [effectiveExercises]);
 
   const exerciseHistoryMap = useMemo(() => {
     const routineHistory = history
       .filter(h => h.routineId === routine.id)
       .sort((a, b) => b.date - a.date);
     const map = {};
-    routine.exercises.forEach(ex => {
+    effectiveExercises.forEach(ex => {
       const occurrences = [];
       for (const entry of routineHistory) {
         const match = entry.exercises.find(e => e.name === ex.name);
@@ -165,7 +170,7 @@ export default function RutinaDetalle({
       map[ex.id] = occurrences;
     });
     return map;
-  }, [history, routine.id, routine.exercises]);
+  }, [history, routine.id, effectiveExercises]);
 
   const toggleCollapse = (id) => {
     setCollapsed(prev => {
@@ -263,7 +268,7 @@ export default function RutinaDetalle({
       setCollapsed(new Set());
       setAllCollapsed(false);
     } else {
-      setCollapsed(new Set(routine.exercises.map(ex => ex.id)));
+      setCollapsed(new Set(effectiveExercises.map(ex => ex.id)));
       setAllCollapsed(true);
     }
   };
@@ -313,7 +318,60 @@ export default function RutinaDetalle({
           )}
         </div>
 
-        <div className="header-sub" style={{ marginTop: 2, marginBottom: 18, fontSize: ".6rem" }}>
+        {hasTempOverride && (
+          <div
+            className="info"
+            onClick={() => setInfoCollapsed(v => !v)}
+            style={{ cursor: "pointer" }}
+          >
+            <InfoIcon
+              size={16}
+              color="var(--acento)"
+              style={{
+                flexShrink: 0,
+                marginTop: 1,
+                transition: "transform .2s",
+                transform: infoCollapsed ? "scale(.9)" : "scale(1)"
+              }}
+            />
+
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 className="info-title">
+                Cambios guardados solo para la próxima vez
+              </h3>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateRows: infoCollapsed ? "0fr" : "1fr",
+                  transition: "grid-template-rows .25s ease"
+                }}
+              >
+                <div style={{ overflow: "hidden" }}>
+                  <p className="info-sub">
+                    Estás viendo la versión modificada que se va a usar la próxima vez que empieces esta rutina.
+                    Después vuelve sola a como estaba.
+                  </p>
+
+                  {onRevertTempOverride && (
+                    <button
+                      className="btns agregar tooltipe"
+                      data-tooltip="Descartar y volver a la versión original"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRevertTempOverride(routine.id);
+                      }}
+                    >
+                      Descartar cambios
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="header-sub" style={{ marginTop: 20, marginBottom: 18, fontSize: ".6rem" }}>
           {lastEntry
             ? `Última vez: ${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series · ${Math.round(lastEntry.totalVolume).toLocaleString('es-AR')} kg`
             : 'Todavía no registraste ninguna sesión de esta rutina'}
@@ -323,7 +381,7 @@ export default function RutinaDetalle({
 
         <div style={{ display: 'flex', gap: 10, marginBottom: 22 }}>
           {[
-            { n: routine.exercises.length, label: 'Ejercicios' },
+            { n: effectiveExercises.length, label: 'Ejercicios' },
             { n: totalSets, label: 'Series' },
             { n: lastEntry ? Math.round(lastEntry.totalVolume).toLocaleString('es-AR') : '—', label: 'Último volumen' },
           ].map(s => (

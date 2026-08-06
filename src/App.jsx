@@ -641,6 +641,11 @@ export default function App() {
     setScreen('routineDetail');
   }
 
+  function revertTempOverride(routineId) {
+    setRoutines(rs => rs.map(r => r.id === routineId ? { ...r, tempOverride: null } : r));
+    showToast('Cambios descartados, rutina como antes');
+  }
+
   function confirmSaveTemporary() {
     const toSave = pendingSaveChoice;
     if (!toSave) return;
@@ -1837,6 +1842,7 @@ export default function App() {
             reminder={{ days: activeRoutine.days || [] }}
             onSaveReminder={saveReminder}
             onClearReminder={clearReminder}
+            onRevertTempOverride={revertTempOverride}
           />
         )}
 

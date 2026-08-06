@@ -2260,6 +2260,31 @@
     overflow: hidden;
 }
 
+/* style={{ fontSize: '.8rem', fontWeight: 600, color: 'var(--texto)' }} */
+
+
+.info {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--componente-transp);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-top: 12px;
+    margin-bottom: 4px;
+}
+
+.info-title {
+    font-size: .8rem;
+}
+
+.info-sub {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .7rem;
+    color: var(--texto-gris);
+    margin-top: 2px;
+}
 
 .descanso-barra-progreso {
     position: absolute;
