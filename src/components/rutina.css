@@ -2286,6 +2286,35 @@
     margin-top: 2px;
 }
 
+.select {
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: var(--componente-transp);
+    backdrop-filter: blur(12px);
+    color: var(--texto);
+    padding: 5px;
+    cursor: pointer;
+    appearance: none;
+    outline: none;
+    transition: all .15s;
+    box-shadow: var(--box-shadow);
+}
+
+.select:hover {
+    border-color: var(--borde-hover);
+    box-shadow: var(--box-shadow-hover);
+}
+
+.select:focus {
+    box-shadow: var(--box-shadow-hover);
+
+    border-color: var(--borde-hover);
+}
+
+.select::-ms-expand {
+    display: none;
+}
+
 .descanso-barra-progreso {
     position: absolute;
     left: 0;

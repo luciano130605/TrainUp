@@ -40,6 +40,7 @@ export default function RutinaPage({
   const [selectedFriendId, setSelectedFriendId] = useState(null);
   const [sending, setSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
+  const [sortBy, setSortBy] = useState("week");
 
   const userId = authSession?.user?.id;
 
@@ -271,10 +272,34 @@ export default function RutinaPage({
     return (routines ?? []).reduce((acc, r) => acc + (r.exercises?.length || 0), 0);
   }, [routines]);
 
-  const listaMostrada = selectedDay === null
-    ? routines
-    : routines.filter(r => r.days?.includes(selectedDay));
+  const listaMostrada = useMemo(() => {
+    let lista =
+      selectedDay === null
+        ? [...routines]
+        : routines.filter(r => r.days?.includes(selectedDay));
 
+    switch (sortBy) {
+      case "alpha":
+        lista.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+
+      case "week":
+        lista.sort((a, b) => {
+          const dayA = a.days?.length ? Math.min(...a.days.map(d => d === 0 ? 7 : d)) : 99;
+          const dayB = b.days?.length ? Math.min(...b.days.map(d => d === 0 ? 7 : d)) : 99;
+
+          if (dayA !== dayB) return dayA - dayB;
+
+          return a.name.localeCompare(b.name);
+        });
+        break;
+
+      default:
+        break;
+    }
+
+    return lista;
+  }, [routines, selectedDay, sortBy]);
   const toggleDay = (i) => setSelectedDay(prev => (prev === i ? null : i));
   const cerrarFab = () => setFabOpen(false);
 
@@ -591,17 +616,35 @@ export default function RutinaPage({
               </div>
             </div>
 
-            <div style={{ marginBottom: 10 }}>
-              <div style={eyebrowStyle}>
-                {selectedDay === null ? 'Todas tus rutinas' : `Rutinas de ${DIAS[selectedDay]}`}
+
+            <div style={{ marginBottom: 10, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+              <div>
+                <div style={eyebrowStyle}>
+                  {selectedDay === null ? 'Todas tus rutinas' : `Rutinas de ${DIAS[selectedDay]}`}
+                </div>
+              </div>
+
+              <div>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="select"
+                  style={{ width: "auto" }}
+                >
+                  <option value="week">Semana</option>
+                  <option value="alpha">A-Z</option>
+                </select>
               </div>
             </div>
+
 
             {listaMostrada.length === 0 ? (
               <div className="mensajes-empty">No tenés rutinas programadas para {DIAS[selectedDay]}.</div>
             ) : (
               listaMostrada.map(renderCard)
             )}
+
+
           </>
         )}
       </div>
