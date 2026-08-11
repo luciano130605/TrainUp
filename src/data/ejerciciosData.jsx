@@ -10,6 +10,7 @@ const ejerciciosLocal = [
     { id: "0005", nombre: "Tríceps con barra (Polea)", gif: "/gifs/triceps-con-barra.gif", parteDelCuerpo: "Triceps", subMusculos: [], equipamiento: "Polea" },
     { id: "0006", nombre: "Tríceps con soga (Polea)", gif: "/gifs/triceps-con-soga.gif", parteDelCuerpo: "Triceps", subMusculos: [], equipamiento: "Polea" },
     { id: "0007", nombre: "Tríceps a un brazo (Polea)", subMusculos: [], gif: "/gifs/triceps-una-mano.gif", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
+    { id: "0066", nombre: "Patada de triceps (Polea)", subMusculos: [], gif: "/gifs/patada-polea.jpg", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
 
     /* biceps */
     { id: "0008", nombre: "Curl Z (Barra)", gif: "/gifs/curl-z.gif", parteDelCuerpo: "Biceps", equipamiento: "Barra", subMusculos: [] },
@@ -82,7 +83,8 @@ const ejerciciosLocal = [
     { id: "0047", nombre: "Press militar parado (Mancuernas)", gif: "/gifs/press-militar-mac-p.jpg", parteDelCuerpo: "Hombros", equipamiento: "Mancuernas", subMusculos: ["Triceps"] },
     { id: "0048", nombre: "Press militar sentado (Mancuernas)", gif: "/gifs/press-militar-mac-s.jpg", parteDelCuerpo: "Hombros", equipamiento: "Mancuernas", subMusculos: ["Triceps"] },
     { id: "0049", nombre: "Press militar parado (Barra)", gif: "/gifs/press-militar-b-p.jpg", parteDelCuerpo: "Hombros", equipamiento: "Barra", subMusculos: ["Triceps", "Abdominales"] },
-    { id: "0050", nombre: "Press militar sentado (Mancuernas)", gif: "/gifs/press-militar-b-s.jpg", parteDelCuerpo: "Hombros", equipamiento: "Mancuernas", subMusculos: ["Triceps"] },
+    { id: "0050", nombre: "Press militar sentado (Barra)", gif: "/gifs/press-militar-b-s.jpg", parteDelCuerpo: "Hombros", equipamiento: "Barra", subMusculos: ["Triceps"] },
+    { id: "0065", nombre: "Press militar sentado smith (Maquina)", gif: "/gifs/press-militar-s-smith.jpg", parteDelCuerpo: "Hombros", equipamiento: "Maquinas", subMusculos: ["Triceps"] },
     { id: "0051", nombre: "Tiron a la cara (Polea)", gif: "/gifs/face-pull.jpg", parteDelCuerpo: "Hombros", equipamiento: "Polea", subMusculos: ["Espalda"] },
 
 
