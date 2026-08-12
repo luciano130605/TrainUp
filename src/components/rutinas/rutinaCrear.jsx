@@ -90,6 +90,7 @@ function TimerInput({ value, placeholder, disabled, onChange, onComplete }) {
     </div>
   );
 }
+const CHIP_ALPHA = '2e';
 
 export default function RutinaCrear({
   draft, onChangeName, onMoveExercise, onRemoveExercise, onAddSet, onRemoveSet, onUpdateSetField,
@@ -390,9 +391,9 @@ export default function RutinaCrear({
 
                 <div className="ex-title-block">
                   <div className="ex-name">{ex.name}</div>
-                  <div className="ex-sub">
+                  <div className="ex-sub flex gap8">
                     {ex.muscle && (
-                      <span className="muscle-chip" style={{ color: mColor }}>{ex.muscle}</span>
+                      <span className="muscle-chip" style={{ background: `${mColor}${CHIP_ALPHA}`, color: mColor }}>{ex.muscle}</span>
                     )}
                     <span
                       className="delta-badge"
@@ -472,7 +473,7 @@ export default function RutinaCrear({
                           </>
                         )}
 
-                        <button type="button" className="btn-circle small danger" title="Quitar serie" onClick={() => onRemoveSet(exi, si)}>
+                        <button type="button" className="btn-circle small" title="Quitar serie" onClick={() => onRemoveSet(exi, si)}>
                           <X size={14} />
                         </button>
                       </div>

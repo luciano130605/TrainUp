@@ -1,12 +1,14 @@
 import React from 'react';
-import { X, Check, Copy, ChevronDown, Dumbbell } from 'lucide-react';
+import { X, Check, Copy, ChevronDown, Dumbbell, ChevronLeft } from 'lucide-react';
 import { formatElapsed } from '../../utils/time';
 import EjercicioModal from '../modales/ejercicioModal';
 import ResumenRutina from '../modales/ResumenRutina';
 import "./rutina.css"
 import {
   AddSquare, Edit, Minimize, MinusSquare, PauseIcon, PlayIcon, Remplazar,
-  Rotate, TickIcon, Eye, EyeSlash, CopyIcon, TimerIcon
+  Rotate, TickIcon, Eye, EyeSlash, CopyIcon, TimerIcon,
+  MoreHorizontal,
+  TrashIcon
 } from '../../icons/icons';
 import { sileo } from 'sileo';
 import { MUSCLE_COLORS } from './rutinaDetalle';
@@ -141,7 +143,7 @@ export default function RutinaCurso({
   const [soloActualMode, setSoloActualMode] = React.useState(false);
   const [bouncingSets, setBouncingSets] = React.useState(new Set());
   const [musculosOpen, setMusculosOpen] = React.useState(false);
-
+  const [kebabOpen, setKebabOpen] = React.useState(false);
 
 
   React.useEffect(() => {
@@ -392,12 +394,10 @@ export default function RutinaCurso({
     <>
       <div className="header">
         <div className="flex gap8">
-          <div className="btn-circle" title="Cancelar" onClick={onCancel}>
-            <X size={20} />
+          <div className="btn-circle tooltipe" title="Volver" data-tooltip="Volver" onClick={onMinimize}>
+            <ChevronLeft size={18} />
           </div>
-          <div className="btn-circle tooltipe" title="Achicar" data-tooltip="Achicar" onClick={onMinimize}>
-            <Minimize size={18} />
-          </div>
+
         </div>
 
         <div className="session-timer">
@@ -415,44 +415,108 @@ export default function RutinaCurso({
         </div>
 
         {s.exercises.length > 0 ? (
-          <div className="flex gap8">
-
-
+          <div
+            onClick={e => e.stopPropagation()}
+          >
             <button
               type="button"
-              className={`btn-circle tooltipe ${soloActualMode ? 'active' : ''}`}
-              data-tooltip={soloActualMode ? 'Ver todos' : 'Ver solo actual'}
-              onClick={() => setSoloActualMode(v => !v)}
+              className={`btn-circle`}
+              title="Opciones"
+              onClick={() => setKebabOpen(v => !v)}
             >
-              {soloActualMode ? <Eye size={16} /> : <EyeSlash size={16} />}
+              <MoreHorizontal size={19} />
             </button>
-            {doneEntries.length > 0 && (
-              <button
-                type="button"
-                className={`btn-circle tooltipe ${showDone ? 'active' : ''}`}
-                data-tooltip={showDone ? 'Ocultar terminados' : 'Ver terminados'}
-                onClick={() => setShowDone(v => !v)}
-              >
-                <TickIcon size={16} />
-              </button>
+
+            {kebabOpen && (
+              <div className="kebab">
+                <button
+                  type="button"
+                  className={`kebab-item ${soloActualMode ? 'active' : ''}`}
+
+                  style={{
+                    width: "100%"
+                  }}
+                  onClick={() => {
+                    setSoloActualMode(v => !v);
+                    setKebabOpen(false);
+                  }}
+                >
+                  <span>
+                    {soloActualMode
+                      ? 'Ver todos los ejercicios'
+                      : 'Ver solo ejercicio actual'}
+                  </span>
+                  {soloActualMode ? (
+                    <Eye size={17} />
+                  ) : (
+                    <EyeSlash size={17} />
+                  )}
+
+                </button>
+
+                {/* Ejercicios terminados */}
+                {doneEntries.length > 0 && (
+                  <button
+                    type="button"
+                    style={{
+                      width: "100%"
+                    }}
+                    className={`kebab-item ${showDone ? 'active' : ''}`}
+                    onClick={() => {
+                      setShowDone(v => !v);
+                      setKebabOpen(false);
+                    }}
+                  >
+
+                    <span>
+                      {showDone
+                        ? 'Ocultar terminados'
+                        : 'Ver ejercicios terminados'}
+                    </span>
+
+                    <TickIcon size={17} />
+
+                  </button>
+                )}
+
+                {/* Autocompletado */}
+                <div className="kebab-item kebab-item-select justifyContentSpaceBet">
+
+                  <span>Autocompletado</span>
+
+                  <select
+                    value={autofillMode}
+                    onChange={e => {
+                      setAutofillMode(e.target.value);
+                      setKebabOpen(false);
+                    }}
+                    className="kebab-select"
+                  >
+                    {AUTOFILL_CYCLE.map(mode => (
+                      <option key={mode} value={mode}>
+                        {AUTOFILL_LABELS[mode]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <button
+                  type="button"
+                  style={{
+                    width: "100%"
+                  }}
+                  className={`kebab-item danger`}
+                  onClick={onCancel}
+                >
+
+                  <span>Cancelar rutina</span>
+
+                  <TrashIcon size={17} />
+
+                </button>
+
+              </div>
             )}
-
-
-            <div className="btn-circle tooltipe autofill-btn" data-tooltip={`Autocompletado: ${AUTOFILL_LABELS[autofillMode]}`}>
-              {autofillIcon(autofillMode)}
-              <select
-                value={autofillMode}
-                onChange={(e) => setAutofillMode(e.target.value)}
-                className="autofill-select-native"
-                title="Autocompletar siguiente serie"
-              >
-                {AUTOFILL_CYCLE.map(mode => (
-                  <option key={mode} value={mode}>
-                    {AUTOFILL_LABELS[mode]}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
         ) : <div style={{ width: 40 }} />}
       </div>
@@ -682,6 +746,8 @@ export default function RutinaCurso({
           onConfirm={(guardarEnHistorial) => onFinish({ guardarEnHistorial })}
         />
       )}
+
+
 
       {gifPreview && (
         <div className="modal-overlay fixed flex justifyContentCenter" onClick={() => setGifPreview(null)}>

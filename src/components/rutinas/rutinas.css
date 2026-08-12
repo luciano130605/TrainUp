@@ -1777,6 +1777,43 @@ input.set-val::placeholder {
     }
 }
 
+.kebab-item-select {
+    position: relative;
+}
+
+.kebab-item-select span {
+    flex: 1;
+}
+
+.kebab-select {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--acento);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+    text-align: right;
+}
+
+.kebab-select option {
+    background: var(--componente);
+    color: var(--texto);
+}
+
+
+.kebab-item.active {
+    background: var(--borde);
+}
+
+.kebab-item.active svg {
+    color: var(--acento);
+}
+
 .kebab-item {
     position: relative;
     display: flex;
@@ -1784,11 +1821,15 @@ input.set-val::placeholder {
     justify-content: space-between;
     gap: 10px;
     padding: 13px 14px;
+    margin-top: 2px;
+    margin-bottom: 2px;
     border-radius: 14px;
     font-size: 14px;
     font-weight: 600;
+    background: none;
+    border: none;
+    box-shadow: var(--box-shadow);
     color: var(--texto);
-    border-bottom: 1px solid var(--borde);
     cursor: pointer;
     -webkit-user-select: none;
     user-select: none;

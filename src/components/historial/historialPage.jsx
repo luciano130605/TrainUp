@@ -145,14 +145,7 @@ export default function HistorialPage({ routines = [], history, onSelectEntry, o
       <div className="header">
         <div><h1 className='page-title'>Historial</h1><div className="sub">{history.length} entrenamiento{history.length !== 1 ? 's' : ''}</div></div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-circle tooltipe" title="Ver recuperacion muscular" onClick={() => setProgresoOpen(true)}
-            data-tooltip={
-              "Ver recuperacion muscular"
-            }
 
-          >
-            <BicepsFlexed size={18} />
-          </button>
           <button
             className="btn-circle tooltipe"
             disabled={history.length === 0}
@@ -169,6 +162,15 @@ export default function HistorialPage({ routines = [], history, onSelectEntry, o
               "Importar"
             }
           ><ImportIcon size={18} /></div>
+
+          <button className="btn-circle acento tooltipe-left" title="Ver recuperacion muscular" onClick={() => setProgresoOpen(true)}
+            data-tooltip={
+              "Ver recuperacion muscular"
+            }
+
+          >
+            <BicepsFlexed size={18} />
+          </button>
         </div>
       </div >
 
@@ -204,7 +206,7 @@ export default function HistorialPage({ routines = [], history, onSelectEntry, o
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                 />
-                {query && <X size={14} onClick={() => setQuery('')} style={{ cursor: 'pointer' }} />}
+
               </div>
 
               <div className="sort-select-wrapper">
@@ -228,7 +230,7 @@ export default function HistorialPage({ routines = [], history, onSelectEntry, o
                   data-tooltip="Ordenar"
                   tabIndex={-1}
                 >
-                  <Order size={16} />
+                  <Order size={12} />
                 </button>
               </div>
 
@@ -238,17 +240,17 @@ export default function HistorialPage({ routines = [], history, onSelectEntry, o
                   "Filtrar"
                 }
               >
-                <CalendarIcon size={16} />
+                <CalendarIcon size={12} />
               </button>
             </div>
 
-           
+
           </>
         )}
 
         {history.length === 0 ? (
           <div className="sin flex column textCenter justifyContentCenter">
-          
+
             <h3>Sin entrenamientos aún</h3>
             <p>Cuando termines una rutina, aparecerá aquí con tu progreso.</p>
           </div>

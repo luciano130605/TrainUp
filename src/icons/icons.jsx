@@ -628,7 +628,7 @@ export const Order = ({ size = 24, color = "currentColor" }) => {
 };
 
 
-export const CalendarIcon = ({ size = 24, color = "currentColor" }) => {
+export const CalendarIcon = ({ size = 2, color = "currentColor" }) => {
     return (<svg width={size} height={size} viewBox={`0 0 24 24`} fill="none" xmlns="http://www.w3.org/2000/svg">
         <g clip-path="url(#clip0_4418_9971)">
             <path d="M8 2V5" stroke={color} stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round" />
