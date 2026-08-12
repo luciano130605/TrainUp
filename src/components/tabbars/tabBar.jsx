@@ -1,20 +1,23 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import AjustesDropdown from '../ajustes/ajustes';
 import "./tabBar.css";
-import { House, Dumbbell, History as HistoryIcon, MessageCircle, Settings } from 'lucide-react';
-import HomeIcon from "../../icons/home"
-import Rutina from "../../icons/rutinas"
-import Historial from "../../icons/historial"
-import Msj from "../../icons/msj"
-import SettingFill from "../../icons/settingFill"
+import HomeIcon from "../../icons/home";
+import HomeIconFill from "../../icons/homeFill";
+import Rutina from "../../icons/rutinas";
+import RutinaFill from "../../icons/rutinasFill";
+import Historial from "../../icons/historial";
+import HistorialFill from "../../icons/historialFill";
+import Msj from "../../icons/msj";
+import MsjFill from "../../icons/msjFill";
+import SettingFill from "../../icons/settingFill";
 
-
-
+// Cada tab ahora tiene su ícono outline (inactivo) y su ícono fill (activo),
+// igual patrón que ya usabas para Settings.
 const TABS = [
-  { key: "home", label: "Inicio", Icon: HomeIcon },
-  { key: "routines", label: "Rutinas", Icon: Rutina },
-  { key: "history", label: "Historial", Icon: Historial },
-  { key: "mensajes", label: "Mensajes", Icon: Msj },
+  { key: "home", label: "Inicio", Icon: HomeIcon, IconFill: HomeIconFill },
+  { key: "routines", label: "Rutinas", Icon: Rutina, IconFill: RutinaFill },
+  { key: "history", label: "Historial", Icon: Historial, IconFill: HistorialFill },
+  { key: "mensajes", label: "Mensajes", Icon: Msj, IconFill: MsjFill },
 ];
 
 export default function TabBar({
@@ -79,8 +82,14 @@ export default function TabBar({
     });
   };
 
+  // El rudder tiene que recalcularse no solo cuando cambia el screen,
+  // sino también cuando el label entra/sale (cambia el ancho del item).
+  // Un pequeño delay deja que la transición de ancho del label termine
+  // antes de medir, para que el rudder "persiga" al item con fluidez.
   useLayoutEffect(() => {
     updateRudder();
+    const t = setTimeout(updateRudder, 220);
+    return () => clearTimeout(t);
   }, [screen]);
 
   useEffect(() => {
@@ -90,7 +99,7 @@ export default function TabBar({
 
   return (
     <div className="tabbar-dock">
-      <div className="tabbar">
+      <div className={`tabbar ${modoOscuro ? 'oscuro' : ''}`}>
         <div className="tabbar-track" ref={trackRef}>
           <div
             className="tabbar-rudder"
@@ -100,17 +109,26 @@ export default function TabBar({
               opacity: rudderStyle.opacity,
             }}
           />
-          {TABS.map(({ key, label, Icon }) => {
+          {TABS.map(({ key, label, Icon, IconFill }) => {
             const active = screen === key;
+            const TabIcon = active ? IconFill : Icon;
             return (
               <div
                 key={key}
                 ref={(el) => (itemRefs.current[key] = el)}
                 className={`tabbar-item ${active ? 'activo' : ''}`}
                 onClick={() => onNavigate(key)}
+                role="tab"
+                aria-selected={active}
               >
-                <Icon size={21} strokeWidth={active ? 2.3 : 1.8} className="tabbar-icon" />
-                <span className="tabbar-label">{label}</span>
+                <TabIcon
+                  size={21}
+                  strokeWidth={active ? 0 : 1.8}
+                  className="tabbar-icon"
+                />
+                <span className="tabbar-label" aria-hidden={!active}>
+                  {label}
+                </span>
               </div>
             );
           })}

@@ -1,7 +1,9 @@
-/* =========================================================
-   TabBar — estilo iOS "liquid glass", consistente con
-   .kebab / .pop / .header de rutinas.css
-   ========================================================= */
+/* ---------------------------------------------------------
+   TabBar — estilo "Liquid Glass" (iOS 18+)
+   Vidrio esmerilado, brillos internos, pill que persigue al
+   tab activo, y label que solo aparece en el tab activo.
+--------------------------------------------------------- */
+
 
 .tabbar-dock {
     position: fixed;
@@ -10,153 +12,156 @@
     bottom: 0;
     display: flex;
     justify-content: center;
-    padding: 0 16px calc(14px + env(safe-area-inset-bottom));
+    padding: 0 12px calc(10px + env(safe-area-inset-bottom));
+    z-index: 50;
     pointer-events: none;
-    animation: tabbarRise .3s cubic-bezier(.2, .9, .25, 1.1);
-}
-
-@keyframes tabbarRise {
-    from {
-        opacity: 0;
-        transform: translateY(14px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
 }
 
 .tabbar {
     pointer-events: auto;
     position: relative;
     display: flex;
-    align-items: stretch;
-    gap: 4px;
-    width: 100%;
-    max-width: 420px;
+    align-items: center;
+    gap: 6px;
     padding: 6px;
     border-radius: 26px;
-    background: var(--componente-transp);
-    backdrop-filter: blur(34px) saturate(190%);
-    -webkit-backdrop-filter: blur(34px) saturate(190%);
-    border: 1px solid var(--borde);
+
+    background: var(--componente);
     box-shadow:
-        0 18px 40px rgba(0, 0, 0, .35),
-        0 2px 10px rgba(0, 0, 0, .18),
-        inset 0 1px 0 rgba(255, 255, 255, .08);
+        var(--box-shadow);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+    transition: background 0.35s ease, border-color 0.35s ease;
 }
 
 .tabbar::before {
-    content: '';
+    content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(155deg, var(--borde), transparent 45%);
-    opacity: .5;
+    opacity: 0.6;
     pointer-events: none;
 }
 
-/* ---------- track de los 4 tabs principales ---------- */
+
 .tabbar-track {
     position: relative;
     display: flex;
-    flex: 1;
-    align-items: stretch;
-    min-width: 0;
+    align-items: center;
 }
 
 .tabbar-rudder {
     position: absolute;
-    top: 2px;
-    bottom: 2px;
+    top: 4px;
+    bottom: 4px;
     left: 0;
-    border-radius: 18px;
-    background: var(--acento);
-    box-shadow: 0 4px 14px var(--acento-transp-2);
+    border-radius: 20px;
+    background: var(--borde);
+    box-shadow: var(--box-shadow);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    backdrop-filter: blur(10px) saturate(160%);
     transition:
-        transform .32s cubic-bezier(.2, .9, .25, 1.15),
-        width .32s cubic-bezier(.2, .9, .25, 1.15),
-        opacity .2s ease;
-    z-index: 0;
+        transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+        width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.25s ease;
+    will-change: transform, width;
 }
 
 .tabbar-item {
     position: relative;
     z-index: 1;
-    flex: 1;
     display: flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 9px 4px 8px;
-    border-radius: 18px;
-    color: var(--texto-gris);
+    gap: 6px;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 20px;
     cursor: pointer;
-    -webkit-user-select: none;
     user-select: none;
-    transform: scale(1);
-    transition: color .2s ease, transform .12s ease-out, background .15s ease;
+    color: var(--texto-gris);
+    transition: color 0.25s ease, padding 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tabbar-item:active {
-    transform: scale(0.92);
-}
-
-@media (hover: hover) {
-    .tabbar-item:not(.activo):not(.noHover):hover {
-        background: var(--borde);
-        color: var(--texto);
-    }
+    transform: scale(0.94);
+    transition: transform 0.12s ease;
 }
 
 .tabbar-icon {
-    transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+    flex-shrink: 0;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .tabbar-item.activo {
-    color: var(--txt-btn);
+    color: var(--texto);
 }
 
 .tabbar-item.activo .tabbar-icon {
-    transform: translateY(-1px) scale(1.06);
-}
-
-.tabbar-label {
-    font-size: 9.5px;
-    font-weight: 700;
-    letter-spacing: .02em;
-    text-transform: uppercase;
-    opacity: .9;
-    white-space: nowrap;
-}
-
-/* ---------- separador entre tabs y ajustes ---------- */
-.tabbar-divider {
-    width: 1px;
-    align-self: stretch;
-    margin: 8px 2px;
-    background: var(--borde);
-    opacity: .7;
-    flex: 0 0 auto;
-}
-
-/* ---------- botón de ajustes ---------- */
-.tabbar-item-wrap {
-    position: relative;
-    flex: 0 0 auto;
-}
-
-.tabbar-item.settings {
-    padding: 9px 13px 8px;
-}
-
-.tabbar-item.settings.activo {
-    background: var(--acento-transp-2);
+    transform: scale(1.06);
     color: var(--acento);
 }
 
-.tabbar-item.settings.activo .tabbar-icon {
+
+.tabbar-label {
+    max-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    transition:
+        max-width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        opacity 0.25s ease 0.05s;
+}
+
+.tabbar-item.activo .tabbar-label {
+    max-width: 120px;
+    opacity: 1;
+}
+
+/* --- Divider + Settings --- */
+.tabbar-divider {
+    width: 1px;
+    height: 26px;
+    margin: 0 2px;
+    background: var(--borde)
+}
+
+.tabbar-item-wrap {
+    position: relative;
+}
+
+.tabbar-item.settings {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+    color: var(--texto-gris);
+}
+
+.tabbar-item.settings.activo {
+    color: var(--acento);
+    background: var(--borde);
+    box-shadow: var(--box-shadow);
+    -webkit-backdrop-filter: blur(10px) saturate(160%);
+    backdrop-filter: blur(10px) saturate(160%);
     transform: rotate(45deg);
+}
+
+
+.tabbar-item:focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .tabbar-rudder,
+    .tabbar-icon,
+    .tabbar-label,
+    .tabbar-item {
+        transition: none !important;
+    }
 }
