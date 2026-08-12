@@ -4,7 +4,7 @@ import "./tabBar.css";
 import HomeIcon from "../../icons/home";
 import HomeIconFill from "../../icons/homeFill";
 import Rutina from "../../icons/rutinas";
-import RutinaFill from "../../icons/rutinasFill";
+import RutinaFill from "../../icons/rutinasFIll";
 import Historial from "../../icons/historial";
 import HistorialFill from "../../icons/historialFill";
 import Msj from "../../icons/msj";
