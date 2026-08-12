@@ -1,0 +1,994 @@
+/* =========================================================
+   TRAINUP — PERFIL / iOS SETTINGS
+   ========================================================= */
+
+.perfil-page {
+    --ios-bg: var(--fondo, #f2f2f7);
+    --ios-card: rgba(255, 255, 255, 0.78);
+    --ios-card-solid: #ffffff;
+    --ios-separator: rgba(60, 60, 67, 0.13);
+    --ios-text: #1c1c1e;
+    --ios-secondary: #8e8e93;
+    --ios-tertiary: #aeaeb2;
+    --ios-blue: var(--acento, #007aff);
+    --ios-red: var(--rojo, #ff3b30);
+    --ios-green: #34c759;
+
+
+
+    line-height: 1.45;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.perfil-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 4px 4px 28px;
+}
+
+.perfil-avatar {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(145deg,
+            color-mix(in srgb, var(--acento) 85%, var(--acento-transp)),
+            var(--acento));
+
+    color: var(--txt-btn);
+
+    font-size: 24px;
+    font-weight: 650;
+    letter-spacing: -0.03em;
+
+    user-select: none;
+}
+
+
+
+.login-form.perfil {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    background: var(--componente);
+    border: 1px solid var(--borde);
+    border-radius: 22px;
+    overflow: hidden;
+    box-shadow:
+        0 .5px 0 rgba(0, 0, 0, .04),
+        0 3px 14px rgba(0, 0, 0, .045);
+
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+}
+
+.login-form.perfil>.section-label {
+    margin: 0;
+    padding: 18px 18px 8px;
+
+
+    font-size: 17px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+    text-transform: none;
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* =========================================================
+   FIELDS
+   ========================================================= */
+
+.login-field-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+}
+
+.login-field {
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    min-width: 0;
+}
+
+.login-field>span {
+    color: var(--ios-secondary);
+
+    font-size: 12px;
+    font-weight: 500;
+}
+
+
+
+/*
+ * Inputs estilo grouped settings.
+ */
+
+.login-input {
+    display: flex;
+    align-items: center;
+
+    min-height: 46px;
+
+    padding: 0 16px;
+    color: var(--texto) !important;
+    background: none;
+    box-shadow: var(--box-shadow) !important;
+
+    border-radius: 22px;
+    border: none !important;
+    transition:
+        background 160ms ease,
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        transform 100ms ease;
+}
+
+
+.login-input:focus-within {
+    background: var(--borde);
+    box-shadow: var(--box-shadow) !important;
+
+}
+
+.login-input input,
+.login-input select {
+    width: 100%;
+    min-width: 0;
+
+    padding: 0;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+
+    color: var(--texto);
+
+    font: inherit;
+    font-size: 16px;
+
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+.login-input input::placeholder {
+    color: var(--texto-gris-oscuro);
+
+}
+
+
+/* =========================================================
+   FIELD LAYOUT
+   ========================================================= */
+
+.login-form.perfil>.login-field-row,
+.login-form.perfil>.cont-todo,
+.login-form.perfil>.login-field {
+    padding-left: 18px;
+    padding-right: 18px;
+}
+
+.login-form.perfil>.login-field-row {
+    gap: 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.cont-todo {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+
+.login-form.perfil>.login-field:not(.login-field-row) {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+
+/* Full-width username */
+
+.cont-todo .login-field.todo {
+    width: 100%;
+}
+
+
+/* =========================================================
+   DATE / SELECT
+   ========================================================= */
+
+.login-input input[type="date"] {
+    color-scheme: light;
+}
+
+.login-input--select {
+    position: relative;
+}
+
+.login-input--select::after {
+    content: "›";
+
+    position: absolute;
+    right: 14px;
+
+    color: var(--ios-tertiary);
+
+    font-size: 21px;
+    font-weight: 300;
+
+    transform: rotate(90deg);
+    pointer-events: none;
+}
+
+.login-input--select select {
+    padding-right: 22px;
+}
+
+
+/* =========================================================
+   USERNAME STATUS
+   ========================================================= */
+
+.cont-todo .header-sub {
+    display: block;
+    margin-top: 5px;
+    padding-left: 2px;
+
+    font-size: 12px;
+}
+
+.cont-todo .header-sub[style*="var(--acento)"] {
+    color: var(--ios-green) !important;
+}
+
+
+/* =========================================================
+   OBJECTIVE CARDS
+   ========================================================= */
+
+.login-objetivo-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+
+    margin-top: 2px;
+}
+
+.login-objetivo-card {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+
+    padding: 11px 13px;
+    box-shadow: var(--box-shadow) !important;
+    border-radius: 22px;
+    border: none !important;
+    background: var(--componente);
+
+    color: var(--texto);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 550;
+
+    cursor: pointer;
+
+    transition:
+        transform 100ms ease-out,
+        background 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.login-objetivo-card svg {
+    flex: 0 0 auto;
+    color: var(--texto-gris);
+
+    transition: color 160ms ease;
+}
+
+.login-objetivo-card:hover {
+    background: var(--borde);
+}
+
+.login-objetivo-card:active {
+    transform: scale(.975);
+}
+
+.login-objetivo-card.active {
+    background: var(--acento);
+    border-color: var(--acento);
+    color: var(--txt-btn);
+
+}
+
+.login-objetivo-card.active svg {
+    color: var(--txt-btn);
+
+}
+
+
+/* =========================================================
+   DAYS
+   ========================================================= */
+
+.dias-selector {
+    display: flex;
+    gap: 8px;
+
+    padding: 2px 0;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dias-selector::-webkit-scrollbar {
+    display: none;
+}
+
+.dia-chip {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+
+    display: grid;
+    place-items: center;
+
+    border: 0;
+    border-radius: 50%;
+
+    background: rgba(118, 118, 128, .10);
+
+    color: var(--ios-text);
+
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 100ms ease-out,
+        background 160ms ease,
+        color 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.dia-chip:active {
+    transform: scale(.92);
+}
+
+.dia-chip.activo {
+    background: var(--ios-blue);
+    color: white;
+
+    box-shadow:
+        0 2px 7px color-mix(in srgb,
+            var(--ios-blue) 25%,
+            transparent);
+}
+
+
+/* =========================================================
+   SAVE BUTTON
+   ========================================================= */
+
+.btns.primario {
+    min-height: 48px;
+
+    margin: 14px 18px 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    border: 0;
+    border-radius: 12px;
+
+    background: var(--ios-blue);
+    color: white;
+
+    font: inherit;
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 2px 7px rgba(0, 122, 255, .18);
+
+    transition:
+        transform 100ms ease-out,
+        filter 120ms ease,
+        opacity 120ms ease;
+}
+
+.btns.primario:active {
+    transform: scale(.975);
+    filter: brightness(.94);
+}
+
+.btns.primario:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+
+/* =========================================================
+   ERRORS
+   ========================================================= */
+
+.login-error {
+    margin: 10px 0;
+
+    padding: 12px 14px;
+
+    border-radius: 12px;
+
+    background: color-mix(in srgb,
+            var(--ios-red) 10%,
+            var(--ios-card-solid));
+
+    color: var(--ios-red);
+
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   SETTINGS ROWS
+   ========================================================= */
+
+.perfil-page>.perfil-seccion-titulo+.perfil-row,
+.perfil-page>.perfil-row {
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+
+    padding: 0 16px;
+
+
+
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+
+.perfil-row {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 0 16px;
+
+    border-bottom: 1px solid var(--borde);
+    color: var(--texto);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+}
+
+.perfil-page>.perfil-row:first-of-type {
+    border-radius: 14px 14px 0 0;
+}
+
+.perfil-page>.perfil-row:last-of-type {
+    border-bottom: 0;
+    border-radius: 0 0 14px 14px;
+}
+
+.perfil-row-label {
+    min-width: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 11px;
+
+    color: var(--texto);
+
+    font-size: 15px;
+}
+
+.perfil-row-label svg {
+    flex: 0 0 auto;
+    color: var(--texto-gris);
+}
+
+
+/* =========================================================
+   iOS-LIKE STATUS BUTTON / SWITCH
+   ========================================================= */
+
+.mini-btn.noti {
+    min-width: 82px;
+    min-height: 32px;
+    padding: 5px 11px;
+    border: 0;
+    border-radius: 999px;
+    background: var(--borde);
+    box-shadow: var(--box-shadow);
+    color: var(--texto-gris);
+
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        transform 100ms ease-out,
+        background 160ms ease,
+        color 160ms ease;
+}
+
+.mini-btn.noti:active {
+    transform: scale(.95);
+}
+
+.mini-btn.noti.activa {
+    background: var(--acento-transp-2);
+
+    color: var(--acento);
+}
+
+
+/* =========================================================
+   PRIVACY / NOTIFICATIONS CONTAINER
+   ========================================================= */
+
+.perfil-page>.perfil-seccion-titulo {
+    margin-top: 30px;
+}
+
+.perfil-page>.header-sub {
+    margin-left: 18px;
+    margin-right: 18px;
+}
+
+
+/* =========================================================
+   TIME INPUT
+   ========================================================= */
+
+.input-time-ajustes {
+    width: calc(90% - 36px);
+    height: 46px;
+
+    margin: 8px 18px 0;
+    padding: 0 14px;
+    margin-bottom: 10px;
+    border: 0;
+    border-radius: 22px;
+
+    border: 1px solid var(--borde);
+    color: var(--texto);
+
+    font: inherit;
+    font-size: 16px;
+
+    outline: none;
+    user-select: none;
+
+    transition:
+        opacity 160ms ease,
+        background 160ms ease,
+        box-shadow 160ms ease;
+}
+
+.input-time-ajustes:focus {
+    background: var(--borde-hover);
+
+
+}
+
+.input-time-ajustes.disabled {
+    opacity: .42;
+}
+
+.input-time-ajustes:disabled {
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   BLOCKED USERS
+   ========================================================= */
+
+.perfil-bloqueados-scroll {
+    overflow: hidden;
+
+    border-radius: 22px;
+
+}
+
+.perfil-bloqueados-scroll .perfil-row {
+    min-height: 52px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 14px;
+
+}
+
+.perfil-bloqueados-scroll .perfil-row:last-child {
+    border-bottom: 0;
+}
+
+
+
+
+.perfil-bloqueados-scroll .btn:active {
+    transform: scale(.90);
+}
+
+
+/* =========================================================
+   ACCOUNT
+   ========================================================= */
+
+.perfil-cuenta-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 9999px;
+    background: var(--componente);
+    border: none;
+    box-shadow: var(--box-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 20px;
+    padding-right: 10px;
+    backdrop-filter: blur(18px) saturate(180%);
+    -webkit-backdrop-filter: blur(18px) saturate(180%);
+    color: var(--texto);
+    cursor: pointer;
+    font-weight: 700;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: transform .1s ease-out, background .15s ease;
+}
+
+.perfil-cuenta-btn:active {
+    transform: scale(.975);
+}
+
+.perfil-cuenta-btn.eliminar {
+    color: var(--rojo);
+    background: var(--rojo-transp);
+
+}
+
+.action-sheet-danger {
+    background: var(--rojo);
+    justify-content: center;
+    gap: 12px;
+    display: flex;
+    align-items: center;
+}
+
+.action-sheet-danger:disabled {
+    background: var(--rojo-transp);
+    pointer-events: none;
+}
+
+/* =========================================================
+   SKELETON — iOS SHIMMER
+   ========================================================= */
+
+.skeleton {
+    background:
+        linear-gradient(100deg,
+            rgba(118, 118, 128, .09) 25%,
+            rgba(118, 118, 128, .17) 40%,
+            rgba(118, 118, 128, .09) 55%);
+
+    background-size: 300% 100%;
+
+    animation: iosSkeleton 1.25s ease-in-out infinite;
+
+    border-radius: 10px;
+}
+
+.skeleton-avatar {
+    width: 64px;
+    height: 64px;
+    flex: 0 0 64px;
+    border-radius: 50%;
+}
+
+.skeleton-line {
+    height: 14px;
+}
+
+.skeleton-input {
+    width: 100%;
+    height: 46px;
+    border-radius: 11px;
+}
+
+.skeleton-card-obj {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+}
+
+.skeleton-chip {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    border-radius: 50%;
+}
+
+.skeleton-btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 12px;
+}
+
+.skeleton-row {
+    width: 100%;
+    height: 52px;
+    border-radius: 14px 14px 0 0;
+}
+
+.skeleton-row-2 {
+    width: 100%;
+    height: 52px;
+    border-radius: 0 0 14px 14px;
+}
+
+
+/* =========================================================
+   SPIN
+   ========================================================= */
+
+.login-spin {
+    animation: iosSpin .75s linear infinite;
+}
+
+
+/* =========================================================
+   TOOLTIP MOBILE
+   ========================================================= */
+
+.tooltipe {
+    position: relative;
+}
+
+.tooltipe[data-tooltip]::after {
+    content: attr(data-tooltip);
+
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+
+    transform:
+        translateX(-50%) translateY(4px);
+
+    padding: 6px 9px;
+
+    border-radius: 8px;
+
+    background: rgba(28, 28, 30, .92);
+    color: white;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    white-space: nowrap;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+        opacity 140ms ease,
+        transform 140ms ease;
+}
+
+.tooltipe:hover[data-tooltip]::after,
+.tooltipe:focus-visible[data-tooltip]::after {
+    opacity: 1;
+
+    transform:
+        translateX(-50%) translateY(0);
+}
+
+
+
+
+/* =========================================================
+   ACCESSIBILITY / REDUCED MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .perfil-page *,
+    .perfil-page *::before,
+    .perfil-page *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 600px) {
+    .perfil-page {
+        width: 100%;
+
+        padding:
+            18px 14px calc(32px + env(safe-area-inset-bottom));
+
+        font-size: 15px;
+    }
+
+    .perfil-header {
+        padding: 4px 5px 24px;
+    }
+
+    .perfil-avatar {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+
+        font-size: 21px;
+    }
+
+    .perfil-nombre {
+        font-size: 21px;
+    }
+
+    .login-form.perfil {
+        border-radius: 15px;
+    }
+
+    .login-form.perfil>.login-field-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .login-form.perfil>.login-field-row>.login-field {
+        padding-bottom: 4px;
+    }
+
+    .login-objetivo-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .perfil-seccion-titulo {
+        margin-left: 14px;
+    }
+
+    .perfil-page>.header-sub {
+        margin-left: 14px;
+        margin-right: 14px;
+    }
+
+    .perfil-page>.perfil-row {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .mini-btn.noti {
+        min-width: 78px;
+    }
+
+    .modal-overlay {
+        align-items: flex-end;
+        padding: 10px;
+        padding-bottom: calc(10px + env(safe-area-inset-bottom));
+    }
+
+    .modal-cont {
+        width: 100%;
+        max-width: none;
+
+        border-radius: 22px;
+
+        padding:
+            18px 18px calc(18px + env(safe-area-inset-bottom));
+    }
+}
+
+
+/* =========================================================
+   ANIMATIONS
+   ========================================================= */
+
+@keyframes iosSkeleton {
+    0% {
+        background-position: 100% 0;
+    }
+
+    100% {
+        background-position: -100% 0;
+    }
+}
+
+@keyframes iosSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes iosOverlayIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes iosModalIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px) scale(.97);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+
+/* =========================================================
+   TOUCH
+   ========================================================= */
+
+button,
+select,
+input {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button {
+    touch-action: manipulation;
+}
+
+@media (hover: none) {
+    .tooltipe[data-tooltip]::after {
+        display: none;
+    }
+}

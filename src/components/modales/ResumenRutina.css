@@ -1,0 +1,125 @@
+/* ===== Recuperación muscular ===== */
+
+.progreso-card {
+    max-height: 70vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Tira horizontal con scroll + snap, para pendientes y recuperados */
+.musc-scroll-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+    padding: 2px 2px 10px;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.musc-scroll-row::-webkit-scrollbar {
+    display: none;
+}
+
+/* ---------- Card pendiente (anillo + texto) ---------- */
+.musc-recovery-card {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 92px;
+    padding: 14px 8px;
+    box-shadow: var(--box-shadow);
+    border-radius: 14px;
+    background: var(--componente);
+    text-align: center;
+}
+
+/* Anillo de progreso tipo "donut" con hueco real en el medio */
+.musc-recovery-ring {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: conic-gradient(var(--acento) var(--pct), var(--borde) 0);
+    position: relative;
+}
+
+.musc-recovery-ring::before {
+    content: '';
+    position: absolute;
+    inset: 4px;
+    border-radius: 50%;
+    background: var(--componente);
+}
+
+.musc-recovery-ring span {
+    position: relative;
+    z-index: 1;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--texto);
+    font-family: 'Inter', system-ui, sans-serif;
+}
+
+.musc-recovery-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    min-width: 0;
+}
+
+.musc-recovery-nombre {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--texto);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.musc-recovery-sub {
+    font-size: 11px;
+    color: var(--texto-gris);
+    line-height: 1.25;
+}
+
+/* ---------- Título "Recuperados" ---------- */
+.musc-recuperados-titulo {
+    margin: 4px 2px 0;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--texto-gris);
+}
+
+/* ---------- Chip "Recuperado" ---------- */
+.musc-chip {
+    flex: none;
+    scroll-snap-align: start;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--box-shadow);
+    gap: 5px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: var(--acento-transp-2);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--acento);
+    white-space: nowrap;
+}
+
+.musc-chip-check {
+    flex: none;
+}

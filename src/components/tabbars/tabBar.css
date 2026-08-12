@@ -1,0 +1,162 @@
+/* =========================================================
+   TabBar — estilo iOS "liquid glass", consistente con
+   .kebab / .pop / .header de rutinas.css
+   ========================================================= */
+
+.tabbar-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    padding: 0 16px calc(14px + env(safe-area-inset-bottom));
+    pointer-events: none;
+    animation: tabbarRise .3s cubic-bezier(.2, .9, .25, 1.1);
+}
+
+@keyframes tabbarRise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tabbar {
+    pointer-events: auto;
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    gap: 4px;
+    width: 100%;
+    max-width: 420px;
+    padding: 6px;
+    border-radius: 26px;
+    background: var(--componente-transp);
+    backdrop-filter: blur(34px) saturate(190%);
+    -webkit-backdrop-filter: blur(34px) saturate(190%);
+    border: 1px solid var(--borde);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, .35),
+        0 2px 10px rgba(0, 0, 0, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .08);
+}
+
+.tabbar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(155deg, var(--borde), transparent 45%);
+    opacity: .5;
+    pointer-events: none;
+}
+
+/* ---------- track de los 4 tabs principales ---------- */
+.tabbar-track {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-items: stretch;
+    min-width: 0;
+}
+
+.tabbar-rudder {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 0;
+    border-radius: 18px;
+    background: var(--acento);
+    box-shadow: 0 4px 14px var(--acento-transp-2);
+    transition:
+        transform .32s cubic-bezier(.2, .9, .25, 1.15),
+        width .32s cubic-bezier(.2, .9, .25, 1.15),
+        opacity .2s ease;
+    z-index: 0;
+}
+
+.tabbar-item {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 9px 4px 8px;
+    border-radius: 18px;
+    color: var(--texto-gris);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transform: scale(1);
+    transition: color .2s ease, transform .12s ease-out, background .15s ease;
+}
+
+.tabbar-item:active {
+    transform: scale(0.92);
+}
+
+@media (hover: hover) {
+    .tabbar-item:not(.activo):not(.noHover):hover {
+        background: var(--borde);
+        color: var(--texto);
+    }
+}
+
+.tabbar-icon {
+    transition: transform .25s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.tabbar-item.activo {
+    color: var(--txt-btn);
+}
+
+.tabbar-item.activo .tabbar-icon {
+    transform: translateY(-1px) scale(1.06);
+}
+
+.tabbar-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    opacity: .9;
+    white-space: nowrap;
+}
+
+/* ---------- separador entre tabs y ajustes ---------- */
+.tabbar-divider {
+    width: 1px;
+    align-self: stretch;
+    margin: 8px 2px;
+    background: var(--borde);
+    opacity: .7;
+    flex: 0 0 auto;
+}
+
+/* ---------- botón de ajustes ---------- */
+.tabbar-item-wrap {
+    position: relative;
+    flex: 0 0 auto;
+}
+
+.tabbar-item.settings {
+    padding: 9px 13px 8px;
+}
+
+.tabbar-item.settings.activo {
+    background: var(--acento-transp-2);
+    color: var(--acento);
+}
+
+.tabbar-item.settings.activo .tabbar-icon {
+    transform: rotate(45deg);
+}

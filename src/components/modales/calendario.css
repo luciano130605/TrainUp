@@ -1,0 +1,77 @@
+/* ---------- calendario (selector de rango) ---------- */
+.cal-card {
+    padding-bottom: 4px;
+    max-height: 500px;
+}
+
+.cal-presets-row {
+    padding: 6px 20px 14px;
+    height: auto;
+    justify-content: center;
+}
+
+.cal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px 12px;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    padding: 0 20px 6px;
+}
+
+.cal-dow {
+    text-align: center;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--texto-gris);
+    padding-bottom: 6px;
+}
+
+.cal-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    transition: background .12s ease, color .12s ease, transform .1s ease-out;
+}
+
+.cal-day:active {
+    transform: scale(0.9);
+}
+
+.cal-day.in-range {
+    background: var(--acento-transp-2);
+}
+
+.cal-day.selected {
+    background: var(--acento);
+    color: var(--txt-btn);
+}
+
+.cal-day.today:not(.selected) {
+    color: var(--acento);
+    box-shadow: inset 0 0 0 1px var(--acento-transp-2);
+}
+
+.cal-footer-range {
+    display: flex;
+    justify-content: center;
+    padding: 4px 20px 16px;
+}

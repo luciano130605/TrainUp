@@ -1,0 +1,830 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rutinas — Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #08080B;
+    --surface: #16161D;
+    --surface-2: #1D1D26;
+    --surface-3: #24242F;
+    --line: #ffffff12;
+    --text: #F3F3F6;
+    --text-muted: #8B8B96;
+    --text-dim: #5C5C68;
+    --accent: #8657FF;
+    --accent-soft: rgba(134,87,255,0.16);
+    --biceps: #5EA1FF;
+    --espalda: #2FD9A8;
+    --warn: #FF9F5A;
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 11px;
+    font-size: 16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background: radial-gradient(ellipse at 50% -10%, #14121c 0%, #08080B 55%);
+    font-family:'Inter', system-ui, sans-serif;
+    color:var(--text);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:28px 12px;
+    overflow-x:hidden;
+  }
+
+  .stage-label{
+    position:fixed; top:14px; left:50%; transform:translateX(-50%);
+    font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--text-dim); font-weight:600; z-index:50;
+  }
+
+  /* ---------- phone shell ---------- */
+  .phone{
+    width:390px; height:844px;
+    background: var(--bg);
+    border-radius:52px;
+    border:1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 40px 100px -20px rgba(0,0,0,.8), inset 0 0 0 8px #000;
+    position:relative;
+    overflow:hidden;
+    isolation:isolate;
+  }
+  .statusbar{
+    position:absolute; top:0; left:0; right:0; height:54px;
+    display:flex; align-items:flex-end; justify-content:space-between;
+    padding:0 28px 8px; font-size:15px; font-weight:600; letter-spacing:.02em;
+    z-index:40; pointer-events:none;
+  }
+  .statusbar .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:6px;box-shadow:0 0 8px var(--accent);}
+  .notch{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    width:120px; height:28px; background:#000; border-radius:20px; z-index:41;
+  }
+
+  /* ---------- nav track ---------- */
+  .track{
+    position:absolute; top:0; left:0;
+    width:200%; height:100%;
+    display:flex;
+    will-change:transform;
+  }
+  .screen{
+    width:50%; height:100%;
+    position:relative;
+    overflow:hidden;
+  }
+  .scroll{
+    height:100%;
+    overflow-y:auto;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:120px;
+    scrollbar-width:none;
+  }
+  .scroll::-webkit-scrollbar{display:none;}
+
+  /* ---------- translucent header ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:30;
+    padding:60px 20px 14px;
+    background:rgba(8,8,11,0.72);
+    backdrop-filter:blur(22px) saturate(160%);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);
+    border-bottom:1px solid transparent;
+    transition:border-color .25s ease, background .25s ease;
+  }
+  .topbar.scrolled{ border-bottom-color:var(--line); }
+  .topbar-row{ display:flex; align-items:center; justify-content:space-between; }
+
+  .icon-btn{
+    width:42px; height:42px; border-radius:50%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--text); cursor:pointer;
+    transform:scale(1);
+    transition:transform .1s ease-out, background .15s ease;
+    -webkit-user-select:none; user-select:none;
+  }
+  .icon-btn:active{ transform:scale(0.93); background:var(--surface-3); }
+  .icon-btn.accent{ background:var(--accent); border-color:transparent; }
+  .icon-btn.accent:active{ background:#7648e6; }
+  .icon-btn svg{width:18px;height:18px;}
+
+  /* ---------- list screen ---------- */
+  .page-title{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:34px;
+    letter-spacing:-0.01em;
+    text-transform:uppercase;
+    line-height:1;
+    margin:0;
+  }
+  .page-sub{ margin-top:6px; font-size:13px; color:var(--text-muted); font-weight:500; letter-spacing:.01em; }
+
+  .stat-row{ display:flex; gap:10px; padding:18px 20px 6px; }
+  .stat-card{
+    flex:1; background:var(--surface); border:1px solid var(--line);
+    border-radius:var(--radius-md); padding:16px 10px 14px; text-align:center;
+  }
+  .stat-num{ font-family:'Oswald',sans-serif; font-weight:600; font-size:26px; color:var(--accent); letter-spacing:-.01em;}
+  .stat-label{ font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-dim); margin-top:2px; font-weight:600;}
+
+  .day-pills{ display:flex; gap:8px; padding:16px 20px 4px; overflow-x:auto; scrollbar-width:none;}
+  .day-pills::-webkit-scrollbar{display:none;}
+  .pill{
+    flex:0 0 auto; padding:9px 16px; border-radius:999px;
+    background:var(--surface); border:1px solid var(--line);
+    font-size:13px; font-weight:600; color:var(--text-muted);
+    cursor:pointer; transform:scale(1);
+    transition:transform .1s ease-out, background .15s ease, color .15s ease;
+  }
+  .pill:active{ transform:scale(0.94); }
+  .pill.active{ background:var(--accent); color:#fff; border-color:transparent; }
+
+  .section-label{
+    padding:22px 20px 10px; font-size:12px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--text-dim); font-weight:700;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+
+  .routine-list{ padding:0 20px; display:flex; flex-direction:column; gap:12px; }
+  .routine-card{
+    background:linear-gradient(155deg, var(--surface) 0%, var(--surface-2) 100%);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:20px;
+    cursor:pointer;
+    position:relative;
+    overflow:hidden;
+    transform:scale(1) translateY(0);
+    transition:transform .12s cubic-bezier(.2,.8,.3,1), box-shadow .2s ease;
+  }
+  .routine-card:active{ transform:scale(0.975); }
+  .routine-card::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:var(--card-accent, var(--accent)); opacity:.85;
+  }
+  .routine-card .top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .routine-name{ font-family:'Oswald',sans-serif; font-weight:600; font-size:21px; text-transform:uppercase; letter-spacing:-0.01em; }
+  .day-badge{
+    font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+    padding:6px 11px; border-radius:999px; background:var(--surface-3); color:var(--text-muted);
+    white-space:nowrap;
+  }
+  .day-badge.today{ background:var(--accent-soft); color:#b79bff; }
+  .routine-meta{ margin-top:5px; font-size:12.5px; color:var(--text-dim); }
+  .tag-row{ display:flex; gap:7px; margin-top:14px; flex-wrap:wrap; }
+  .tag{
+    font-size:11.5px; font-weight:600; padding:5px 10px; border-radius:8px;
+    background:var(--surface-3); color:var(--text-muted);
+    display:flex; align-items:center; gap:5px;
+  }
+  .tag .dot{ width:6px; height:6px; border-radius:50%; }
+
+  /* ---------- detail screen ---------- */
+  .hero{ padding:18px 20px 6px; }
+  .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; }
+  .hero-title{
+    font-family:'Oswald',sans-serif; font-weight:700; font-size:32px;
+    text-transform:uppercase; letter-spacing:-0.015em; line-height:1.02; max-width:260px;
+  }
+  .hero-meta{ margin-top:8px; font-size:12.5px; color:var(--text-muted); }
+
+  .stat-row-detail{ display:flex; gap:10px; padding:18px 20px 4px; }
+
+  .dist-section{ padding:24px 20px 6px; }
+  .dist-header{ display:flex; align-items:center; gap:8px; font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); font-weight:700; margin-bottom:12px; cursor:pointer; -webkit-user-select:none; user-select:none;}
+  .dist-header svg{width:14px;height:14px; opacity:.7;}
+  .dist-morph{ position:relative; min-height:96px; }
+  .dist-bar-wrap{ position:absolute; inset:0; }
+  .dist-bar{
+    height:10px; border-radius:999px; background:var(--surface-3); overflow:hidden; display:flex;
+  }
+  .dist-bar > div{ height:100%; }
+  .dist-legend{ display:flex; gap:10px; margin-top:12px; }
+  .legend-pill{
+    display:flex; align-items:center; gap:7px; font-size:12.5px; font-weight:600; color:var(--text-muted);
+    background:var(--surface); border:1px solid var(--line); padding:8px 13px; border-radius:999px;
+  }
+  .legend-pill .dot{width:8px;height:8px;border-radius:50%;}
+  .dist-ring-wrap{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:24px;
+    pointer-events:none;
+  }
+  .dist-ring-wrap svg{ transform:rotate(-90deg); }
+  .ring-center-label{ position:absolute; text-align:center; }
+  .ring-center-label .num{ font-family:'Oswald',sans-serif; font-size:22px; font-weight:700; }
+  .ring-center-label .lbl{ font-size:9.5px; color:var(--text-dim); letter-spacing:.08em; text-transform:uppercase; }
+  .ring-legend{ display:flex; flex-direction:column; gap:10px; }
+
+  .ex-filter-row{ display:flex; gap:8px; padding:22px 20px 4px; }
+
+  .ex-list{ padding:14px 20px 40px; display:flex; flex-direction:column; gap:12px; position:relative; }
+  .ex-card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-lg);
+    overflow:hidden; position:relative;
+    touch-action:pan-y;
+  }
+  .ex-card.dragging{ z-index:10; box-shadow:0 22px 44px -12px rgba(0,0,0,.6); border-color:rgba(255,255,255,0.14); }
+  .ex-head{ display:flex; align-items:center; gap:10px; padding:18px 16px 16px; cursor:pointer; }
+  .chev{ flex:0 0 auto; width:20px; height:20px; color:var(--text-dim); transition:transform .25s cubic-bezier(.2,.8,.2,1); }
+  .ex-card.open .chev{ transform:rotate(180deg); }
+  .ex-title-block{ flex:1; min-width:0; }
+  .ex-name{ font-family:'Oswald',sans-serif; font-weight:600; font-size:16px; text-transform:uppercase; letter-spacing:.005em; }
+  .ex-sub{ margin-top:4px; font-size:12px; color:var(--text-dim); }
+  .muscle-chip{ font-size:10.5px; font-weight:700; padding:5px 9px; border-radius:7px; letter-spacing:.04em; text-transform:uppercase; flex:0 0 auto;}
+  .drag-handle{
+    flex:0 0 auto; width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+    color:var(--text-dim); cursor:grab; border-radius:9px; touch-action:none;
+  }
+  .drag-handle:active{ cursor:grabbing; color:var(--text); background:var(--surface-3); }
+
+  .ex-body{ height:0; overflow:hidden; }
+  .ex-body-inner{ padding:0 16px 18px; }
+  .set-table-head{ display:flex; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-dim); font-weight:700; padding:0 0 8px 34px;}
+  .set-table-head span{ flex:1; }
+  .set-row{ display:flex; align-items:center; gap:10px; padding:7px 0; }
+  .set-idx{ width:22px; height:22px; border-radius:7px; background:var(--surface-3); display:flex; align-items:center; justify-content:center; font-size:11.5px; font-weight:700; color:var(--text-muted); flex:0 0 auto;}
+  .set-val{ flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 10px; font-size:14px; font-weight:600; text-align:center; font-variant-numeric:tabular-nums;}
+
+  /* fade edges on scroll containers to hint more content */
+  .fade-bottom{
+    position:absolute; left:0; right:0; bottom:0; height:34px;
+    background:linear-gradient(to top, var(--bg), transparent);
+    pointer-events:none; z-index:5;
+  }
+
+  .hairline-hint{ display:flex; align-items:center; justify-content:center; gap:8px; padding:14px 0 4px; color:var(--text-dim); font-size:11px;}
+  .hairline-hint svg{width:13px;height:13px;}
+
+  ::selection{ background:var(--accent-soft); }
+</style>
+</head>
+<body>
+
+<div class="stage-label">Arrastrá el borde izquierdo del detalle para volver · Mantené presionado ≡ para reordenar</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span>1:08</span>
+    <span style="display:flex;align-items:center;"><span class="dot"></span>••• 66</span>
+  </div>
+
+  <div class="track" id="track">
+
+    <!-- ===================== LIST SCREEN ===================== -->
+    <section class="screen" id="screen-list">
+      <div class="scroll" id="scroll-list">
+        <div class="topbar" id="topbar-list">
+          <div class="topbar-row">
+            <div>
+              <h1 class="page-title">Rutinas</h1>
+              <div class="page-sub">5 guardadas</div>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <div class="icon-btn" id="bell-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+              </div>
+              <div class="icon-btn accent" id="add-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-card"><div class="stat-num">5</div><div class="stat-label">Rutinas</div></div>
+          <div class="stat-card"><div class="stat-num">1</div><div class="stat-label">Hoy</div></div>
+          <div class="stat-card"><div class="stat-num">38</div><div class="stat-label">Ejercicios</div></div>
+        </div>
+
+        <div class="day-pills" id="day-pills">
+          <div class="pill active" data-day="todas">Todas</div>
+          <div class="pill" data-day="L">Lunes</div>
+          <div class="pill" data-day="M">Martes</div>
+          <div class="pill" data-day="X">Miércoles</div>
+          <div class="pill" data-day="J">Jueves</div>
+          <div class="pill" data-day="V">Viernes</div>
+        </div>
+
+        <div class="section-label">Todas tus rutinas</div>
+
+        <div class="routine-list">
+          <div class="routine-card" data-open="detail" style="--card-accent:var(--accent)">
+            <div class="top">
+              <div>
+                <div class="routine-name">Bíceps y Espalda</div>
+                <div class="routine-meta">8 ejercicios · última vez hace 3 días</div>
+              </div>
+              <div class="day-badge today">Lunes</div>
+            </div>
+            <div class="tag-row">
+              <div class="tag"><span class="dot" style="background:var(--espalda)"></span>Espalda</div>
+              <div class="tag"><span class="dot" style="background:var(--biceps)"></span>Bíceps</div>
+            </div>
+          </div>
+
+          <div class="routine-card" style="--card-accent:#FF6B6B">
+            <div class="top">
+              <div>
+                <div class="routine-name">Piernas</div>
+                <div class="routine-meta">6 ejercicios · última vez hace 5 días</div>
+              </div>
+              <div class="day-badge">Martes</div>
+            </div>
+            <div class="tag-row">
+              <div class="tag"><span class="dot" style="background:#FF6B6B"></span>Cuádriceps</div>
+              <div class="tag"><span class="dot" style="background:#FFB86B"></span>Isquiotibiales</div>
+              <div class="tag"><span class="dot" style="background:#6BCBFF"></span>Gemelos</div>
+            </div>
+          </div>
+
+          <div class="routine-card" style="--card-accent:var(--warn)">
+            <div class="top">
+              <div>
+                <div class="routine-name">Pecho y Tríceps</div>
+                <div class="routine-meta">6 ejercicios · última vez hace 2 días</div>
+              </div>
+              <div class="day-badge">Miércoles</div>
+            </div>
+            <div class="tag-row">
+              <div class="tag"><span class="dot" style="background:var(--warn)"></span>Pecho</div>
+              <div class="tag"><span class="dot" style="background:#FFD166"></span>Tríceps</div>
+            </div>
+          </div>
+
+          <div class="routine-card" style="--card-accent:#9B87F5">
+            <div class="top">
+              <div>
+                <div class="routine-name">Hombros y Abdominales</div>
+                <div class="routine-meta">7 ejercicios · última vez hace 6 días</div>
+              </div>
+              <div class="day-badge">Jueves</div>
+            </div>
+            <div class="tag-row">
+              <div class="tag"><span class="dot" style="background:#9B87F5"></span>Hombros</div>
+              <div class="tag"><span class="dot" style="background:#5EE6D0"></span>Abdominales</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== DETAIL SCREEN ===================== -->
+    <section class="screen" id="screen-detail">
+      <div class="scroll" id="scroll-detail">
+        <div class="topbar" id="topbar-detail">
+          <div class="topbar-row">
+            <div class="icon-btn" id="back-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </div>
+            <div style="display:flex;gap:10px;">
+              <div class="icon-btn accent">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              </div>
+              <div class="icon-btn">
+                <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero">
+          <div class="hero-top">
+            <div class="hero-title">Bíceps<br>y Espalda</div>
+            <div class="day-badge today">Lunes</div>
+          </div>
+          <div class="hero-meta">Última vez: hace 3 días · 24 series · 4.446 kg</div>
+        </div>
+
+        <div class="stat-row-detail">
+          <div class="stat-card"><div class="stat-num">8</div><div class="stat-label">Ejercicios</div></div>
+          <div class="stat-card"><div class="stat-num">22</div><div class="stat-label">Series</div></div>
+          <div class="stat-card"><div class="stat-num" style="font-size:20px;">4.446</div><div class="stat-label">Último vol.</div></div>
+        </div>
+
+        <div class="dist-section">
+          <div class="dist-header" id="dist-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18"/></svg>
+            Distribución muscular
+          </div>
+
+          <div class="dist-morph" id="dist-morph">
+            <div class="dist-bar-wrap" id="dist-bar-wrap">
+              <div class="dist-bar">
+                <div style="width:55%; background:var(--biceps);"></div>
+                <div style="width:45%; background:var(--espalda);"></div>
+              </div>
+              <div class="dist-legend">
+                <div class="legend-pill"><span class="dot" style="background:var(--biceps)"></span>Bíceps · 55%</div>
+                <div class="legend-pill"><span class="dot" style="background:var(--espalda)"></span>Espalda · 45%</div>
+              </div>
+            </div>
+
+            <div class="dist-ring-wrap" id="dist-ring-wrap" style="opacity:0;">
+              <svg width="96" height="96" viewBox="0 0 96 96">
+                <circle cx="48" cy="48" r="40" fill="none" stroke="var(--surface-3)" stroke-width="11"/>
+                <circle id="ring-biceps" cx="48" cy="48" r="40" fill="none" stroke="var(--biceps)" stroke-width="11" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+                <circle id="ring-espalda" cx="48" cy="48" r="40" fill="none" stroke="var(--espalda)" stroke-width="11" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+              </svg>
+              <div class="ring-legend">
+                <div class="legend-pill"><span class="dot" style="background:var(--biceps)"></span>Bíceps · 55%</div>
+                <div class="legend-pill"><span class="dot" style="background:var(--espalda)"></span>Espalda · 45%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ex-filter-row">
+          <div class="pill active">Todos</div>
+          <div class="pill"><span class="dot" style="background:var(--espalda);width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;"></span>Espalda</div>
+          <div class="pill"><span class="dot" style="background:var(--biceps);width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;"></span>Bíceps</div>
+        </div>
+
+        <div class="hairline-hint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg>
+          Mantené presionado ≡ para reordenar
+        </div>
+
+        <div class="ex-list" id="ex-list"></div>
+      </div>
+      <div class="fade-bottom"></div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------------- Spring engine ---------------- */
+  function springParams(dampingRatio, response){
+    const k = Math.pow((2*Math.PI)/response, 2);
+    const c = 2*dampingRatio*Math.sqrt(k);
+    return {k,c};
+  }
+  class Spring{
+    constructor(value=0){
+      this.value=value; this.velocity=0; this.target=value;
+      this.k=280; this.c=32; this.precision=0.01; this._raf=null;
+      this.onUpdate=null; this.onRest=null;
+    }
+    configure(dampingRatio, response){
+      const p = springParams(dampingRatio, REDUCED? 0.001 : response);
+      this.k=p.k; this.c=p.c;
+    }
+    jumpTo(v){
+      this.value=v; this.velocity=0; this.target=v;
+      if(this.onUpdate) this.onUpdate(this.value);
+    }
+    retarget(target, opts={}){
+      this.target = target;
+      if(opts.value!==undefined) this.value = opts.value;
+      if(opts.velocity!==undefined) this.velocity = opts.velocity;
+      this._run();
+    }
+    _run(){
+      if(this._raf) return;
+      let last = performance.now();
+      const step = (t)=>{
+        const dt = Math.min((t-last)/1000, 0.032); last = t;
+        const force = -this.k*(this.value-this.target);
+        const damp = -this.c*this.velocity;
+        this.velocity += (force+damp)*dt;
+        this.value += this.velocity*dt;
+        if(this.onUpdate) this.onUpdate(this.value);
+        if(Math.abs(this.value-this.target)<this.precision && Math.abs(this.velocity)<this.precision){
+          this.value=this.target; this.velocity=0;
+          if(this.onUpdate) this.onUpdate(this.value);
+          this._raf=null;
+          if(this.onRest) this.onRest();
+          return;
+        }
+        this._raf = requestAnimationFrame(step);
+      };
+      this._raf = requestAnimationFrame(step);
+    }
+  }
+  function rubberband(overshoot, dimension, constant){
+    constant = constant || 0.55;
+    const sign = overshoot<0?-1:1;
+    const o = Math.abs(overshoot);
+    return sign*(o*dimension*constant)/(dimension+constant*o);
+  }
+  function project(velocity, decel){
+    decel = decel===undefined?0.998:decel;
+    return (velocity/1000)*decel/(1-decel);
+  }
+
+  /* ---------------- Navigation (list <-> detail) ---------------- */
+  const track = document.getElementById('track');
+  const phone = document.getElementById('phone');
+  const W = phone.getBoundingClientRect().width;
+
+  const nav = new Spring(0); // 0 = list shown, -W = detail shown
+  nav.onUpdate = (v)=>{ track.style.transform = `translateX(${v}px)`; };
+
+  function goDetail(){
+    nav.configure(1.0, 0.42);
+    nav.retarget(-W);
+  }
+  function goList(velocity){
+    nav.configure(1.0, 0.4);
+    nav.retarget(0, velocity!==undefined?{velocity}:undefined);
+  }
+
+  document.querySelectorAll('.routine-card').forEach(card=>{
+    card.addEventListener('click', ()=>{ if(card.dataset.open==='detail') goDetail(); else goDetail(); });
+  });
+  document.getElementById('back-btn').addEventListener('click', ()=> goList());
+
+  /* Edge-swipe-to-go-back gesture: direct 1:1 tracking, rubber band past bounds,
+     velocity handoff + momentum projection to decide pop vs snap-back (interruptible). */
+  const detailScreen = document.getElementById('screen-detail');
+  let dragging=false, dragStartX=0, dragBaseline=0, history=[];
+  const EDGE = 28;
+
+  detailScreen.addEventListener('pointerdown', (e)=>{
+    if(nav.value > -W+2) return; // only when detail is fully/mostly presented
+    if(e.clientX > EDGE) return; // only from the left edge, like iOS
+    dragging = true;
+    dragStartX = e.clientX;
+    dragBaseline = nav.value;
+    history = [{x:e.clientX, t:performance.now()}];
+    nav._raf && cancelAnimationFrame(nav._raf); nav._raf=null; // interrupt any in-flight spring
+    detailScreen.setPointerCapture(e.pointerId);
+  });
+  detailScreen.addEventListener('pointermove', (e)=>{
+    if(!dragging) return;
+    const dx = e.clientX - dragStartX;
+    let x = dragBaseline + dx;
+    if(x>0) x = rubberband(x, W, 0.6);          // resist dragging past fully-open
+    if(x<-W) x = -W + rubberband(x+W, W, 0.6);  // resist dragging past fully-closed
+    nav.value = x;
+    track.style.transform = `translateX(${x}px)`;
+    history.push({x:e.clientX, t:performance.now()});
+    if(history.length>5) history.shift();
+  });
+  function endDrag(e){
+    if(!dragging) return;
+    dragging=false;
+    let v=0;
+    if(history.length>=2){
+      const a=history[history.length-2], b=history[history.length-1];
+      const dt=(b.t-a.t)||16;
+      v = (b.x-a.x)/dt*1000;
+    }
+    const projected = nav.value + project(v);
+    nav.configure(v>0? 0.86 : 1.0, 0.4); // slight bounce only when it carried real momentum
+    if(projected > -W/2){
+      nav.retarget(0, {velocity:v});
+    } else {
+      nav.retarget(-W, {velocity:v});
+    }
+  }
+  detailScreen.addEventListener('pointerup', endDrag);
+  detailScreen.addEventListener('pointercancel', endDrag);
+
+  /* ---------------- scroll-edge header state ---------------- */
+  function wireScrollFade(scrollId, topbarId){
+    const s = document.getElementById(scrollId), t = document.getElementById(topbarId);
+    s.addEventListener('scroll', ()=>{ t.classList.toggle('scrolled', s.scrollTop>4); }, {passive:true});
+  }
+  wireScrollFade('scroll-list','topbar-list');
+  wireScrollFade('scroll-detail','topbar-detail');
+
+  /* ---------------- Day pills / filter pills press + select ---------------- */
+  document.querySelectorAll('.day-pills .pill, .ex-filter-row .pill').forEach(p=>{
+    p.addEventListener('click', ()=>{
+      p.parentElement.querySelectorAll('.pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+    });
+  });
+
+  /* ---------------- Distribution bar -> ring materialize ---------------- */
+  const distToggle = document.getElementById('dist-toggle');
+  const barWrap = document.getElementById('dist-bar-wrap');
+  const ringWrap = document.getElementById('dist-ring-wrap');
+  const ringBiceps = document.getElementById('ring-biceps');
+  const ringEspalda = document.getElementById('ring-espalda');
+  const CIRC = 251.2;
+  let distOpen=false;
+  const morph = new Spring(0);
+  morph.configure(1.0, 0.4);
+  morph.onUpdate = (p)=>{
+    p = Math.max(0, Math.min(1, p));
+    barWrap.style.opacity = String(1-p);
+    barWrap.style.filter = `blur(${(p*5).toFixed(1)}px)`;
+    barWrap.style.transform = `scale(${1-p*0.08})`;
+    ringWrap.style.opacity = String(p);
+    ringWrap.style.filter = `blur(${((1-p)*5).toFixed(1)}px)`;
+    ringWrap.style.transform = `scale(${0.85+p*0.15})`;
+    ringBiceps.setAttribute('stroke-dashoffset', String(CIRC - (CIRC*0.55*p)));
+    ringEspalda.setAttribute('stroke-dashoffset', String(CIRC - (CIRC*0.45*p)));
+    ringEspalda.style.transform = `rotate(${0.55*360}deg)`;
+    ringEspalda.style.transformOrigin='48px 48px';
+  };
+  distToggle.addEventListener('click', ()=>{
+    distOpen = !distOpen;
+    morph.retarget(distOpen?1:0);
+  });
+
+  /* ---------------- Exercise data ---------------- */
+  const exercises = [
+    {name:"Jalón al pecho — agarre abierto (máquina)", muscle:"Espalda", color:'var(--espalda)', meta:"hace 3 días · 900 kg", sets:[[37.5,8],[37.5,8],[37.5,8]]},
+    {name:"Remo unilateral (polea)", muscle:"Espalda", color:'var(--espalda)', meta:"hace 3 días · 630 kg", sets:[[24,10],[24,9],[24,8]]},
+    {name:"Remo en máquina, agarre neutro", muscle:"Espalda", color:'var(--espalda)', meta:"hace 3 días · 780 kg", sets:[[45,8],[45,8],[45,7]]},
+    {name:"Curl con barra Z", muscle:"Bíceps", color:'var(--biceps)', meta:"hace 3 días · 405 kg", sets:[[22.5,10],[22.5,9],[22.5,8]]},
+    {name:"Curl martillo con mancuernas", muscle:"Bíceps", color:'var(--biceps)', meta:"hace 3 días · 336 kg", sets:[[14,8],[14,8],[14,8]]},
+    {name:"Curl concentrado", muscle:"Bíceps", color:'var(--biceps)', meta:"hace 3 días · 234 kg", sets:[[13,6],[13,6],[13,6]]},
+    {name:"Face pull, cuerda", muscle:"Espalda", color:'var(--espalda)', meta:"hace 3 días · 320 kg", sets:[[16,10],[16,10]]},
+    {name:"Curl en polea baja", muscle:"Bíceps", color:'var(--biceps)', meta:"hace 3 días · 300 kg", sets:[[15,10],[15,10]]},
+  ];
+
+  const list = document.getElementById('ex-list');
+  const chevSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>`;
+  const dragSvg = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="8" cy="6" r="1.6"/><circle cx="16" cy="6" r="1.6"/><circle cx="8" cy="12" r="1.6"/><circle cx="16" cy="12" r="1.6"/><circle cx="8" cy="18" r="1.6"/><circle cx="16" cy="18" r="1.6"/></svg>`;
+
+  exercises.forEach((ex, i)=>{
+    const card = document.createElement('div');
+    card.className='ex-card';
+    card.dataset.idx = i;
+    card.innerHTML = `
+      <div class="ex-head">
+        <span class="chev">${chevSvg}</span>
+        <div class="ex-title-block">
+          <div class="ex-name">${ex.name}</div>
+          <div class="ex-sub">${ex.meta}</div>
+        </div>
+        <span class="muscle-chip" style="background:color-mix(in srgb, ${ex.color} 18%, transparent); color:${ex.color};">${ex.muscle}</span>
+        <span class="drag-handle">${dragSvg}</span>
+      </div>
+      <div class="ex-body">
+        <div class="ex-body-inner">
+          <div class="set-table-head"><span>Kg</span><span>Reps</span></div>
+          ${ex.sets.map((s,si)=>`
+            <div class="set-row">
+              <div class="set-idx">${si+1}</div>
+              <div class="set-val">${s[0]}</div>
+              <div class="set-val">${s[1]}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+    `;
+    list.appendChild(card);
+
+    // accordion spring, interruptible on rapid taps
+    const body = card.querySelector('.ex-body');
+    const inner = card.querySelector('.ex-body-inner');
+    const spring = new Spring(0);
+    spring.onUpdate = (v)=>{ body.style.height = Math.max(0,v)+'px'; };
+    let open = false;
+    card.querySelector('.ex-head').addEventListener('click', (e)=>{
+      if(card.classList.contains('dragging')) return;
+      open = !open;
+      card.classList.toggle('open', open);
+      const target = open ? inner.getBoundingClientRect().height : 0;
+      spring.configure(1.0, 0.35);
+      spring.retarget(target, {value: spring.value});
+    });
+  });
+
+  /* ---------------- Drag-to-reorder exercises ---------------- */
+  const listEl = document.getElementById('ex-list');
+  let dragState = null;
+
+  function cardHeightWithGap(card){
+    const style = getComputedStyle(listEl);
+    const gap = parseFloat(style.rowGap || style.gap || '12') || 12;
+    return card.getBoundingClientRect().height + gap;
+  }
+
+  function attachDragHandle(handle){
+    handle.addEventListener('pointerdown', (e)=>{
+      e.stopPropagation();
+      const card = handle.closest('.ex-card');
+      const cards = Array.from(listEl.children);
+      const originalIndex = cards.indexOf(card);
+      const itemH = cardHeightWithGap(card);
+      const listRect = listEl.getBoundingClientRect();
+
+      card.classList.add('dragging');
+      handle.setPointerCapture(e.pointerId);
+
+      const siblingSprings = cards.map((c)=>{
+        if(c===card) return null;
+        const sp = new Spring(0);
+        sp.configure(1.0, 0.32);
+        sp.onUpdate = (v)=>{ c.style.transform = `translateY(${v}px)`; };
+        return sp;
+      });
+      let lastTargets = cards.map(()=>0);
+
+      const startY = e.clientY;
+      let currentSlot = originalIndex;
+      let hist = [{y:e.clientY, t:performance.now()}];
+
+      function onMove(ev){
+        const rawDy = ev.clientY - startY;
+        const minDy = -listRect.top - card.getBoundingClientRect().top + (card.getBoundingClientRect().top - listRect.top) - (originalIndex*itemH);
+        // clamp within list bounds with rubber banding
+        const topBound = -originalIndex*itemH;
+        const bottomBound = (cards.length-1-originalIndex)*itemH;
+        let dy = rawDy;
+        if(dy < topBound) dy = topBound + rubberband(dy-topBound, itemH, 0.5);
+        if(dy > bottomBound) dy = bottomBound + rubberband(dy-bottomBound, itemH, 0.5);
+
+        card.style.transform = `translateY(${dy}px)`;
+
+        hist.push({y:ev.clientY, t:performance.now()});
+        if(hist.length>5) hist.shift();
+
+        const slot = Math.max(0, Math.min(cards.length-1, Math.round(originalIndex + dy/itemH)));
+        if(slot !== currentSlot) currentSlot = slot;
+
+        cards.forEach((c, j)=>{
+          if(c===card) return;
+          let target = 0;
+          if(originalIndex < j && j <= currentSlot) target = -itemH;
+          else if(currentSlot <= j && j < originalIndex) target = itemH;
+          if(target !== lastTargets[j]){
+            lastTargets[j] = target;
+            siblingSprings[j].retarget(target, {value: siblingSprings[j].value});
+          }
+        });
+      }
+
+      function onUp(ev){
+        handle.releasePointerCapture(ev.pointerId);
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        handle.removeEventListener('pointercancel', onUp);
+
+        let vel = 0;
+        if(hist.length>=2){
+          const a=hist[hist.length-2], b=hist[hist.length-1];
+          const dt=(b.t-a.t)||16;
+          vel = (b.y-a.y)/dt*1000;
+        }
+
+        // reorder DOM to match new slot, compensating transforms so it's visually seamless
+        if(currentSlot !== originalIndex){
+          const ref = cards[currentSlot];
+          if(currentSlot > originalIndex) listEl.insertBefore(card, ref.nextSibling);
+          else listEl.insertBefore(card, ref);
+        }
+        cards.forEach((c,j)=>{
+          if(c===card) return;
+          c.style.transform = siblingSprings[j] ? `translateY(${siblingSprings[j].value}px)` : '';
+          if(siblingSprings[j]){ siblingSprings[j].jumpTo(0); c.style.transform='translateY(0px)'; }
+        });
+
+        const finalDy = currentSlot*itemH - originalIndex*itemH;
+        const settle = new Spring(card.getBoundingClientRect().top - listRect.top - currentSlot*itemH + finalDy);
+        // simpler: animate from current raw transform value to 0
+        const dragSpring = new Spring(parseTranslateY(card));
+        dragSpring.configure(Math.abs(vel) > 40 ? 0.82 : 1.0, 0.32);
+        dragSpring.onUpdate = (v)=>{ card.style.transform = `translateY(${v}px)`; };
+        dragSpring.onRest = ()=>{ card.classList.remove('dragging'); card.style.transform=''; };
+        dragSpring.retarget(0, {velocity: vel});
+      }
+
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+      handle.addEventListener('pointercancel', onUp);
+    });
+  }
+
+  function parseTranslateY(el){
+    const t = el.style.transform || '';
+    const m = t.match(/translateY\(([-\d.]+)px\)/);
+    return m ? parseFloat(m[1]) : 0;
+  }
+
+  document.querySelectorAll('.drag-handle').forEach(attachDragHandle);
+
+  /* open the first exercise by default to preview the accordion content */
+  requestAnimationFrame(()=>{
+    const first = list.querySelector('.ex-card');
+    if(first) first.querySelector('.ex-head').click();
+  });
+
+})();
+</script>
+</body>
+</html>

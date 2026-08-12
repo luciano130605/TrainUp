@@ -1,0 +1,309 @@
+.reloj-descanso {
+    flex: 0 0 auto;
+    display: block;
+}
+
+.reloj-descanso-bg {
+    stroke: var(--borde);
+}
+
+.reloj-descanso-fill {
+    stroke: var(--acento);
+    transition: stroke-dashoffset .3s linear;
+}
+
+.reloj-descanso-mano {
+    stroke: var(--acento);
+}
+
+.tiempo-toast {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+.tiempo-controles.minimal {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mini-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: var(--componente-transp);
+    border: 1px solid var(--borde);
+    color: var(--texto);
+}
+
+.tiempo-controles .mini-btn.descanso {
+    background: var(--acento);
+    color: var(--txt-btn);
+    border-color: transparent;
+}
+
+.tiempo-controles .mini-btn:active {
+    transform: scale(0.92);
+}
+
+/* ---------- barra fija flotante ---------- */
+.descanso-barra-fija {
+    position: fixed;
+    left: 14px;
+    right: 14px;
+    bottom: calc(14px + env(safe-area-inset-bottom));
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 22px;
+    overflow: hidden;
+    background: var(--componente-transp);
+    backdrop-filter: blur(34px) saturate(190%);
+    -webkit-backdrop-filter: blur(34px) saturate(190%);
+    border: 1px solid var(--borde);
+    box-shadow:
+        0 18px 40px rgba(0, 0, 0, .35),
+        0 2px 10px rgba(0, 0, 0, .18),
+        inset 0 1px 0 rgba(255, 255, 255, .08);
+    animation: descansoBarraPop .28s cubic-bezier(.2, .8, .2, 1);
+}
+
+.descanso-barra-fija.entrando {
+    animation: descansoBarraEntrar .38s cubic-bezier(.34, 1.4, .4, 1);
+}
+
+.descanso-barra-fija.saliendo {
+    animation: descansoBarraSalir .32s cubic-bezier(.4, 0, .6, 1) forwards;
+    pointer-events: none;
+}
+
+@keyframes descansoBarraEntrar {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(.94);
+        filter: blur(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes descansoBarraSalir {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(14px) scale(.92);
+        filter: blur(6px);
+    }
+}
+
+.descanso-barra-fija.compacta {
+    padding: 8px 10px;
+    gap: 8px;
+    border-radius: 16px;
+}
+
+@keyframes descansoBarraPop {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* barra de progreso: relleno translúcido detrás del contenido */
+.descanso-barra-progreso {
+    position: absolute;
+    inset: 0;
+    background: var(--acento-transp-2);
+    transition: width .3s linear;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* contenido por encima del progreso */
+.descanso-barra-info,
+.descanso-barra-controles {
+    position: relative;
+    z-index: 1;
+}
+
+.descanso-barra-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.descanso-barra-textos {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.descanso-barra-label {
+    font-size: .68rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--texto-gris);
+    font-weight: 700;
+}
+
+.descanso-barra-tiempo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--texto);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: .01em;
+}
+
+.compacta .descanso-barra-tiempo {
+    font-size: 14px;
+}
+
+.descanso-barra-controles {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+}
+
+.descanso-barra-controles .mini-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+    background: var(--componente-transp);
+    border: 1px solid var(--borde);
+    color: var(--texto);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform .1s ease-out, background .15s ease, border-color .15s ease;
+}
+
+.descanso-barra-controles .mini-btn:active {
+    transform: scale(0.9);
+}
+
+@media (hover: hover) {
+    .descanso-barra-controles .mini-btn:hover {
+        border-color: var(--borde-hover);
+    }
+}
+
+.descanso-barra-controles .mini-btn.descanso {
+    background: var(--acento);
+    color: var(--txt-btn);
+    border-color: transparent;
+    width: 38px;
+    height: 38px;
+    border-radius: 13px;
+}
+
+.compacta .descanso-barra-controles .mini-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 10px;
+}
+
+.compacta .descanso-barra-controles .mini-btn.descanso {
+    width: 30px;
+    height: 30px;
+}
+
+
+/* descanso.css */  
+
+/* Contenedor del sileo action sheet */
+.sileo-cont {
+    border-radius: 14px;
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    padding: 16px 14px 14px;
+}
+
+.sileo-title {
+    text-align: center !important;
+    letter-spacing: -0.2px;
+    margin-bottom: 4px;
+}
+
+.sileo-description {
+    margin-top: 8px;
+}
+
+/* Grid de chips */
+.descanso-chips {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding-top: 6px;
+}
+
+/* Chip individual */
+.descanso-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 8px;
+    min-height: 40px;
+    border-radius: 10px;
+    background: var(--borde);
+    color: var(--acento);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
+}
+
+.descanso-chip:active {
+    background: var(--acento-transp-2);
+    transform: scale(0.96);
+}
+
+/* Chip activo (valor actual seleccionado) */
+.descanso-chip.active {
+    background: var(--acento-transp-2);
+
+    color: var(--acento);
+    font-weight: 600;
+}
+
+.descanso-chip.active:active {
+    background: var(--acento-transp-2);
+}
+
+/* Chip "Sin descanso" ocupa todo el ancho, estilo destructivo sutil */
+.descanso-chip-clear {
+    grid-column: 1 / -1;
+    background: var(--rojo-transp);
+    color: var(--rojo);
+    font-weight: 500;
+    margin-top: 2px;
+}
+
+.descanso-chip-clear:active {
+    background: var(--rojo-transp);
+
+}

@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { sileo, Toaster } from "sileo";
-import TabBar from './components/tabBar';
-import RutinaPage from './components/rutinaPage';
-import RutinaDetalle from './components/rutinaDetalle';
-import RutinaCrear from './components/rutinaCrear';
-import RutinaCurso from './components/RutinaCurso';
-import HistorialPage from './components/historialPage';
-import HistorialDetalle from './components/HistorialDetalle';
+import TabBar from './components/tabbars/tabBar';
+import RutinaPage from './components/rutinas/rutinaPage';
+import RutinaDetalle from './components/rutinas/rutinaDetalle';
+import RutinaCrear from './components/rutinas/rutinaCrear';
+import RutinaCurso from './components/rutinas/RutinaCurso';
+import HistorialPage from './components/historial/historialPage';
+import HistorialDetalle from './components/historial/HistorialDetalle';
 import { scheduleReminderPush, cancelReminderPush } from './utils/push';
-import BackupModal from './components/BackupModal';
+import BackupModal from './components/modales/BackupModal';
 import { encodeBackup, decodeBackup, downloadJSON, readJSONFile } from './utils/backup';
-import HomePage from "./components/Homepage"
-import MiPerfil from './components/Miperfil';
-import Login from './components/Login';
+import HomePage from "./components/home/Homepage"
+import MiPerfil from './components/mensajes/Miperfil';
+import Login from './components/login/Login';
 import { supabase } from './lib/supabaseClient';
 import { ensureUserProfile } from './lib/profile';
 import {
@@ -29,19 +29,19 @@ import { playBeep } from './utils/audio';
 import { encodeRoutine, decodeRoutine } from './utils/share'; // NUEVO
 import "./App.css"
 import "../index.css"
-import Ajustes from './components/ajustes';
+import Ajustes from './components/ajustes/ajustes';
 import ProximamentePage from './components/proximamente';
-import Perfil from './components/perfil';
-import { openDescansoToast } from './components/descansoToastModal';
-import openTiempoDescansoToast, { resetDescansoState, DescansoBarraFija } from './components/TiempoDescansoToast';
-import MiniSesionBar from './components/MiniSesionBar';
+import Perfil from './components/perfil/perfil';
+import { openDescansoToast } from './components/modales/descansoToastModal';
+import openTiempoDescansoToast, { resetDescansoState, DescansoBarraFija } from './components/tabbars/TiempoDescansoToast';
+import MiniSesionBar from "./components/tabbars/MiniSesionBar";
 import PageSkeleton from './components/PageSkeleton';
 import { ClipboardCopy, Copy, LogOut, Pencil, Share2, Trash2 } from 'lucide-react';
 import { flushSync } from 'react-dom';
-import OnboardingTour from './components/Onboardingtour';
-import Mensajes from './components/Mensajes';
-import ResetPassword from './components/ResetPassword';
-import PerfilPublico from './components/perfilPublico';
+import OnboardingTour from './components/Onboarding/Onboardingtour';
+import Mensajes from './components/mensajes/Mensajes';
+import ResetPassword from './components/login/ResetPassword';
+import PerfilPublico from './components/mensajes/perfilPublico';
 import Logo from '../public/logo';
 import { heartbeat } from './lib/social';
 
@@ -1466,6 +1466,7 @@ export default function App() {
 
   function reorderExercise(fromIndex, toIndex) {
     setEditorDraft(d => {
+      if (fromIndex === toIndex) return d;
       const arr = [...d.exercises];
       const [moved] = arr.splice(fromIndex, 1);
       arr.splice(toIndex, 0, moved);
@@ -1762,13 +1763,14 @@ export default function App() {
           />
         )}
         {screen === 'mensajes' && (
-          <Mensajes
-            authSession={authSession}
-            routines={routines}
-            onOpenProfile={openProfileScreen}
-            onOpenOwnProfile={() => setScreen('miPerfil')}
-            onImportRoutine={importSharedRoutine}
-          />
+          <ProximamentePage />
+          // <Mensajes
+          //   authSession={authSession}
+          //   routines={routines}
+          //   onOpenProfile={openProfileScreen}
+          //   onOpenOwnProfile={() => setScreen('miPerfil')}
+          //   onImportRoutine={importSharedRoutine}
+          // />
         )}
 
         {screen === 'perfilPublico' && viewingProfileId && (
@@ -2010,18 +2012,30 @@ export default function App() {
         )}
 
         {pendingSaveChoice && (
-          <div className="modal-overlay" onClick={() => setPendingSaveChoice(null)}>
-            <div className="modal-cont" onClick={e => e.stopPropagation()}>
-              <h3>¿Cómo guardamos estos cambios?</h3>
-              <p className="header-sub" style={{ marginBottom: 16 }}>
-                "Para siempre" actualiza la rutina de forma permanente. "Solo la próxima vez" aplica
-                estos cambios nada más para la próxima sesión — después vuelve a quedar como estaba.
-              </p>
-              <div className='btn-cont-modal'>
-                <button className="btns agregar m" onClick={confirmSavePermanent}>Para siempre</button>
-                <button className="btns agregar m" onClick={confirmSaveTemporary}>Solo la próxima vez</button>
+          <div className="modal-overlay fixed flex justifyContentCenter" onClick={() => setPendingSaveChoice(null)}>
+            <div className="action-sheet" onClick={e => e.stopPropagation()}>
+              <div className="action-sheet-card">
+                <h3 className="action-sheet-title">¿Cómo guardamos estos cambios?</h3>
+                <p className="action-sheet-desc">
+                  <strong>Para siempre</strong> actualiza la rutina de forma permanente.{' '}
+                  <strong>Solo la próxima vez</strong> aplica estos cambios nada más para la
+                  próxima sesión — después vuelve a quedar como estaba.
+                </p>
+
+                <div className="action-sheet-divider" />
+                <button className="action-sheet-btn" onClick={confirmSavePermanent}>
+                  Para siempre
+                </button>
+
+                <div className="action-sheet-divider" />
+                <button className="action-sheet-btn" onClick={confirmSaveTemporary}>
+                  Solo la próxima vez
+                </button>
               </div>
-              <button className="btns eliminar m" onClick={() => setPendingSaveChoice(null)}>Cancelar</button>
+
+              <button className="action-sheet-cancel" onClick={() => setPendingSaveChoice(null)}>
+                Cancelar
+              </button>
             </div>
           </div>
         )}

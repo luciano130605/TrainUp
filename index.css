@@ -1,30 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
 
 :root {
-  --fondo: #171717;
-  --txt-btn: #171717;
-  --texto-btn: #171717;
-  --fondo-transp: #17171785;
-  --componente: #24262b;
-  --componente-transp: #24262b63;
-  --texto: #f2f1ec;
+  --fondo: #08080B;
+  --txt-btn: rgb(8, 8, 11);
+  --fondo-transp: rgba(8, 8, 11, 0.522);
+  --componente: rgb(22, 22, 29);
+  --componente-transp: rgba(22, 22, 29, 0.388);
+  --componente-transp-2: rgba(22, 22, 29, 0.8);
+  --texto: #F3F3F6;
   --dorado: #efb810;
   --dorado-transp: #d0a5242e;
-  --box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35),
-    0 8px 24px rgba(0, 0, 0, 0.35);
+  --box-shadow: 0 18px 40px rgba(0, 0, 0, .15), 0 2px 10px rgba(0, 0, 0, .01), inset 0 1px 0 rgba(255, 255, 255, .08);
 
   --box-shadow-hover:
     0 2px 4px rgba(0, 0, 0, 0.4),
     0 12px 32px rgba(0, 0, 0, 0.45);
 
-  /* --acento: #c6ff34;
-  --acento-transp: rgba(197, 255, 52, 0.675); */
-  --acento2: #b2d5e5;
-  --borde: #303339;
-  --borde-hover: #4c4f57;
-  --texto-gris: #9a9ca3;
-  --texto-gris-oscuro: #65676e;
+
+  --borde: #ffffff12;
+  --borde-hover: rgba(120, 117, 117, 0.53);
+  --texto-gris: #8B8B96;
+  --texto-gris-oscuro: #5C5C68;
   --rojo: #ff5a4a;
+  --rojo-transp-2: #de594d;
   --rojo-transp: rgba(201, 69, 57, 0.293);
 }
 
@@ -33,7 +31,8 @@ html {
   background: var(--fondo);
   color: var(--texto);
   box-sizing: border-box;
-  font-family: 'Inter', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "SF Pro Display", system-ui, sans-serif;
   max-width: 100%;
   margin: 0 auto;
   position: relative;
@@ -60,32 +59,32 @@ h3 {
 .acento-rosa {
   --acento: #ff1493;
   --acento-transp: rgba(255, 20, 147, 0.675);
-  --acento-transp-2: rgba(255, 20, 147, 0.3);
+  --acento-transp-2: rgba(255, 20, 147, 0.16);
 }
 
 .acento-naranja {
   --acento: #ff9a4a;
   --acento-transp: rgba(255, 154, 74, 0.675);
-  --acento-transp-2: rgba(255, 154, 74, 0.3);
+  --acento-transp-2: rgba(255, 154, 74, 0.16);
 }
 
 .acento-violeta {
   --acento: #b28aff;
   --acento-transp: rgba(178, 138, 255, 0.675);
-  --acento-transp-2: rgba(178, 138, 255, 0.3);
+  --acento-transp-2: rgba(178, 138, 255, 0.16);
 }
 
 .acento-verde {
   --acento: #c6ff34;
   --acento-transp: rgba(197, 255, 52, 0.675);
-  --acento-transp-2: rgba(197, 255, 52, 0.3);
+  --acento-transp-2: rgba(197, 255, 52, 0.16);
 
 }
 
 .acento-celeste {
   --acento: #b2d5e5;
   --acento-transp: rgba(178, 213, 229, 0.675);
-  --acento-transp-2: rgba(178, 213, 229, 0.3);
+  --acento-transp-2: rgba(178, 213, 229, 0.16);
 
 }
 
