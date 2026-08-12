@@ -11,8 +11,7 @@ import Msj from "../../icons/msj";
 import MsjFill from "../../icons/msjFill";
 import SettingFill from "../../icons/settingFill";
 
-// Cada tab ahora tiene su ícono outline (inactivo) y su ícono fill (activo),
-// igual patrón que ya usabas para Settings.
+
 const TABS = [
   { key: "home", label: "Inicio", Icon: HomeIcon, IconFill: HomeIconFill },
   { key: "routines", label: "Rutinas", Icon: Rutina, IconFill: RutinaFill },

@@ -24,8 +24,8 @@
     align-items: center;
     gap: 6px;
     padding: 6px;
-    border-radius: 26px;
-
+    border-radius: 22px;
+    margin-bottom: 10px;
     background: var(--componente);
     box-shadow:
         var(--box-shadow);
