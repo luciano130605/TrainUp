@@ -6,13 +6,14 @@ import {
 import { openDescansoToast } from '../modales/descansoToastModal';
 import "./rutina.css"
 import EjercicioModal from '../modales/ejercicioModal';
-import { AddSquare, CopyIcon, MinusSquare, Remplazar, TimerIcon } from '../../icons/icons';
+import { AddSquare, CopyIcon, Grip, MinusSquare, Remplazar, TimerIcon } from '../../icons/icons';
 import { MUSCLE_COLORS } from './rutinaDetalle';
+import ReordenarEjerciciosModal from '../modales/ReordenarEjerciciosModal';
 
 const DIAS = [
   { label: 'L', value: 1 },
   { label: 'M', value: 2 },
-  { label: 'M', value: 3 },
+  { label: 'X', value: 3 },
   { label: 'J', value: 4 },
   { label: 'V', value: 5 },
   { label: 'S', value: 6 },
@@ -102,6 +103,23 @@ export default function RutinaCrear({
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const pointerIdRef = React.useRef(null);
+  const listRef = React.useRef(null);
+
+  const getIndexAtPoint = (clientY) => {
+    const container = listRef.current;
+    if (!container) return null;
+    const cards = Array.from(container.querySelectorAll('.ex-card'));
+    for (const card of cards) {
+      const rect = card.getBoundingClientRect();
+      const mid = rect.top + rect.height / 2;
+      if (clientY < mid) {
+        return Number(card.dataset.index);
+      }
+    }
+    // si el puntero quedó por debajo de todas las tarjetas -> va al final
+    return cards.length ? Number(cards[cards.length - 1].dataset.index) : null;
+  };
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   // Todos los hooks deben ejecutarse siempre en el mismo orden, así que
   // este useMemo va ANTES del return temprano por `!draft` (si no, React
@@ -155,19 +173,14 @@ export default function RutinaCrear({
 
   const handleHeadPointerMove = (e) => {
     if (dragIndex === null) {
-      // todavía esperando el long-press: si se movió mucho, es scroll, cancelamos
       const dx = Math.abs(e.clientX - startPosRef.current.x);
       const dy = Math.abs(e.clientY - startPosRef.current.y);
       if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) clearLongPress();
       return;
     }
     e.preventDefault();
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const cardEl = el?.closest('.ex-card');
-    if (cardEl) {
-      const idx = Number(cardEl.dataset.index);
-      if (!Number.isNaN(idx) && idx !== dragOverIndex) setDragOverIndex(idx);
-    }
+    const idx = getIndexAtPoint(e.clientY);
+    if (idx !== null && idx !== dragOverIndex) setDragOverIndex(idx);
   };
 
   const endDrag = () => {
@@ -204,14 +217,8 @@ export default function RutinaCrear({
   const handleGripPointerMove = (e) => {
     if (dragIndex === null) return;
     e.preventDefault();
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const cardEl = el?.closest('.ex-card');
-    if (cardEl) {
-      const idx = Number(cardEl.dataset.index);
-      if (!Number.isNaN(idx) && idx !== dragOverIndex) {
-        setDragOverIndex(idx);
-      }
-    }
+    const idx = getIndexAtPoint(e.clientY);
+    if (idx !== null && idx !== dragOverIndex) setDragOverIndex(idx);
   };
 
   const handleGripPointerUp = () => {
@@ -335,17 +342,18 @@ export default function RutinaCrear({
 
           {d.exercises.length > 0 && (
             <div className="ex-section-head">
-
-              <div>
-                {d.exercises.length > 0 && (
-                  <button type="button" className="pill pill-rest-all" onClick={openRestToastAll}>
-                    <TimerIcon size={13} /> Descanso para todos
-                  </button>
-                )}
+              <div className="flex gap8">
+                <button type="button" className="pill pill-rest-all " data-tooltip="Descanso para todos" onClick={openRestToastAll}>
+                  <TimerIcon size={13} /> Descanso
+                </button>
+                <button type="button" className="pill" onClick={() => setReorderOpen(true)}>
+                  <Grip size={13} /> Reordenar
+                </button>
               </div>
               <button
                 type="button"
-                className="btn-circle small"
+                className="btn-circle small "
+                data-tooltip={allCollapsed ? 'Expandir todo' : 'Colapsar todo'}
                 title={allCollapsed ? 'Expandir todo' : 'Colapsar todo'}
                 onClick={toggleAll}
               >
@@ -356,7 +364,7 @@ export default function RutinaCrear({
         </>
       )}
 
-      <div className="ex-list">
+      <div className="ex-list" ref={listRef}>
         {d.exercises.map((ex, exi) => {
           const isTimed = esEjercicioDeTiempo(ex);
           const isBodyweight = ex.equipment === 'P. corporal';
@@ -374,27 +382,9 @@ export default function RutinaCrear({
             >
               <div
                 className="ex-head"
-                onClick={() => {
-                  if (suppressClickRef.current) { suppressClickRef.current = false; return; }
-                  toggleOne(ex.id);
-                }}
-                onPointerDown={handleHeadPointerDown(exi)}
-                onPointerMove={handleHeadPointerMove}
-                onPointerUp={handleHeadPointerUp}
-                onPointerCancel={handleHeadPointerUp}
+                onClick={() => toggleOne(ex.id)}
               >
-                {!isSingle && (
-                  <div
-                    className="drag-handle"
-                    onPointerDown={handleGripPointerDown(exi)}
-                    onPointerMove={handleGripPointerMove}
-                    onPointerUp={handleGripPointerUp}
-                    onPointerCancel={handleGripPointerUp}
-                  >
 
-                    <GripVertical size={16} />
-                  </div>
-                )}
 
                 <ChevronDown size={16} className="chev" />
 
@@ -520,7 +510,13 @@ export default function RutinaCrear({
           </button>
         </div>
       )}
-
+      {reorderOpen && (
+        <ReordenarEjerciciosModal
+          exercises={d.exercises}
+          onMove={(i, dir) => onMoveExercise(i, dir)}
+          onClose={() => setReorderOpen(false)}
+        />
+      )}
       {pickerOpen && (
         <EjercicioModal
           isOpen={pickerOpen}

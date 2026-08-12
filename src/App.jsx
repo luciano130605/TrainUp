@@ -1465,14 +1465,16 @@ export default function App() {
   }
 
   function reorderExercise(fromIndex, toIndex) {
-    setEditorDraft(d => {
-      if (fromIndex === toIndex) return d;
-      const arr = [...d.exercises];
-      const [moved] = arr.splice(fromIndex, 1);
-      arr.splice(toIndex, 0, moved);
-      return { ...d, exercises: arr };
-    });
-  }
+  setEditorDraft(d => {
+    if (fromIndex === toIndex) return d;
+    const arr = [...d.exercises];
+    const [moved] = arr.splice(fromIndex, 1);
+    const insertAt = toIndex > fromIndex ? toIndex - 1 : toIndex;
+    arr.splice(insertAt, 0, moved);
+    return { ...d, exercises: arr };
+  });
+}
+
   function removeExercise(i) {
     const removed = editorDraft.exercises[i];
     setEditorDraft(d => ({ ...d, exercises: d.exercises.filter((_, idx) => idx !== i) }));
