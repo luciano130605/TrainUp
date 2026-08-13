@@ -608,7 +608,6 @@ export default function RutinaCurso({
                   </div>
                 )}
 
-                <ChevronDown size={16} className="chev" />
 
                 <div className="ex-title-block">
                   <div className="ex-name">{nombre}</div>

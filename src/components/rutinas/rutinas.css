@@ -305,6 +305,7 @@
     background: var(--borde);
     display: flex;
     align-items: center;
+    box-shadow: var(--box-shadow);
     justify-content: center;
     font-size: 11.5px;
     font-weight: 700;
@@ -315,9 +316,10 @@
 .set-val {
     flex: 1;
     background: var(--componente-transp);
-    border: 1px solid var(--borde);
-    border-radius: 9px;
+    border-radius: 22px;
     padding: 9px 0px;
+    border: 0.5px solid var(--borde);
+    box-shadow: var(--box-shadow);
     font-size: 16px;
     font-weight: 600;
     transition: all .15s;
@@ -329,6 +331,10 @@
     border-color: var(--acento);
 }
 
+.ex-card.done {
+    border: 1px solid var(--acento) !important;
+    color: var(--acento);
+}
 .set-val.done,
 .set-idx.done {
     background: var(--acento-transp-2);
@@ -767,7 +773,8 @@ select {
     background: var(--componente-transp);
     padding: 6px;
     border-radius: 22px;
-    border: 1px solid var(--borde);
+    border: none;
+    box-shadow: var(--box-shadow);
 }
 
 /* =========================================================
@@ -1533,7 +1540,8 @@ input.set-val::placeholder {
     flex: 0 0 auto;
     border-radius: 9px;
     background: var(--componente-transp);
-    border: 1px solid var(--borde);
+    border: 0.5px solid var(--borde);
+    box-shadow: var(--box-shadow);
     color: var(--texto-gris);
     display: flex;
     align-items: center;
@@ -1544,9 +1552,9 @@ input.set-val::placeholder {
 }
 
 .set-check.done {
-    background: var(--acento);
-    color: var(--txt-btn);
-    border-color: transparent;
+    background: var(--acento-transp-2);
+    color: var(--acento);
+    border-color: var(--acento);
 }
 
 .set-check.bounce {

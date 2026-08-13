@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { Wrench, BarChart3, Users, Watch, Bell, Check } from 'lucide-react';
 import './proximamente.css';
-import { Chart, MagicPen, NotificationIcon, UsersIcon, WatchIcon } from '../icons/icons';
+import { Chart, MagicPen, NotificationIcon, Offline, TrenUp, UsersIcon, WatchIcon } from '../icons/icons';
+import MsjIcon from "../icons/msj"
 
 const FEATURES = [
-    { icon: Chart, title: 'Estadísticas avanzadas', desc: 'Gráficos detallados de tu progreso a lo largo del tiempo.' },
+
+    { icon: MsjIcon, title: 'Conectá con amigos', desc: 'Enviá mensajes, agregá amigos y descubrí sus perfiles.' },
     { icon: UsersIcon, title: 'Entrenamiento en grupo', desc: 'Sumate a rutinas compartidas con amigos.' },
-    { icon: WatchIcon, title: 'Sincronización con reloj', desc: 'Conectá tu Apple Watch para seguir tus sesiones en vivo.' },
+    { icon: Offline, title: 'Mejor experiencia offline', desc: 'Registrá una sesión incluso sin conexión y sincronizala después.' },
+    { icon: TrenUp, title: 'Progresión automática', desc: 'Sugerencias de peso y repeticiones basadas en tus entrenamientos anteriores.' },
 ];
 
 export default function ProximamentePage() {
@@ -47,15 +50,6 @@ export default function ProximamentePage() {
                         </div>
                     ))}
                 </div>
-
-                <button
-                    className={`btn-avisar ${notified ? 'agregar' : 'primario'}`}
-                    onClick={() => setNotified(true)}
-                    disabled={notified}
-                >
-                    {notified ? <Check size={17} strokeWidth={2.5} /> : <NotificationIcon size={17} strokeWidth={2.5} />}
-                    {notified ? 'Te vamos a avisar' : 'Avisame cuando esté'}
-                </button>
             </div>
         </>
     );
