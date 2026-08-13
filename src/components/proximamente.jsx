@@ -50,6 +50,7 @@ export default function ProximamentePage() {
                         </div>
                     ))}
                 </div>
+                <br ></br>
             </div>
         </>
     );
