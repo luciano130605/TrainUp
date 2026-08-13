@@ -516,7 +516,7 @@ export default function Perfil({
                 />
             </div>
 
-            <div className='login-form perfil'>
+            {/* <div className='login-form perfil'>
 
                 <div className="section-label acento-color">Bloqueados</div>
                 {blocked.length === 0 ? (
@@ -538,7 +538,7 @@ export default function Perfil({
                         ))}
                     </div>
                 )}
-            </div>
+            </div> */}
             <div className='login-form perfil'
                 style={{
                     marginBottom: 50,

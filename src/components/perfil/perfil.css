@@ -1,18 +1,7 @@
-/* =========================================================
-   TRAINUP — PERFIL / iOS SETTINGS
-   ========================================================= */
+
 
 .perfil-page {
-    --ios-bg: var(--fondo, #f2f2f7);
-    --ios-card: rgba(255, 255, 255, 0.78);
-    --ios-card-solid: #ffffff;
-    --ios-separator: rgba(60, 60, 67, 0.13);
-    --ios-text: #1c1c1e;
-    --ios-secondary: #8e8e93;
-    --ios-tertiary: #aeaeb2;
-    --ios-blue: var(--acento, #007aff);
-    --ios-red: var(--rojo, #ff3b30);
-    --ios-green: #34c759;
+  
 
 
 
@@ -20,9 +9,6 @@
 }
 
 
-/* =========================================================
-   HEADER
-   ========================================================= */
 
 .perfil-header {
     display: flex;
@@ -65,13 +51,11 @@
     padding: 0;
     margin-top: 10px;
     margin-bottom: 10px;
-    background: var(--componente);
     border: 1px solid var(--borde);
     border-radius: 22px;
     overflow: hidden;
     box-shadow:
-        0 .5px 0 rgba(0, 0, 0, .04),
-        0 3px 14px rgba(0, 0, 0, .045);
+        var(--box-shadow);
 
     backdrop-filter: blur(24px) saturate(180%);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -115,7 +99,6 @@ select {
 }
 
 .login-field>span {
-    color: var(--ios-secondary);
 
     font-size: 12px;
     font-weight: 500;
@@ -135,7 +118,7 @@ select {
 
     padding: 0 16px;
     color: var(--texto) !important;
-    background: none;
+    background: var(--componente);
     box-shadow: var(--box-shadow) !important;
 
     border-radius: 22px;
@@ -229,12 +212,10 @@ select {
 }
 
 .login-input--select::after {
-    content: "›";
 
     position: absolute;
     right: 14px;
 
-    color: var(--ios-tertiary);
 
     font-size: 21px;
     font-weight: 300;
@@ -244,7 +225,7 @@ select {
 }
 
 .login-input--select select {
-    padding-right: 22px;
+    height: 100%;
 }
 
 
