@@ -50,7 +50,9 @@ export default function ProximamentePage() {
                         </div>
                     ))}
                 </div>
-                <br ></br>
+                <div style={{
+                    paddingBottom: 10
+                }}></div>
             </div>
         </>
     );
