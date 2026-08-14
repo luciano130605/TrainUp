@@ -1,4 +1,5 @@
 import { supabase } from './supabaseClient';
+import { fetchMySharedRoutines } from './sharedRoutines'; // ★ NUEVO
 
 function rowToRoutine(r) {
     return {
@@ -59,19 +60,26 @@ function toExerciseRow(userId, e) {
 export async function fetchUserData(userId) {
     if (!supabase || !userId) return null;
 
-    const [routinesRes, historyRes, exercisesRes, settingsRes] = await Promise.all([
+    // ★ NUEVO: sumamos shared routines al Promise.all para no serializar el fetch
+    const [routinesRes, historyRes, exercisesRes, settingsRes, sharedRoutinesRes] = await Promise.all([
         supabase.from('routines').select('*').eq('user_id', userId),
         supabase.from('history').select('*').eq('user_id', userId).order('date', { ascending: false }),
         supabase.from('custom_exercises').select('*').eq('user_id', userId),
         supabase.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
+        fetchMySharedRoutines(userId), // ★ NUEVO
     ]);
 
     const s = settingsRes.data;
+
+    if (sharedRoutinesRes.error) {
+        console.error('fetchUserData sharedRoutines:', sharedRoutinesRes.error); // ★ NUEVO
+    }
 
     return {
         routines: (routinesRes.data || []).map(rowToRoutine),
         history: (historyRes.data || []).map(rowToHistory),
         customExercises: (exercisesRes.data || []).map(rowToExercise),
+        sharedRoutines: sharedRoutinesRes.data || [], // ★ NUEVO
         settings: s ? {
             restDefault: s.rest_default,
             reminderEnabled: s.reminder_enabled,

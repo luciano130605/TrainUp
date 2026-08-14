@@ -335,6 +335,7 @@
     border: 1px solid var(--acento) !important;
     color: var(--acento);
 }
+
 .set-val.done,
 .set-idx.done {
     background: var(--acento-transp-2);
@@ -2022,11 +2023,8 @@ input.set-val::placeholder {
     background: var(--componente);
     backdrop-filter: blur(34px) saturate(190%);
     -webkit-backdrop-filter: blur(34px) saturate(190%);
-    border: 1px solid var(--borde);
     box-shadow:
-        0 18px 40px rgba(0, 0, 0, .35),
-        0 2px 10px rgba(0, 0, 0, .18),
-        inset 0 1px 0 rgba(255, 255, 255, .08);
+       var(--box-shadow)
 }
 
 
@@ -2070,6 +2068,11 @@ input.set-val::placeholder {
     -webkit-user-select: none;
     user-select: none;
     transition: background .12s ease, transform .12s ease;
+}
+
+.action-sheet-btn:disabled {
+    opacity: 0.5;
+    cursor: no-drop;
 }
 
 .action-sheet-btn:active {
@@ -2179,12 +2182,31 @@ input.set-val::placeholder {
 
 .action-sheet-cancel {
     width: 100%;
-    border: 1px solid var(--borde);
+    border: none;
+    box-shadow: var(--box-shadow);
     border-radius: 20px;
     padding: 15px;
     font-size: 15.5px;
     font-weight: 700;
     color: var(--rojo-transp-2);
+    cursor: pointer;
+    background: var(--componente);
+    backdrop-filter: blur(34px) saturate(190%);
+    -webkit-backdrop-filter: blur(34px) saturate(190%);
+    -webkit-user-select: none;
+    user-select: none;
+    transition: color .12s ease, transform .12s ease;
+}
+
+.action-sheet-sucess {
+    width: 100%;
+    border-radius: 20px;
+    padding: 15px;
+    font-size: 15.5px;
+    border: none;
+    box-shadow: var(--box-shadow);
+    font-weight: 700;
+    color: var(--acento);
     cursor: pointer;
     background: var(--componente);
     backdrop-filter: blur(34px) saturate(190%);

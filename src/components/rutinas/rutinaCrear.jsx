@@ -6,9 +6,10 @@ import {
 import { openDescansoToast } from '../modales/descansoToastModal';
 import "./rutina.css"
 import EjercicioModal from '../modales/ejercicioModal';
-import { AddSquare, CopyIcon, Grip, MinusSquare, Remplazar, TimerIcon } from '../../icons/icons';
+import { AddSquare, CopyIcon, Grip, MinusSquare, Remplazar, TimerIcon, UsersIcon } from '../../icons/icons';
 import { MUSCLE_COLORS } from './rutinaDetalle';
 import ReordenarEjerciciosModal from '../modales/ReordenarEjerciciosModal';
+import InvitarIntegrantesModal from '../modales/InvitarIntegrantesModal';
 
 const DIAS = [
   { label: 'L', value: 1 },
@@ -96,7 +97,9 @@ export default function RutinaCrear({
   draft, onChangeName, onMoveExercise, onRemoveExercise, onAddSet, onRemoveSet, onUpdateSetField,
   onOpenPicker, onSave, onCancel, onDeleteRoutine,
   onDuplicateLastSet, onReorderExercise, onUpdateRest,
-  onChangeDays,
+  onChangeDays, onChangeMode,
+  onToggleInvitee, onAddInviteEmail, onRemoveInviteEmail,     // ★ NUEVO
+  userId,
   pickerOpen, pickerSelection, onConfirmPicker, onClosePicker,
   mode = 'full'
 }) {
@@ -105,7 +108,7 @@ export default function RutinaCrear({
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const pointerIdRef = React.useRef(null);
   const listRef = React.useRef(null);
-
+  const [invitarOpen, setInvitarOpen] = useState(false);
   const getIndexAtPoint = (clientY) => {
     const container = listRef.current;
     if (!container) return null;
@@ -311,6 +314,38 @@ export default function RutinaCrear({
               {d.exercises.length} ejercicio{d.exercises.length !== 1 ? 's' : ''}
               {totalSets > 0 ? ` · ${totalSets} serie${totalSets !== 1 ? 's' : ''}` : ''}
             </div>
+
+            {/* ★ NUEVO: toggle individual / en conjunto — solo al crear */}
+            {!d.id && (
+              <div className="pills" style={{ marginTop: 10 }}>
+                <button
+                  type="button"
+                  className={`pill ${!d.isShared ? 'activo' : ''}`}
+                  onClick={() => onChangeMode?.('individual')}
+                >
+                  Individual
+                </button>
+                <button
+                  type="button"
+                  className={`pill ${d.isShared ? 'activo' : ''}`}
+                  onClick={() => onChangeMode?.('conjunto')}
+                >
+                  En conjunto
+                </button>
+              </div>
+            )}
+
+            {d.isShared && (
+              <button
+                type="button"
+                className="pill"
+                style={{ width: 'auto', marginTop: 10 }}
+                onClick={() => setInvitarOpen(true)}
+              >
+                Invitar integrantes
+                {!d.id && d.pendingInviteIds?.length > 0 ? ` (${d.pendingInviteIds.length})` : ''}
+              </button>
+            )}
           </div>
 
           <div className="pills">
@@ -428,7 +463,9 @@ export default function RutinaCrear({
                 <div style={{ overflow: 'hidden', minHeight: 0 }}>
                   <div className="ex-body-inner">
                     <div className="set-table-head">
-                      {isTimed ? <span>Segundos</span> : (
+                      {isTimed ? <span>Segundos</span> : isBodyweight ? (
+                        <span>Reps</span>
+                      ) : (
                         <>
                           <span>Kg</span>
                           <span>Reps</span>
@@ -447,24 +484,28 @@ export default function RutinaCrear({
                             placeholder="0"
                             onChange={v => onUpdateSetField(exi, si, 'reps', v)}
                           />
+                        ) : isBodyweight ? (
+                          <input
+                            className="set-val"
+                            type="text" inputMode="numeric"
+                            value={s.reps}
+                            style={{ maxWidth: "100%" }}
+                            placeholder="0"
+                            onChange={e => onUpdateSetField(exi, si, 'reps', e.target.value)}
+                          />
                         ) : (
                           <>
                             <input
                               className="set-val"
                               type="text" inputMode="decimal"
                               value={s.weight}
-                              style={{
-                                maxWidth: "35%"
-                              }}
-                              disabled={isBodyweight}
+                              style={{ maxWidth: "35%" }}
                               placeholder="0"
                               onChange={e => onUpdateSetField(exi, si, 'weight', e.target.value.replace(',', '.'))}
                             />
                             <input
                               className="set-val"
-                              style={{
-                                maxWidth: "40%"
-                              }}
+                              style={{ maxWidth: "40%" }}
                               type="text" inputMode="numeric"
                               value={s.reps}
                               placeholder="0"
@@ -510,6 +551,20 @@ export default function RutinaCrear({
             <Plus size={18} /> Añadir ejercicio
           </button>
         </div>
+      )}
+
+      {invitarOpen && (
+        <InvitarIntegrantesModal
+          mode={d.id ? 'invite' : 'select'}
+          sharedRoutineId={d.id}
+          userId={userId}
+          selectedIds={new Set(d.pendingInviteIds || [])}
+          onToggleSelect={onToggleInvitee}
+          selectedEmails={d.pendingInviteEmails || []}
+          onAddEmail={onAddInviteEmail}
+          onRemoveEmail={onRemoveInviteEmail}
+          onClose={() => setInvitarOpen(false)}
+        />
       )}
       {reorderOpen && (
         <ReordenarEjerciciosModal

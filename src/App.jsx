@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { sileo, Toaster } from "sileo";
 import TabBar from './components/tabbars/tabBar';
 import RutinaPage from './components/rutinas/rutinaPage';
@@ -15,6 +15,27 @@ import MiPerfil from './components/mensajes/Miperfil';
 import Login from './components/login/Login';
 import { supabase } from './lib/supabaseClient';
 import { ensureUserProfile } from './lib/profile';
+import {
+  fetchMySharedRoutines,
+  createSharedRoutine,
+  addSharedExercise,
+  inviteByEmail,
+  upsertMySets,
+  fetchPendingInvites,
+  respondInvite,
+  requestRoutineDeletion,
+  fetchPendingRoutineDeletions,
+  voteRoutineDeletion,
+  inviteFriendToSharedRoutine,
+  requestExerciseRemoval,
+  getMembersProfiles,
+  deleteSharedRoutineDirect,
+  requestRoutineEdit,
+  fetchPendingRoutineEdits,
+  voteRoutineEdit,
+  startLiveSession,
+  endLiveSession,
+} from './lib/sharedRoutines';
 import {
   fetchUserData,
   migrateLocalDataIfNeeded,
@@ -49,9 +70,12 @@ export default function App() {
   const [authSession, setAuthSession] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [routines, setRoutines] = useState([]);
+  const [partnerProgress, setPartnerProgress] = useState(null); // { name, doneSets, totalSets }
+  const liveChannelRef = useRef(null);
   const [onboardingSeen, setOnboardingSeen] = useState(true);
   const [history, setHistory] = useState([]);
-  const [customExercises, setCustomExercises] = useState([]);
+  const [customExercises, setCustomExercises] = useState([])
+  const [pendingRoutineEdits, setPendingRoutineEdits] = useState([]);;
   const [restDefault, setRestDefault] = useState(90);
   const [loaded, setLoaded] = useState(false);
   const [reminderEnabled, setReminderEnabled] = useState(true);
@@ -60,9 +84,14 @@ export default function App() {
   const [pendingImport, setPendingImport] = useState(null);
   // junto a los otros estados
   const [registering, setRegistering] = useState(false);
+  const [votingEditId, setVotingEditId] = useState(null);
 
   const [viewingProfileId, setViewingProfileId] = useState(null);
-
+  // ★ NUEVO: rutinas en conjunto
+  const [sharedRoutines, setSharedRoutines] = useState([]);
+  const [pendingInvites, setPendingInvites] = useState([]);
+  const [pendingRoutineDeletions, setPendingRoutineDeletions] = useState([]);
+  const [activeMembersProfiles, setActiveMembersProfiles] = useState([]);
   const [activeRoutineId, setActiveRoutineId] = useState(null);
   const [activeHistoryId, setActiveHistoryId] = useState(null);
   const [editorDraft, setEditorDraft] = useState(null);
@@ -99,6 +128,8 @@ export default function App() {
   const ACENTOS_IDS = ['acento-verde', 'acento-celeste', 'acento-naranja', 'acento-violeta'];
 
   const [screen, setScreenState] = useState('home');
+  const [pendingLiveInvite, setPendingLiveInvite] = useState(null);
+
 
   const setScreen = useCallback((next) => {
     const apply = () => setScreenState(next);
@@ -128,10 +159,109 @@ export default function App() {
   }, [loaded]);
 
 
+  useEffect(() => {
+    if (!supabase || !session?.isSharedRoutine) {
+      if (liveChannelRef.current) {
+        supabase?.removeChannel(liveChannelRef.current);
+        liveChannelRef.current = null;
+      }
+      setPartnerProgress(null);
+      return;
+    }
+
+    const channel = supabase.channel(`session-progress-${session.routineId}`, {
+      config: { broadcast: { self: false } },
+    });
+
+    channel
+      .on('broadcast', { event: 'progress' }, ({ payload }) => {
+        if (payload.userId === authSession?.user?.id) return;
+        setPartnerProgress(payload);
+      })
+      .on('broadcast', { event: 'pause' }, ({ payload }) => {
+        if (payload.userId === authSession?.user?.id) return;
+        setSession(s => (s ? { ...s, paused: payload.paused, pausedAt: payload.pausedAt, pausedMs: payload.pausedMs } : s));
+      })
+      .subscribe();
+
+    liveChannelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+      liveChannelRef.current = null;
+      setPartnerProgress(null);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.isSharedRoutine, session?.routineId, authSession?.user?.id]);
+
+  useEffect(() => {
+    if (!session?.isSharedRoutine || !liveChannelRef.current) return;
+    let total = 0, done = 0;
+    session.exercises.forEach(ex => {
+      total += ex.sets.length;
+      done += ex.sets.filter(st => st.done).length;
+    });
+    const t = setTimeout(() => {
+      liveChannelRef.current?.send({
+        type: 'broadcast',
+        event: 'progress',
+        payload: {
+          userId: authSession.user.id,
+          name: authSession.user.user_metadata?.nombre || authSession.user.email,
+          doneSets: done,
+          totalSets: total,
+        },
+      });
+    }, 300);
+    return () => clearTimeout(t);
+  }, [session?.exercises, session?.isSharedRoutine]);
+
+  useEffect(() => {
+    if (!supabase || sharedRoutines.length === 0) return;
+    const ids = sharedRoutines.map(r => r.id);
+
+    const handleChange = (payload) => {
+      const row = payload.new;
+      if (row.status !== 'active') return;          // ★ ignorar el UPDATE de "ended"
+      if (row.started_by === authSession.user.id) return;
+      if (session) return;
+      const r = sharedRoutines.find(x => x.id === row.shared_routine_id);
+      if (!r) return;
+      setPendingLiveInvite({
+        sharedRoutineId: row.shared_routine_id,
+        routineName: r.name,
+        startedAt: new Date(row.started_at).getTime(),
+        startedBy: row.started_by,
+      });
+    };
+
+    const channel = supabase.channel('live-sessions')
+      .on('postgres_changes', {
+        event: 'INSERT', schema: 'public', table: 'shared_routine_live_sessions',
+        filter: `shared_routine_id=in.(${ids.join(',')})`,
+      }, handleChange)
+      .on('postgres_changes', {                      // ★ NUEVO: también escuchar UPDATE
+        event: 'UPDATE', schema: 'public', table: 'shared_routine_live_sessions',
+        filter: `shared_routine_id=in.(${ids.join(',')})`,
+      }, handleChange)
+      .subscribe();
+
+    return () => supabase.removeChannel(channel);
+  }, [sharedRoutines, session, authSession?.user?.id]);
+
   async function finishOnboarding() {
     setOnboardingSeen(true);
     try { await window.storage.set('gym_onboarding_seen', 'true', false); } catch (e) { }
   }
+
+  // ★ NUEVO
+  useEffect(() => {
+    const shared = sharedRoutines.find(r => r.id === activeRoutineId);
+    if (!shared) { setActiveMembersProfiles([]); return; }
+    getMembersProfiles(shared.members || []).then(({ data }) => {
+      setActiveMembersProfiles(data || []);
+    });
+  }, [activeRoutineId, sharedRoutines]);
 
   useEffect(() => {
     sessionRef.current = session;
@@ -253,6 +383,19 @@ export default function App() {
       setRoutines(data.routines);
       setHistory(data.history);
       setCustomExercises(data.customExercises);
+      const { data: shared } = await fetchMySharedRoutines(userId);
+      if (!cancelled) setSharedRoutines(shared || []);
+
+      const { data: invites } = await fetchPendingInvites(userId, authSession.user.email);
+      if (!cancelled) setPendingInvites(invites || []);
+
+      const sharedIds = (shared || []).map(r => r.id);
+      if (sharedIds.length) {
+        const { data: dels } = await fetchPendingRoutineDeletions(sharedIds, userId);
+        if (!cancelled) setPendingRoutineDeletions(dels || []);
+        const { data: edits } = await fetchPendingRoutineEdits(sharedIds, userId);
+        if (!cancelled) setPendingRoutineEdits(edits || []);
+      }
       prevRoutineIds.current = new Set(data.routines.map(r => r.id));
       prevHistoryIds.current = new Set(data.history.map(h => h.id));
       prevExerciseIds.current = new Set(data.customExercises.map(e => e.id));
@@ -287,6 +430,10 @@ export default function App() {
     setRoutines([]);
     setHistory([]);
     setCustomExercises([]);
+    setSharedRoutines([]);       // ★ NUEVO
+    setPendingInvites([]);       // ★ NUEVO
+    setPendingRoutineDeletions([]); // ★ NUEVO
+    setPendingRoutineEdits([]);
     prevRoutineIds.current = new Set();
     prevHistoryIds.current = new Set();
     prevExerciseIds.current = new Set();
@@ -479,10 +626,14 @@ export default function App() {
 
   // ---------- guards ----------
   useEffect(() => {
-    if (screen === 'routineDetail' && !routines.find(x => x.id === activeRoutineId)) {
+    if (
+      screen === 'routineDetail' &&
+      !routines.find(x => x.id === activeRoutineId) &&
+      !sharedRoutines.find(x => x.id === activeRoutineId)
+    ) {
       setScreen('routines');
     }
-  }, [screen, routines, activeRoutineId]);
+  }, [screen, routines, sharedRoutines, activeRoutineId]);
 
   useEffect(() => {
     if (screen === 'historyDetail' && !history.find(x => x.id === activeHistoryId)) {
@@ -543,7 +694,7 @@ export default function App() {
     setRestTimer(null);
   }
 
-  function openEditor(routineId) {
+  function openEditor(routineId, initialMode) { // ★ agregado initialMode
     if (routineId) {
       const r = routines.find(x => x.id === routineId);
       const baseExercises = r.tempOverride?.exercises || r.exercises;
@@ -554,10 +705,57 @@ export default function App() {
         days: r.days || [],
       });
     } else {
-      setEditorDraft({ id: null, name: '', exercises: [], mode: 'full', days: [], reminderTime: '' });
+      setEditorDraft({
+        id: null, name: '', exercises: [], mode: 'full', days: [], reminderTime: '',
+        isShared: initialMode === 'conjunto', // ★ NUEVO
+      });
     }
     setKebabOpen(false);
     setScreen('routineEditor');
+  }
+
+  // ★ NUEVO: abrir editor de una rutina compartida existente
+  function openSharedEditor(sharedRoutineId) {
+    const r = sharedRoutines.find(x => x.id === sharedRoutineId);
+    if (!r) return;
+    setEditorDraft({
+      ...JSON.parse(JSON.stringify(r)),
+      isShared: true,
+      mode: 'full',
+      days: r.days || [],
+      createdBy: r.createdBy,
+    });
+    setScreen('routineEditor');
+  }
+
+  function addDraftInviteEmail(email) {
+    setEditorDraft(d => {
+      if (!d) return d;
+      const emails = new Set(d.pendingInviteEmails || []);
+      emails.add(email);
+      return { ...d, pendingInviteEmails: [...emails] };
+    });
+  }
+
+  function removeDraftInviteEmail(email) {
+    setEditorDraft(d => {
+      if (!d) return d;
+      const emails = (d.pendingInviteEmails || []).filter(e => e !== email);
+      return { ...d, pendingInviteEmails: emails };
+    });
+  }
+  function toggleDraftInvitee(friendId) {
+    setEditorDraft(d => {
+      if (!d) return d;
+      const ids = new Set(d.pendingInviteIds || []);
+      ids.has(friendId) ? ids.delete(friendId) : ids.add(friendId);
+      return { ...d, pendingInviteIds: [...ids] };
+    });
+  }
+
+  // ★ NUEVO
+  function changeDraftMode(newMode) {
+    setEditorDraft(d => d ? { ...d, isShared: newMode === 'conjunto' } : d);
   }
 
   function openSessionExerciseEditor(exi) {
@@ -617,6 +815,42 @@ export default function App() {
 
     // rutina nueva -> se guarda derecho, no aplica lo de "para siempre / solo hoy"
     if (!toSave.id) {
+      // rama de rutina en conjunto NUEVA -> hay que crearla de verdad en Supabase
+      if (toSave.isShared) {
+        (async () => {
+          const userId = authSession.user.id;
+          const { data: created, error } = await createSharedRoutine(userId, toSave.name, toSave.days || []);
+          if (error || !created) {
+            showToast('No se pudo crear la rutina en conjunto', 'error');
+            return;
+          }
+          for (let i = 0; i < toSave.exercises.length; i++) {
+            await addSharedExercise(created.id, userId, toSave.exercises[i], i);
+          }
+
+          const inviteIds = toSave.pendingInviteIds || [];
+          for (const friendId of inviteIds) {
+            try {
+              await inviteFriendToSharedRoutine(created.id, friendId, userId);
+            } catch (e) {
+              console.error('No se pudo invitar a', friendId, e);
+            }
+          }
+          const inviteEmails = toSave.pendingInviteEmails || [];
+          for (const em of inviteEmails) {
+            try { await inviteByEmail(created.id, em, userId); }
+            catch (e) { console.error('No se pudo invitar a', em, e); }
+          }
+
+          const { data: refreshed } = await fetchMySharedRoutines(userId);
+          setSharedRoutines(refreshed || []);
+          setEditorDraft(null);
+          showToast(inviteIds.length > 0 ? 'Rutina creada e invitaciones enviadas' : 'Rutina en conjunto creada');
+          setScreen('routines');
+        })();
+        return;
+      }
+
       toSave.id = uid();
       setRoutines(rs => [...rs, toSave]);
       setActiveRoutineId(toSave.id);
@@ -626,8 +860,41 @@ export default function App() {
       return;
     }
 
-    // rutina existente -> preguntamos el alcance del cambio
+    // rutina EXISTENTE en conjunto -> proponer el cambio en vez de guardar directo
+    if (toSave.isShared) {
+      (async () => {
+        const userId = authSession.user.id;
+        const { error } = await requestRoutineEdit(toSave.id, userId, {
+          name: toSave.name,
+          days: toSave.days,
+          exercises: toSave.exercises,
+        });
+        if (error) { showToast('No se pudo proponer el cambio', 'error'); return; }
+        setEditorDraft(null);
+        showToast('Cambios enviados, esperando confirmación de los demás');
+        setScreen('routineDetail');
+      })();
+      return;
+    }
+
+    // rutina individual existente -> preguntamos el alcance del cambio
     setPendingSaveChoice(toSave);
+  }
+
+  async function voteOnRoutineEdit(editRequestId, approve) {
+    if (votingEditId) return; // ya hay un voto en curso, ignoramos el click extra
+    setVotingEditId(editRequestId);
+    try {
+      const userId = authSession.user.id;
+      const { error } = await voteRoutineEdit(editRequestId, userId, approve ? 'approve' : 'reject');
+      if (error) { showToast('No se pudo registrar el voto', 'error'); return; }
+      setPendingRoutineEdits(pe => pe.filter(e => e.id !== editRequestId));
+      const { data: shared } = await fetchMySharedRoutines(userId);
+      setSharedRoutines(shared || []);
+      showToast(approve ? 'Aceptaste los cambios' : 'Rechazaste los cambios');
+    } finally {
+      setVotingEditId(null);
+    }
   }
 
   function confirmSavePermanent() {
@@ -934,8 +1201,9 @@ export default function App() {
   }
 
 
-  function startSession(routineId) {
-    const r = routines.find(x => x.id === routineId);
+  function startSession(routineId, opts = {}) {
+    const shared = sharedRoutines.find(x => x.id === routineId);
+    const r = shared || routines.find(x => x.id === routineId);
     if (!r) return;
 
     if (session) {
@@ -947,17 +1215,25 @@ export default function App() {
       return;
     }
 
+    if (shared) {
+      setActiveRoutineId(r.id);
+    }
+
+
     const exercisesSource = r.tempOverride?.exercises || r.exercises;
+    const startedAt = opts.startedAt || Date.now();
 
     setSession({
+      isSharedRoutine: !!shared,
+      sharedMembers: shared?.members || [],
       routineId: r.id,
       routineName: r.name,
-      startedAt: Date.now(),
+      startedAt,
       paused: false,
       pausedAt: null,
       pausedMs: 0,
       exercises: exercisesSource.map(ex => ({
-        id: uid(), name: ex.name, muscle: ex.muscle, gif: ex.gif, rest: ex.rest || '',
+        id: uid(), name: ex.name, muscle: ex.muscle, equipment: ex.equipment, gif: ex.gif, rest: ex.rest || '',
         notes: '',
         sets: ex.sets.map(s => ({
           id: uid(),
@@ -970,9 +1246,13 @@ export default function App() {
       }))
     });
 
-    // si había un cambio "solo para la próxima", ya se usó: la rutina vuelve a la normal
     if (r.tempOverride) {
       setRoutines(rs => rs.map(x => x.id === r.id ? { ...x, tempOverride: null } : x));
+    }
+
+    // avisamos a los demás integrantes SOLO si somos quienes arrancan (no si nos estamos uniendo)
+    if (shared && !opts.isJoining) {
+      startLiveSession(shared.id, authSession.user.id).catch(() => { });
     }
 
     setRestTimer(null);
@@ -993,11 +1273,21 @@ export default function App() {
   function toggleSessionPause() {
     setSession(s => {
       if (!s) return s;
+      let next;
       if (s.paused) {
         const pausedDuration = Date.now() - s.pausedAt;
-        return { ...s, paused: false, pausedAt: null, pausedMs: (s.pausedMs || 0) + pausedDuration };
+        next = { ...s, paused: false, pausedAt: null, pausedMs: (s.pausedMs || 0) + pausedDuration };
+      } else {
+        next = { ...s, paused: true, pausedAt: Date.now() };
       }
-      return { ...s, paused: true, pausedAt: Date.now() };
+      if (next.isSharedRoutine && liveChannelRef.current) {
+        liveChannelRef.current.send({
+          type: 'broadcast',
+          event: 'pause',
+          payload: { userId: authSession.user.id, paused: next.paused, pausedAt: next.pausedAt, pausedMs: next.pausedMs },
+        });
+      }
+      return next;
     });
     setRestTimer(rt => (rt && rt.running) ? { ...rt, running: false } : rt);
   }
@@ -1096,6 +1386,30 @@ export default function App() {
         exercises: completedExercises, totalVolume, totalSets
       }, ...h]);
 
+      if (s.isSharedRoutine) {
+        const userId = authSession.user.id;
+        s.exercises.forEach(sEx => {
+          if (!sEx.exerciseRefId) return;
+          const cleanSets = sEx.sets.map(st => ({ id: st.id, weight: st.weight, reps: st.reps }));
+          upsertMySets(s.routineId, userId, sEx.exerciseRefId, cleanSets).catch(() => { });
+        });
+      } else {
+        setRoutines(rs => rs.map(r => {
+          if (r.id !== s.routineId) return r;
+          const rCopy = JSON.parse(JSON.stringify(r));
+          s.exercises.forEach(sEx => {
+            const rEx = rCopy.exercises.find(e => e.name === sEx.name);
+            if (rEx) {
+              sEx.sets.forEach((st, i) => {
+                if (rEx.sets[i] && st.weight !== '') rEx.sets[i].weight = st.weight;
+                if (rEx.sets[i] && st.reps !== '') rEx.sets[i].reps = st.reps;
+              });
+            }
+          });
+          return rCopy;
+        }));
+      }
+
       setRoutines(rs => rs.map(r => {
         if (r.id !== s.routineId) return r;
         const rCopy = JSON.parse(JSON.stringify(r));
@@ -1110,6 +1424,10 @@ export default function App() {
         });
         return rCopy;
       }));
+    }
+
+    if (s.isSharedRoutine) {
+      endLiveSession(s.routineId).catch(() => { });
     }
 
     setRestTimer(null);
@@ -1133,6 +1451,9 @@ export default function App() {
           setSession(null);
           lastSavedSessionRef.current = null;
           window.storage.delete('gym_active_session', false).catch(() => { });
+          if (session?.isSharedRoutine) {
+            endLiveSession(session.routineId).catch(() => { });
+          }
           setScreen('routines');
           resetDescansoState();
           sileo.dismiss(toastId);
@@ -1298,6 +1619,7 @@ export default function App() {
           next.exercises.push({
             id: uid(),
             exerciseId: exercise.id,
+            equipment: exercise.equipamiento,
             name: exercise.nombre,
             muscle: exercise.parteDelCuerpo,
             gif: exercise.gif,
@@ -1465,15 +1787,15 @@ export default function App() {
   }
 
   function reorderExercise(fromIndex, toIndex) {
-  setEditorDraft(d => {
-    if (fromIndex === toIndex) return d;
-    const arr = [...d.exercises];
-    const [moved] = arr.splice(fromIndex, 1);
-    const insertAt = toIndex > fromIndex ? toIndex - 1 : toIndex;
-    arr.splice(insertAt, 0, moved);
-    return { ...d, exercises: arr };
-  });
-}
+    setEditorDraft(d => {
+      if (fromIndex === toIndex) return d;
+      const arr = [...d.exercises];
+      const [moved] = arr.splice(fromIndex, 1);
+      const insertAt = toIndex > fromIndex ? toIndex - 1 : toIndex;
+      arr.splice(insertAt, 0, moved);
+      return { ...d, exercises: arr };
+    });
+  }
 
   function removeExercise(i) {
     const removed = editorDraft.exercises[i];
@@ -1616,6 +1938,37 @@ export default function App() {
     });
   }
 
+  async function requestSharedRoutineDelete(sharedRoutineId) {
+    const userId = authSession.user.id;
+    const shared = sharedRoutines.find(r => r.id === sharedRoutineId);
+    const soloCreador = !shared || (shared.members || []).length <= 1;
+
+    if (soloCreador) {
+      const { error } = await deleteSharedRoutineDirect(sharedRoutineId);
+      if (error) { showToast('No se pudo eliminar la rutina', 'error'); return; }
+      setSharedRoutines(rs => rs.filter(r => r.id !== sharedRoutineId));
+      showToast('Rutina eliminada');
+      setScreen('routines');
+      return;
+    }
+
+    const { error } = await requestRoutineDeletion(sharedRoutineId, userId);
+    if (error) { showToast('No se pudo iniciar el borrado', 'error'); return; }
+    showToast('Se les pidió confirmación a los demás integrantes');
+    setScreen('routines');
+  }
+
+  // ★ NUEVO
+  async function voteOnRoutineDeletion(deleteRequestId, approve) {
+    const userId = authSession.user.id;
+    const { error } = await voteRoutineDeletion(deleteRequestId, userId, approve ? 'approve' : 'reject');
+    if (error) { showToast('No se pudo registrar el voto', 'error'); return; }
+    setPendingRoutineDeletions(pd => pd.filter(d => d.id !== deleteRequestId));
+    const { data: shared } = await fetchMySharedRoutines(userId);
+    setSharedRoutines(shared || []); // por si se borró, desaparece sola
+    showToast(approve ? 'Confirmaste el borrado' : 'Rechazaste el borrado');
+  }
+
   // DESPUÉS
   function handleEditorDeleteRoutine() {
     const d = editorDraft;
@@ -1705,7 +2058,12 @@ export default function App() {
     });
   }
 
-  const activeRoutine = routines.find(x => x.id === activeRoutineId) || null;
+  const activeRoutine = useMemo(() => {
+    const own = routines.find(x => x.id === activeRoutineId);
+    if (own) return own;
+    const shared = sharedRoutines.find(x => x.id === activeRoutineId);
+    return shared ? { ...shared, isShared: true } : null;
+  }, [routines, sharedRoutines, activeRoutineId]);
   const activeHistoryEntry = history.find(x => x.id === activeHistoryId) || null;
   const showTabs = screen === 'home' || screen === 'routines' || screen === 'history' || screen === 'proximamente' || screen === 'perfil' || screen === 'mensajes';
 
@@ -1794,9 +2152,32 @@ export default function App() {
         {screen === 'routines' && (
           <RutinaPage
             routines={routines}
-            onNewRoutine={() => openEditor(null)}
+            sharedRoutines={sharedRoutines}
+            pendingInvites={pendingInvites}
+            onNewRoutine={(m) => openEditor(null, m)}
+            onSelectSharedRoutine={(id) => {
+              {/* ★ NUEVO */ }
+              setActiveRoutineId(id);
+              setScreen('routineDetail');
+              setKebabOpen(false);
+            }}
+            onAcceptInvite={async (inviteId) => {
+              {/* ★ NUEVO */ }
+              const userId = authSession.user.id;
+              const { error } = await respondInvite(inviteId, userId, true);
+              if (error) { showToast('No se pudo aceptar la invitación', 'error'); return; }
+              const { data: shared } = await fetchMySharedRoutines(userId);
+              setSharedRoutines(shared || []);
+              setPendingInvites(pi => pi.filter(i => i.id !== inviteId));
+              showToast('Te uniste a la rutina');
+            }}
+            onRejectInvite={async (inviteId) => {
+              {/* ★ NUEVO */ }
+              const userId = authSession.user.id;
+              await respondInvite(inviteId, userId, false);
+              setPendingInvites(pi => pi.filter(i => i.id !== inviteId));
+            }}
             authSession={authSession}
-
             onSelectRoutine={(id) => { setActiveRoutineId(id); setScreen('routineDetail'); setKebabOpen(false); }}
             onExport={() => setBackupModal({ mode: 'export', kind: 'routines' })}
             onImport={() => setBackupModal({ mode: 'import', kind: 'routines' })}
@@ -1835,7 +2216,9 @@ export default function App() {
             authSession={authSession}
             onToggleKebab={() => setKebabOpen(k => !k)}
             onBack={() => { setScreen('routines'); setKebabOpen(false); }}
-            onEdit={() => openEditor(activeRoutine.id)}
+            onEdit={() => activeRoutine.isShared ? openSharedEditor(activeRoutine.id) : openEditor(activeRoutine.id)}
+            membersProfiles={activeMembersProfiles}
+            onRequestSharedDelete={requestSharedRoutineDelete}
             onDuplicate={() => duplicateRoutine(activeRoutine.id)}
             onDelete={handleDetailDelete}
             onStartSession={() => startSession(activeRoutine.id)}
@@ -1855,6 +2238,11 @@ export default function App() {
             draft={editorDraft}
             mode={editorDraft?.mode || 'full'}
             onChangeName={updateDraftName}
+            userId={authSession?.user?.id}
+            onChangeMode={changeDraftMode}
+            onToggleInvitee={toggleDraftInvitee}
+            onAddInviteEmail={addDraftInviteEmail}
+            onRemoveInviteEmail={removeDraftInviteEmail}
             onChangeDays={updateDraftDays}
             onChangeReminderTime={updateDraftReminderTime}
             onMoveExercise={moveExercise}
@@ -1864,6 +2252,7 @@ export default function App() {
             onDuplicateLastSet={duplicateLastSet}
             onRemoveSet={removeSet}
             onUpdateSetField={updateSetField}
+            onChangeMode={changeDraftMode}
             onUpdateRest={updateRest}
             onOpenPicker={openPicker}
             onSave={saveDraft}
@@ -1884,6 +2273,7 @@ export default function App() {
         {screen === 'session' && (
           <RutinaCurso
             session={session}
+            partnerProgress={partnerProgress}
             history={history}
             routineName={session?.routineName}
             restTimer={restTimer}
@@ -1894,6 +2284,13 @@ export default function App() {
             onAutoResumenHandled={() => setAutoOpenResumen(false)}
             onToggleSet={toggleSet}
             onUpdateNotes={updateExerciseNotes}
+            sharedWithNames={
+              session?.isSharedRoutine
+                ? activeMembersProfiles
+                  .filter(m => m.id !== authSession?.user?.id)
+                  .map(m => m.nombre || m.username)
+                : []
+            }
             onUpdateField={updateLiveField}
             onAddSet={addLiveSet}
             onDuplicateLastSet={duplicateLiveSet}
@@ -1997,6 +2394,42 @@ export default function App() {
           />
         )}
 
+        {pendingLiveInvite && (
+          <div className="modal-overlay fixed flex justifyContentCenter" onClick={() => setPendingLiveInvite(null)}>
+            <div className="action-sheet" onClick={e => e.stopPropagation()}>
+              <div className="action-sheet-card">
+                <h3 className="action-sheet-title">
+                  {pendingLiveInvite.routineName} — empezaron a entrenar
+                </h3>
+                <p className="action-sheet-desc">
+                  Un integrante ya arrancó esta rutina en conjunto. ¿Te sumás ahora mismo?
+                </p>
+
+                <div className="action-sheet-divider" />
+                <button
+                  className="action-sheet-btn"
+                  onClick={() => {
+                    const invite = pendingLiveInvite;
+                    setPendingLiveInvite(null);
+                    startSession(invite.sharedRoutineId, { startedAt: invite.startedAt, isJoining: true });
+                  }}
+                >
+                  Unirme ahora
+                </button>
+
+                <div className="action-sheet-divider" />
+                <button
+                  className="action-sheet-btn"
+                  style={{ color: "var(--rojo)" }}
+                  onClick={() => setPendingLiveInvite(null)}
+                >
+                  No, gracias
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {backupModal && (
           <BackupModal
             mode={backupModal.mode}
@@ -2013,6 +2446,73 @@ export default function App() {
           <OnboardingTour onFinish={finishOnboarding} />
         )}
 
+
+        {pendingRoutineDeletions.length > 0 && (
+          <div className="modal-overlay fixed flex justifyContentCenter">
+            <div className="action-sheet">
+              <div className="action-sheet-card">
+                <h3 className="action-sheet-title">
+                  ¿Eliminar "{pendingRoutineDeletions[0].routineName}"?
+                </h3>
+                <p className="action-sheet-desc">
+                  Otro integrante pidió eliminar esta rutina en conjunto para todos. Si aceptás, se borra para todos los miembros.
+                </p>
+
+                <div className="action-sheet-divider" />
+                <button
+                  className="action-sheet-btn"
+                  onClick={() => voteOnRoutineDeletion(pendingRoutineDeletions[0].id, true)}
+                >
+                  Aceptar borrado
+                </button>
+
+                <div className="action-sheet-divider" />
+                <button
+                  className="action-sheet-btn danger"
+                  style={{
+                    color: "var(--rojo)"
+                  }}
+                  onClick={() => voteOnRoutineDeletion(pendingRoutineDeletions[0].id, false)}
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {pendingRoutineEdits.length > 0 && (
+          <div className="modal-overlay fixed flex justifyContentCenter">
+            <div className="action-sheet">
+              <div className="action-sheet-card">
+                <h3 className="action-sheet-title">
+                  Cambios propuestos en "{pendingRoutineEdits[0].routineName}"
+                </h3>
+                <p className="action-sheet-desc">
+                  Un integrante propuso cambios: nuevo nombre "{pendingRoutineEdits[0].proposedName}"
+                  con {pendingRoutineEdits[0].proposedExerciseCount} ejercicio{pendingRoutineEdits[0].proposedExerciseCount !== 1 ? 's' : ''}.
+                </p>
+
+                <div className="action-sheet-divider" />
+                <button className="action-sheet-btn"
+                  disabled={!!votingEditId}
+                  onClick={() => voteOnRoutineEdit(pendingRoutineEdits[0].id, true)}>
+                  Aceptar cambios
+                </button>
+
+                <div className="action-sheet-divider" />
+                <button
+                  className="action-sheet-btn"
+                  disabled={!!votingEditId}
+                  style={{ color: "var(--rojo)" }}
+                  onClick={() => voteOnRoutineEdit(pendingRoutineEdits[0].id, false)}
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {pendingSaveChoice && (
           <div className="modal-overlay fixed flex justifyContentCenter" onClick={() => setPendingSaveChoice(null)}>
             <div className="action-sheet" onClick={e => e.stopPropagation()}>

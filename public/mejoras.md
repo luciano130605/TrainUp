@@ -4,15 +4,21 @@ Ajustes / Preferencias
 
 
 Perfo
-* Cuando achico una rutina el tiempo no vuelve
 * Que funcione sin wifi, todo local y que se guarde en la BD cuando tenga wifi.. que avise con un icon
 
 
 Diseño 
 * agregar toast a todo
 
+
 Social / Comunidad
 * notificaciones push cuando te envian un msj
+
+
+rutina juntos
+
+* notificaciones para avisar todo, si te invitan, si quieren eliminar, etc.
+que mas
 
 
 Notificaciones

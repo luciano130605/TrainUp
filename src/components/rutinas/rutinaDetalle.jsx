@@ -58,7 +58,8 @@ function MuscleChip({ active, color, onClick, children }) {
 export default function RutinaDetalle({
   routine, kebabOpen, onToggleKebab, onBack, onEdit, onDuplicate, onDelete, onStartSession,
   authSession, onRevertTempOverride,
-  onRename, onShare, onCopyText, history, reminder, onSaveReminder, onClearReminder
+  onRename, onShare, onCopyText, history, reminder, onSaveReminder, onClearReminder,
+  membersProfiles = [], onRequestSharedDelete, // ★ NUEVO
 }) {
   const [collapsed, setCollapsed] = useState(() => new Set());
   const [allCollapsed, setAllCollapsed] = useState(false);
@@ -371,8 +372,18 @@ export default function RutinaDetalle({
                 <span>Copiar como texto</span>
                 <CopyIcon size={15} />
               </div>
-              <div className="kebab-item danger" onClick={onDelete}>
-                <span>Eliminar rutina</span>
+              <div
+                className="kebab-item danger"
+                onClick={() => {
+                  onToggleKebab();
+                  if (routine.isShared) {
+                    onRequestSharedDelete(routine.id);
+                  } else {
+                    onDelete();
+                  }
+                }}
+              >
+                <span>{routine.isShared ? 'Eliminar para todos' : 'Eliminar rutina'}</span>
                 <TrashIcon size={15} />
               </div>
             </div>
@@ -403,6 +414,18 @@ export default function RutinaDetalle({
               ? `Última vez: ${formatRelative(lastEntry.date)} · ${lastEntry.totalSets} series · ${Math.round(lastEntry.totalVolume).toLocaleString('es-AR')} kg`
               : 'Todavía no registraste ninguna sesión de esta rutina'}
           </div>
+
+          {routine.isShared && (
+            <div style={{ padding: '0 20px', marginTop: 10 }}>
+              <div className="flex gap8" style={{ flexWrap: 'wrap' }}>
+                {membersProfiles.map(m => (
+                  <span key={m.id} className="muscle-chip" style={{ background: 'var(--acento-transp-2)', color: 'var(--acento)' }}>
+                    {m.nombre || m.username}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {hasTempOverride && (
@@ -578,7 +601,7 @@ export default function RutinaDetalle({
             const prev = occurrences[1];
             const delta = last && prev ? last.volume - prev.volume : null;
             const muscleColor = colorFor(ex.muscle);
-
+            const isBodyweight = ex.equipment === 'P. corporal';
             return (
               <div
                 key={ex.id}
@@ -639,13 +662,14 @@ export default function RutinaDetalle({
                       }}
                     >
                       <div className="set-table-head">
-                        <span>Kg</span>
-                        <span>Reps</span>
+                        {isBodyweight ? <span>Reps</span> : (
+                          <><span>Kg</span><span>Reps</span></>
+                        )}
                       </div>
                       {ex.sets.map((s, i) => (
                         <div key={s.id} className="set-row">
                           <div className="set-idx">{i + 1}</div>
-                          <div className="set-val">{s.weight || 0}</div>
+                          {!isBodyweight && <div className="set-val">{s.weight || 0}</div>}
                           <div className="set-val">{s.reps || 0}</div>
                         </div>
                       ))}

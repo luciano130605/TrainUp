@@ -54,7 +54,9 @@ h3 {
 
 
 
-
+button {
+  outline: none;
+}
 
 .acento-rosa {
   --acento: #ff1493;

@@ -121,7 +121,8 @@ function autofillIcon(mode, size = 12) {
 
 export default function RutinaCurso({
   session, restTimer, restDefault, history = [], routineName,
-  onCancel, onToggleSet, onUpdateField, onAddSet, onFinish,
+  sharedWithNames = [],
+  onCancel, onToggleSet, onUpdateField, onAddSet, onFinish, partnerProgress,
   onSetRestDefault, onAdjustRest, onTogglePause, onDismissRest,
   onDuplicateLastSet, onOpenPicker, onToggleSessionPause, onEditExercise,
   onUpdateNotes,
@@ -402,6 +403,12 @@ export default function RutinaCurso({
 
         <div className="session-timer">
           <h3 className="fontSize1-2 txt-acento">{formatElapsedFull(elapsedMs)}</h3>
+          {sharedWithNames.length > 0 && (
+            <span className="sub fontSize6" title={`Entrenando junto a ${sharedWithNames.join(', ')}`}>
+              con {sharedWithNames.join(', ')}
+              {partnerProgress && ` · ${partnerProgress.name}: ${partnerProgress.doneSets}/${partnerProgress.totalSets}`}
+            </span>
+          )}
           {onToggleSessionPause && (
             <button
               type="button"
@@ -582,7 +589,7 @@ export default function RutinaCurso({
           const doneInEx = ex.sets.filter(st => st.done).length;
           const isExDone = ex.sets.length > 0 && doneInEx === ex.sets.length;
           const isTimed = esEjercicioDeTiempo(ex);
-          const isBodyweight = ex.equipment === 'P. corporal';
+          const isBodyweight = (ex.equipo ?? ex.equipment) === 'P. corporal';
 
           return (
             <div
@@ -646,7 +653,11 @@ export default function RutinaCurso({
                 <div style={{ overflow: 'hidden', minHeight: 0 }}>
                   <div className="ex-body-inner">
                     <div className="set-table-head">
-                      {isTimed ? <span>Segundos</span> : (<><span>Kg</span><span>Reps</span></>)}
+                      {isTimed ? <span>Segundos</span> : isBodyweight ? (
+                        <span>Reps</span>
+                      ) : (
+                        <><span>Kg</span><span>Reps</span></>
+                      )}
                       <span style={{ flex: '0 0 36px' }} />
                     </div>
 
@@ -663,17 +674,22 @@ export default function RutinaCurso({
                               onChange={v => onUpdateField(exi, si, 'reps', v)}
                               onComplete={() => handleToggleSet(exi, si)}
                             />
+                          ) : isBodyweight ? (
+                            <input
+                              className={`set-val ${set.done ? 'done' : ''}`}
+                              style={{ maxWidth: "100%" }}
+                              type="text" inputMode="numeric"
+                              value={set.reps}
+                              placeholder={set.placeholderReps || '0'}
+                              onChange={e => onUpdateField(exi, si, 'reps', e.target.value)}
+                            />
                           ) : (
                             <>
                               <input
-
                                 className={`set-val ${set.done ? 'done' : ''}`}
-                                style={{
-                                  maxWidth: "35%"
-                                }}
+                                style={{ maxWidth: "35%" }}
                                 type="text" inputMode="decimal"
                                 value={set.weight}
-                                disabled={isBodyweight}
                                 placeholder={set.placeholderWeight || '0'}
                                 onChange={e => {
                                   let val = e.target.value.replace(',', '.');
@@ -684,10 +700,7 @@ export default function RutinaCurso({
                               />
                               <input
                                 className={`set-val ${set.done ? 'done' : ''}`}
-
-                                style={{
-                                  maxWidth: "40%"
-                                }}
+                                style={{ maxWidth: "40%" }}
                                 type="text" inputMode="numeric"
                                 value={set.reps}
                                 placeholder={set.placeholderReps || '0'}

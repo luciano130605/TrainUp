@@ -466,7 +466,7 @@ export default function Perfil({
                 </button>
             </form>
 
-            <div className='login-form perfil'>
+            {/* <div className='login-form perfil'>
                 <div className="section-label acento-color">Privacidad</div>
                 <p className="sub" style={{ marginBottom: 10 }}>
                     Tu usuario (@{profile.username}) siempre es visible para que te puedan buscar.
@@ -494,7 +494,7 @@ export default function Perfil({
                         </button>
                     </div>
                 ))}
-            </div>
+            </div> */}
             <div className='login-form perfil'>
 
                 <div className="section-label acento-color">Notificaciones</div>

@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { sileo } from 'sileo';
 import { fetchFriendships, getPublicProfiles, sendRoutineShare } from '../../lib/social.js';
-import { CopyIcon, ExportIcon, ImgIcon, ImportIcon, NotificationIcon, SendIcon } from '../../icons/icons.jsx';
+import { CopyIcon, ExportIcon, ImgIcon, ImportIcon, NotificationIcon, SendIcon, UsersIcon } from '../../icons/icons.jsx';
 import "../style.css"
 import EnviarAmigosModal from '../modales/enviarAmigos.jsx';
 import { StatNumber } from "./count.jsx"
@@ -36,7 +36,10 @@ const getMuscleColor = (muscle) =>
   MUSCLE_COLORS[muscle] || MUSCLE_COLORS.Otro;
 
 export default function RutinaPage({
-  routines = [], onNewRoutine, onSelectRoutine, onExport, onImport,
+  routines = [], sharedRoutines = [], pendingInvites = [],
+  onNewRoutine, onSelectRoutine, onSelectSharedRoutine,
+  onAcceptInvite, onRejectInvite,
+  onExport, onImport,
   swipeGestures = true, getSwipeActionFor, swipeLeftAction = 'delete', swipeRightAction = 'edit',
   authSession
 }) {
@@ -52,7 +55,7 @@ export default function RutinaPage({
   const [sending, setSending] = useState(false);
   const [sendProgress, setSendProgress] = useState(0);
   const [sortBy, setSortBy] = useState("week");
-
+  const [viewTab, setViewTab] = useState('individual'); // ★ NUEVO: 'individual' | 'grupal'
   const userId = authSession?.user?.id;
 
   const DIAS_ORDEN_SEMANA = [1, 2, 3, 4, 5, 6, 0]; // lunes a domingo
@@ -590,92 +593,178 @@ export default function RutinaPage({
 
       {fabOpen && <div className="fixed cerrar-afuera" onClick={cerrarFab} />
       }
-
+      <div className="pills justifyContentCenter" style={{ padding: '0 20px 14px', marginTop: 10 }}>
+        <button
+          type="button"
+          className={`pill ${viewTab === 'individual' ? 'activo' : ''}`}
+          style={{ width: 'auto', padding: '0 16px' }}
+          onClick={() => setViewTab('individual')}
+        >
+          Individual
+        </button>
+        <button
+          type="button"
+          className={`pill ${viewTab === 'grupal' ? 'activo' : ''}`}
+          style={{ width: 'auto', padding: '0 16px' }}
+          onClick={() => setViewTab('grupal')}
+        >
+          Grupal
+          {pendingInvites.length > 0 && (
+            <span className="dot" style={{ marginLeft: 4 }} />
+          )}
+        </button>
+      </div>
       <div className="cont">
-        {routines.length === 0 ? (
-          <div className="sin flex column textCenter justifyContentCenter">
-            <h3 className='fontSize1-5'>Aún no tienes rutinas</h3>
-            <p className='fontSize8'>Crea tu primera rutina para organizar tus ejercicios, series y empezar a entrenar.</p>
-          </div>
-        ) : (
-          <>
-            <div className='stat-row'>
-              {[
-                { n: routines.length, label: 'Rutinas' },
-                { n: rutinasDeHoy.length, label: 'Hoy' },
-                { n: totalEjercicios, label: 'Ejercicios' },
-              ].map((s, i) => (
-                <div
-                  key={s.label}
-                  className='stat-card stat-card-in'
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  <StatNumber value={s.n} />
-                  <label className='stat-label'>{s.label}</label>
-                </div>
-              ))}
+        {viewTab === 'individual' && (
+          routines.length === 0 ? (
+            <div className="sin flex column textCenter justifyContentCenter">
+              <h3 className='fontSize1-5'>Aún no tienes rutinas</h3>
+              <p className='fontSize8'>Crea tu primera rutina para organizar tus ejercicios, series y empezar a entrenar.</p>
             </div>
-
-            <div className='marginBottom20'>
-              <div className='day-pills'>
-                <button
-                  onClick={() => setSelectedDay(null)}
-                  className={`pill ${selectedDay === null ? 'active' : ''}`}
-                  style={{ width: 'auto', padding: '0 12px' }}
-                  title="Todas"
-                >
-                  Todas
-                </button>
-                {DIAS_CORTO.map((d, i) => diasConRutina.has(i) && (
-                  <button
-                    key={i}
-                    onClick={() => toggleDay(i)}
-                    className={`pill ${selectedDay === i ? 'active' : ''} ${i === hoy ? 'esHoy' : ''}`}
-                    title={DIAS[i]}
+          ) : (
+            <>
+              <div className='stat-row'>
+                {[
+                  { n: routines.length, label: 'Rutinas' },
+                  { n: rutinasDeHoy.length, label: 'Hoy' },
+                  { n: totalEjercicios, label: 'Ejercicios' },
+                ].map((s, i) => (
+                  <div
+                    key={s.label}
+                    className='stat-card stat-card-in'
+                    style={{ animationDelay: `${i * 60}ms` }}
                   >
-                    {d}
-                  </button>
+                    <StatNumber value={s.n} />
+                    <label className='stat-label'>{s.label}</label>
+                  </div>
                 ))}
               </div>
-            </div>
 
-
-            <div className='cont-title-sub'
-            >
-              <div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="select"
-                  style={{ width: "auto", marginLeft: 25 }}
-                >
-                  <option value="week">Semana</option>
-                  <option value="alpha">A-Z</option>
-                </select>
-              </div>
-              <div>
-                <h3 className='section-label'
-                  style={{
-
-                    padding: "22px 20px 10px"
-                  }}>
-                  {selectedDay === null ? 'Todas tus rutinas' : `Rutinas de ${DIAS[selectedDay]}`}
-                </h3>
-              </div>
-
-
-            </div>
-
-
-            {
-              listaMostrada.length === 0 ? (
-                <div>No tenés rutinas programadas para {DIAS[selectedDay]}.</div>
-              ) : (
-                <div className='routine-list'>
-                  {listaMostrada.map((r, i) => renderCard(r, i))}
+              <div className='marginBottom20'>
+                <div className='day-pills'>
+                  <button
+                    onClick={() => setSelectedDay(null)}
+                    className={`pill ${selectedDay === null ? 'active' : ''}`}
+                    style={{ width: 'auto', padding: '0 12px' }}
+                    title="Todas"
+                  >
+                    Todas
+                  </button>
+                  {DIAS_CORTO.map((d, i) => diasConRutina.has(i) && (
+                    <button
+                      key={i}
+                      onClick={() => toggleDay(i)}
+                      className={`pill ${selectedDay === i ? 'active' : ''} ${i === hoy ? 'esHoy' : ''}`}
+                      title={DIAS[i]}
+                    >
+                      {d}
+                    </button>
+                  ))}
                 </div>
-              )
-            }
+              </div>
+
+
+              <div className='cont-title-sub'
+              >
+                <div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="select"
+                    style={{ width: "auto", marginLeft: 25 }}
+                  >
+                    <option value="week">Semana</option>
+                    <option value="alpha">A-Z</option>
+                  </select>
+                </div>
+                <div>
+                  <h3 className='section-label'
+                    style={{
+
+                      padding: "22px 20px 10px"
+                    }}>
+                    {selectedDay === null ? 'Todas tus rutinas' : `Rutinas de ${DIAS[selectedDay]}`}
+                  </h3>
+                </div>
+
+
+              </div>
+
+
+              {
+                listaMostrada.length === 0 ? (
+                  <div>No tenés rutinas programadas para {DIAS[selectedDay]}.</div>
+                ) : (
+                  <div className='routine-list'>
+                    {listaMostrada.map((r, i) => renderCard(r, i))}
+                  </div>
+                )
+              }
+            </>
+          )
+        )}
+        {viewTab === 'grupal' && (
+          <>
+            {pendingInvites.length === 0 && sharedRoutines.length === 0 ? (
+              <div className="sin flex column textCenter justifyContentCenter">
+                <h3 className='fontSize1-5'>Sin rutinas grupales</h3>
+                <p className='fontSize8'>Cuando te inviten a entrenar en conjunto, va a aparecer acá.</p>
+              </div>
+            ) : (
+              <>
+                {pendingInvites.length > 0 && (
+                  <div>
+                    <h3 className='section-label' style={{ padding: "10px 20px" }}>Invitaciones</h3>
+                    <div className='routine-list'>
+                      {pendingInvites.map(inv => (
+                        <div key={inv.id} className="routine-card" style={{ "--card-accent": "var(--acento)" }}>
+                          <div className='top'>
+                            <div>
+                              <h3 className='routine-name'>{inv.routineName}</h3>
+                              <div className="routine-meta">Te invitaron a entrenar en conjunto</div>
+                            </div>
+                          </div>
+                          <div className="flex gap10" style={{ marginTop: 10 }}>
+                            <button className="btn-circle acento" title="Aceptar" onClick={() => onAcceptInvite(inv.id)}>
+                              <Check size={16} />
+                            </button>
+                            <button className="btn-circle danger" title="Rechazar" onClick={() => onRejectInvite(inv.id)}>
+                              <X size={16} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {sharedRoutines.length > 0 && (
+                  <div className={pendingInvites.length > 0 ? "marginTop20" : ""}>
+                    <h3 className='section-label' style={{ padding: "10px 20px" }}>Rutinas en conjunto</h3>
+                    <div className='routine-list'>
+                      {sharedRoutines.map((r, i) => (
+                        <div
+                          key={r.id}
+                          className="routine-card routine-card-in"
+                          style={{ "--card-accent": "var(--acento)", animationDelay: `${Math.min(i, 8) * 45}ms` }}
+                          role="button" tabIndex={0}
+                          onClick={() => onSelectSharedRoutine(r.id)}
+                        >
+                          <div className='top'>
+                            <div>
+                              <h3 className='routine-name'>{r.name}</h3>
+                              <div className="routine-meta">
+                                {r.exercises.length} ejercicio{r.exercises.length !== 1 ? 's' : ''} · {r.members.length} integrante{r.members.length !== 1 ? 's' : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
       </div>
