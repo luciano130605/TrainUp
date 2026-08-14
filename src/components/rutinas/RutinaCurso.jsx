@@ -120,7 +120,7 @@ function autofillIcon(mode, size = 12) {
 }
 
 export default function RutinaCurso({
-  session, restTimer, restDefault, history = [], routineName,
+  session, restTimer, restDefault, history = [], routineName, onSetAutofillMode,
   sharedWithNames = [],
   onCancel, onToggleSet, onUpdateField, onAddSet, onFinish, partnerProgress,
   onSetRestDefault, onAdjustRest, onTogglePause, onDismissRest,
@@ -133,7 +133,6 @@ export default function RutinaCurso({
   const s = session;
   const [collapsedIds, setCollapsedIds] = React.useState(new Set());
   const [, forceTick] = React.useState(0);
-  const [autofillMode, setAutofillMode] = React.useState('vacio');
   const [gifPreview, setGifPreview] = React.useState(null);
   const [gifFailedIds, setGifFailedIds] = React.useState(new Set());
   const exerciseRefs = React.useRef({});
@@ -145,6 +144,7 @@ export default function RutinaCurso({
   const [bouncingSets, setBouncingSets] = React.useState(new Set());
   const [musculosOpen, setMusculosOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
+  const autofillMode = s.autofillMode ?? 'Rutina';
 
 
   React.useEffect(() => {
@@ -241,6 +241,7 @@ export default function RutinaCurso({
   }, [s, showDone]);
 
   if (!s) return null;
+
 
   const elapsedMs = (s.paused ? s.pausedAt : Date.now()) - s.startedAt - (s.pausedMs || 0);
   const globalPct = totalSets > 0 ? Math.round((doneSets / totalSets) * 100) : 0;
@@ -494,7 +495,7 @@ export default function RutinaCurso({
                   <select
                     value={autofillMode}
                     onChange={e => {
-                      setAutofillMode(e.target.value);
+                      onSetAutofillMode?.(e.target.value); 
                       setKebabOpen(false);
                     }}
                     className="kebab-select"

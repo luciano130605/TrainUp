@@ -1232,6 +1232,7 @@ export default function App() {
       paused: false,
       pausedAt: null,
       pausedMs: 0,
+      autofillMode: 'Rutina',
       exercises: exercisesSource.map(ex => ({
         id: uid(), name: ex.name, muscle: ex.muscle, equipment: ex.equipment, gif: ex.gif, rest: ex.rest || '',
         notes: '',
@@ -1333,6 +1334,10 @@ export default function App() {
       next.exercises[exi].notes = value;
       return next;
     });
+  }
+
+  function updateAutofillMode(mode) {
+    setSession(s => s ? { ...s, autofillMode: mode } : s);
   }
 
   function addLiveSet(exi) {
@@ -2276,6 +2281,7 @@ export default function App() {
             partnerProgress={partnerProgress}
             history={history}
             routineName={session?.routineName}
+            onSetAutofillMode={updateAutofillMode}
             restTimer={restTimer}
             restDefault={restDefault}
             onCancel={cancelSession}
