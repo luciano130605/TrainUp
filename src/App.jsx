@@ -1305,9 +1305,12 @@ export default function App() {
     });
 
     if (willComplete) {
+      if (options.skipRest) {
+        resetDescansoState();
+        return;
+      }
       const secondsToRest = ex.rest ? parseInt(ex.rest, 10) : restDefault;
       if (options.celebrate) {
-        // Dejamos 5s libres para el toast de felicitación antes de abrir el de descanso
         setTimeout(() => {
           startRest(Math.max(0, secondsToRest - 5));
         }, 5000);

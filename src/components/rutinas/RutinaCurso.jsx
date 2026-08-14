@@ -144,7 +144,6 @@ export default function RutinaCurso({
   const [bouncingSets, setBouncingSets] = React.useState(new Set());
   const [musculosOpen, setMusculosOpen] = React.useState(false);
   const [kebabOpen, setKebabOpen] = React.useState(false);
-  const autofillMode = s.autofillMode ?? 'Rutina';
 
 
   React.useEffect(() => {
@@ -241,6 +240,10 @@ export default function RutinaCurso({
   }, [s, showDone]);
 
   if (!s) return null;
+
+
+  const autofillMode = s.autofillMode ?? 'Rutina';
+
 
 
   const elapsedMs = (s.paused ? s.pausedAt : Date.now()) - s.startedAt - (s.pausedMs || 0);
@@ -495,7 +498,7 @@ export default function RutinaCurso({
                   <select
                     value={autofillMode}
                     onChange={e => {
-                      onSetAutofillMode?.(e.target.value); 
+                      onSetAutofillMode?.(e.target.value);
                       setKebabOpen(false);
                     }}
                     className="kebab-select"

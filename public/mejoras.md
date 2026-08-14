@@ -20,6 +20,7 @@ rutina juntos
 * notificaciones para avisar todo, si te invitan, si quieren eliminar, etc.
 que mas
 
+* no funciona la racha
 
 Notificaciones
 * Me llegan 2 notis juntas
