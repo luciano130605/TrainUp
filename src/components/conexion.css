@@ -47,3 +47,40 @@
         transform: rotate(360deg);
     }
 }
+
+
+.wifi-activity {
+    display: block;
+    overflow: visible;
+}
+
+.wifi-wave {
+    transform-origin: center;
+    animation: wifi-wave 1.4s ease-in-out infinite;
+}
+
+.wifi-wave-1 {
+    animation-delay: 0s;
+}
+
+.wifi-wave-2 {
+    animation-delay: 0.18s;
+}
+
+.wifi-wave-3 {
+    animation-delay: 0.36s;
+}
+
+@keyframes wifi-wave {
+
+    0%,
+    100% {
+        opacity: 0.25;
+        transform: translateY(2px);
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+}
