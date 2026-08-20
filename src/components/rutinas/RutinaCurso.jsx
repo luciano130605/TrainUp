@@ -125,7 +125,7 @@ export default function RutinaCurso({
   onCancel, onToggleSet, onUpdateField, onAddSet, onFinish, partnerProgress,
   onSetRestDefault, onAdjustRest, onTogglePause, onDismissRest,
   onDuplicateLastSet, onOpenPicker, onToggleSessionPause, onEditExercise,
-  onUpdateNotes,
+  onUpdateNotes, onRemoveExercise,
   onMinimize, autoOpenResumen, onAutoResumenHandled,
   pickerOpen, allExercises, pickerQuery, onPickerQueryChange, pickerSelection,
   onTogglePick, onCreateCustomExercise, onConfirmPicker, onClosePicker
@@ -643,7 +643,11 @@ export default function RutinaCurso({
                       <Remplazar size={14} />
                     </button>
                   )}
-
+                  {onRemoveExercise && (
+                    <button type="button" className="btn-circle small" title="Quitar de hoy" onClick={() => onRemoveExercise(exi)}>
+                      <TrashIcon size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
 

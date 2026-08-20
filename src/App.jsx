@@ -131,6 +131,47 @@ export default function App() {
   const [pendingLiveInvite, setPendingLiveInvite] = useState(null);
 
 
+  const wakeLockRef = useRef(null);
+
+  async function requestWakeLock() {
+    if (!('wakeLock' in navigator)) return;
+    try {
+      wakeLockRef.current = await navigator.wakeLock.request('screen');
+    } catch (e) {
+      // el usuario puede rechazarlo o el browser no lo soporta en ese momento, no rompemos nada
+      console.warn('No se pudo activar wake lock:', e);
+    }
+  }
+
+  function releaseWakeLock() {
+    wakeLockRef.current?.release().catch(() => { });
+    wakeLockRef.current = null;
+  }
+
+  useEffect(() => {
+    if (session && !session.paused) {
+      requestWakeLock();
+    } else {
+      releaseWakeLock();
+    }
+  }, [!!session, session?.paused]);
+
+  // el navegador libera el wake lock automáticamente si la pestaña pierde foco;
+  // hay que re-pedirlo cuando el usuario vuelve
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && session && !session.paused && !wakeLockRef.current) {
+        requestWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, [session]);
+
+  // liberar al desmontar la app, por las dudas
+  useEffect(() => () => releaseWakeLock(), []);
+
+
   const setScreen = useCallback((next) => {
     const apply = () => setScreenState(next);
 
@@ -254,6 +295,11 @@ export default function App() {
     try { await window.storage.set('gym_onboarding_seen', 'true', false); } catch (e) { }
   }
 
+  const rutinasDeHoy = useMemo(() => {
+    const hoy = new Date().getDay();
+    return routines.filter(r => r.days?.includes(hoy));
+  }, [routines]);
+
   // ★ NUEVO
   useEffect(() => {
     const shared = sharedRoutines.find(r => r.id === activeRoutineId);
@@ -298,6 +344,15 @@ export default function App() {
     const t = setTimeout(() => setShowSplash(false), 2000);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (!('setAppBadge' in navigator)) return;
+    if (rutinasDeHoy?.length > 0 && !session) {
+      navigator.setAppBadge(1).catch(() => { });
+    } else {
+      navigator.clearAppBadge().catch(() => { });
+    }
+  }, [rutinasDeHoy, session]);
 
   useEffect(() => {
     if (!supabase) {
@@ -769,6 +824,65 @@ export default function App() {
       exercises: [JSON.parse(JSON.stringify(ex))]
     });
     setScreen('routineEditor');
+  }
+
+  function removeSessionExercise(exi) {
+    if (!session) return;
+    const removed = session.exercises[exi];
+    if (!removed) return;
+
+    const toastId = sileo.action({
+      title: "¿Quitar este ejercicio de hoy?",
+      description: "Se saca solo de esta sesión. La próxima vez que entrenes esta rutina va a volver a aparecer.",
+      duration: null,
+      button: {
+        title: "Quitar",
+        className: "btns eliminar sileo-danger",
+        onClick: () => {
+          setSession(s => {
+            if (!s) return s;
+            const next = JSON.parse(JSON.stringify(s));
+            next.exercises.splice(exi, 1);
+            return next;
+          });
+          sileo.dismiss(toastId);
+
+          setTimeout(() => {
+            const undoToastId = sileo.action({
+              title: 'Ejercicio quitado de hoy',
+              description: removed.name,
+              duration: 5000,
+              button: {
+                title: 'Deshacer',
+                className: 'btns agregar',
+                onClick: () => {
+                  setSession(s => {
+                    if (!s) return s;
+                    const next = JSON.parse(JSON.stringify(s));
+                    const idx = Math.min(exi, next.exercises.length);
+                    next.exercises.splice(idx, 0, removed);
+                    return next;
+                  });
+                  sileo.dismiss(undoToastId);
+                },
+              },
+              styles: {
+                container: "sileo-cont",
+                title: "sileo-title",
+                description: "sileo-description",
+                button: "btns agregar sileo",
+              },
+            });
+          }, 300);
+        },
+      },
+      styles: {
+        container: "sileo-cont-danger",
+        title: "sileo-title-danger",
+        description: "sileo-description",
+        button: "btns eliminar sileo-danger",
+      },
+    });
   }
 
   function saveDraft() {
@@ -2288,6 +2402,7 @@ export default function App() {
             restTimer={restTimer}
             restDefault={restDefault}
             onCancel={cancelSession}
+            onRemoveExercise={removeSessionExercise}
             onMinimize={minimizeSession}
             autoOpenResumen={autoOpenResumen}
             onAutoResumenHandled={() => setAutoOpenResumen(false)}
