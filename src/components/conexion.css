@@ -1,0 +1,49 @@
+.conexion-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--texto);
+    animation: slideDown .25s ease;
+}
+
+.conexion-banner.offline {
+    background: var(--rojo);
+}
+
+.conexion-banner.error {
+    background: var(--rojo);
+
+}
+
+.conexion-banner.ok {
+    background: #16a34a;
+}
+
+.conexion-banner .spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

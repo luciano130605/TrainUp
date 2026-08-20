@@ -21,10 +21,10 @@
     {
       "name": "Rutina de hoy",
       "short_name": "Hoy",
-      "url": "/?openRoutine=today",
+      "url": "../src/components/rutinas/rutinaCurso",
       "icons": [
         {
-          "src": "/icons/shortcut-today.png",
+          "src": "/shortcut-today.png",
           "sizes": "96x96"
         }
       ]

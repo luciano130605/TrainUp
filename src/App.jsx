@@ -14,6 +14,8 @@ import HomePage from "./components/home/Homepage"
 import MiPerfil from './components/mensajes/Miperfil';
 import Login from './components/login/Login';
 import { supabase } from './lib/supabaseClient';
+import { useOnlineStatus } from './hooks/useOnlineStatus';
+import ConexionBanner from './components/ConexionBanner';
 import { ensureUserProfile } from './lib/profile';
 import {
   fetchMySharedRoutines,
@@ -118,6 +120,9 @@ export default function App() {
 
   const [pendingSaveChoice, setPendingSaveChoice] = useState(null);
 
+  const isOnline = useOnlineStatus();
+  const [syncStatus, setSyncStatus] = useState('synced'); // 'synced' | 'syncing' | 'pending' | 'error'
+  const [retryTick, setRetryTick] = useState(0);
   const [modoOscuro, setModoOscuro] = useState(true);
   const [acento, setAcento] = useState('acento-rosa');
   const [toasterPosition, setToasterPosition] = useState('bottom');
@@ -147,6 +152,12 @@ export default function App() {
     wakeLockRef.current?.release().catch(() => { });
     wakeLockRef.current = null;
   }
+
+  useEffect(() => {
+    if (syncStatus !== 'error') return;
+    const id = setInterval(() => setRetryTick(t => t + 1), 10000);
+    return () => clearInterval(id);
+  }, [syncStatus]);
 
   useEffect(() => {
     if (session && !session.paused) {
@@ -295,10 +306,15 @@ export default function App() {
     try { await window.storage.set('gym_onboarding_seen', 'true', false); } catch (e) { }
   }
 
+  function yaEntrenadaHoy(routineId, history) {
+    const hoyStr = new Date().toDateString();
+    return history.some(h => h.routineId === routineId && new Date(h.date).toDateString() === hoyStr);
+  }
+
   const rutinasDeHoy = useMemo(() => {
     const hoy = new Date().getDay();
-    return routines.filter(r => r.days?.includes(hoy));
-  }, [routines]);
+    return routines.filter(r => r.days?.includes(hoy) && !yaEntrenadaHoy(r.id, history));
+  }, [routines, history]);
 
   // ★ NUEVO
   useEffect(() => {
@@ -501,36 +517,41 @@ export default function App() {
     clearTimeout(saveTimerRef.current);
     const userId = authSession.user.id;
 
+    // respaldo local SIEMPRE, haya o no conexión
+    window.storage.set('gym_local_backup', JSON.stringify({
+      routines, history, customExercises,
+      settings: { restDefault, reminderEnabled, reminderTime, modoOscuro, acento, toasterPosition, swipeGestures, swipeLeftAction, swipeRightAction },
+      savedAt: Date.now(),
+    }), false).catch(() => { });
+
+    if (!isOnline) {
+      setSyncStatus('pending');
+      return; // no pegamos a la red si ya sabemos que no hay
+    }
+
+    setSyncStatus('syncing');
     saveTimerRef.current = setTimeout(async () => {
-      try { await window.storage.set('gym_reminder_push_id', JSON.stringify(reminderPushId), false); } catch (e) { console.error(e); }
-
-      try { prevRoutineIds.current = await syncRoutines(userId, routines, prevRoutineIds.current); } catch (e) { console.error(e); }
-      try { prevHistoryIds.current = await syncHistory(userId, history, prevHistoryIds.current); } catch (e) { console.error(e); }
-      try { prevExerciseIds.current = await syncCustomExercises(userId, customExercises, prevExerciseIds.current); } catch (e) { console.error(e); }
-
       try {
+        try { await window.storage.set('gym_reminder_push_id', JSON.stringify(reminderPushId), false); } catch (e) { console.error(e); }
+        prevRoutineIds.current = await syncRoutines(userId, routines, prevRoutineIds.current);
+        prevHistoryIds.current = await syncHistory(userId, history, prevHistoryIds.current);
+        prevExerciseIds.current = await syncCustomExercises(userId, customExercises, prevExerciseIds.current);
         await syncSettings(userId, {
           restDefault, reminderEnabled, reminderTime, modoOscuro, acento,
           toasterPosition, swipeGestures, swipeLeftAction, swipeRightAction,
         });
-      } catch (e) { console.error(e); }
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error('Error sincronizando:', e);
+        setSyncStatus('error');
+      }
     }, 350);
   }, [
     routines, history, customExercises, restDefault, loaded,
     reminderTime, reminderEnabled, reminderPushId, modoOscuro, acento,
     toasterPosition, swipeGestures, swipeLeftAction, swipeRightAction,
-    authSession?.user?.id,
+    authSession?.user?.id, isOnline, retryTick,
   ]);
-
-  const showToast = useCallback((msg, type = 'success') => {
-    sileo[type]({
-      title: msg,
-      duration: 3000,
-      ...(type === 'error' && {
-        description: 'Inténtalo de nuevo.',
-      }),
-    });
-  }, []);
 
 
   useEffect(() => {
@@ -603,7 +624,17 @@ export default function App() {
     window.history.replaceState({}, '', cleanUrl);
 
     if (openRoutineId === 'today') {
-      setScreen('routines'); // la propia RutinaPage ya resalta "hoy toca"
+      const dia = new Date().getDay();
+      const pendiente =
+        routines.find(r => r.days?.includes(dia) && !yaEntrenadaHoy(r.id, history)) ||
+        sharedRoutines.find(r => r.days?.includes(dia) && !yaEntrenadaHoy(r.id, history));
+
+      if (pendiente) {
+        startSession(pendiente.id);
+      } else {
+        showToast('Ya completaste tu entrenamiento de hoy 💪');
+        setScreen('home');
+      }
       return;
     }
     const found = routines.find(r => r.id === openRoutineId);
@@ -611,7 +642,7 @@ export default function App() {
       setActiveRoutineId(found.id);
       setScreen('routineDetail');
     }
-  }, [loaded, routines]);
+  }, [loaded, routines, history, sharedRoutines]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -1319,6 +1350,14 @@ export default function App() {
     const shared = sharedRoutines.find(x => x.id === routineId);
     const r = shared || routines.find(x => x.id === routineId);
     if (!r) return;
+
+    if (!isOnline && shared) {
+      showToast('Estás sin conexión — no vas a poder entrenar en tiempo real con los demás hasta reconectarte.', 'error');
+      return;
+    }
+    if (!isOnline) {
+      showToast('Sin conexión: vamos a guardar todo local y sincronizar cuando vuelva internet.', 'warning');
+    }
 
     if (session) {
       if (session.routineId === routineId) {
@@ -2228,6 +2267,7 @@ export default function App() {
       theme={modoOscuro ? 'light' : 'dark'}
       position={toasterPosition === 'top' ? 'top-center' : 'bottom-center'}
     >
+      <ConexionBanner isOnline={isOnline} syncStatus={syncStatus} />
       <div className='cont'>
 
 

@@ -245,10 +245,17 @@ export default function HomePage({
     const hoy = new Date().getDay();
     const [progresoOpen, setProgresoOpen] = useState(false);
 
-    const rutinasHoy = useMemo(
+    const rutinasHoyTotal = useMemo(
         () => routines.filter(r => r.days?.includes(hoy)),
         [routines, hoy]
     );
+
+    const rutinasHoy = useMemo(() => {
+        const hoyStr = new Date().toDateString();
+        return rutinasHoyTotal.filter(
+            r => !history.some(h => h.routineId === r.id && new Date(h.date).toDateString() === hoyStr)
+        );
+    }, [rutinasHoyTotal, history]);
 
     const racha = useMemo(() => calcRacha(routines, history), [routines, history]);
     const ultimoEntreno = history[0] || null;
@@ -425,15 +432,21 @@ export default function HomePage({
 
                     {rutinasHoy.length === 0 ? (
                         <div className="home-hoy-vacio">
-                            <p className='sub'>No tenés rutinas programadas para hoy.</p>
-                            {routines.length === 0 ? (
-                                <button className="add-exercise-btn home-hoy-btn" onClick={onNewRoutine}>
-                                    <Plus size={16} /> Crear tu primera rutina
-                                </button>
+                            {rutinasHoyTotal.length > 0 ? (
+                                <p className='sub'>Ya completaste tu entrenamiento de hoy 🎉</p>
                             ) : (
-                                <button className="add-exercise-btn home-hoy-btn" onClick={() => onNavigate('routines')}>
-                                    Ver mis rutinas
-                                </button>
+                                <>
+                                    <p className='sub'>No tenés rutinas programadas para hoy.</p>
+                                    {routines.length === 0 ? (
+                                        <button className="add-exercise-btn home-hoy-btn" onClick={onNewRoutine}>
+                                            <Plus size={16} /> Crear tu primera rutina
+                                        </button>
+                                    ) : (
+                                        <button className="add-exercise-btn home-hoy-btn" onClick={() => onNavigate('routines')}>
+                                            Ver mis rutinas
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
                     ) : (

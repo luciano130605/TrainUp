@@ -4,7 +4,7 @@ Ajustes / Preferencias
 
 
 Perfo
-* Que funcione sin wifi, todo local y que se guarde en la BD cuando tenga wifi.. que avise con un icon
+
 
 
 Diseño 

@@ -39,7 +39,7 @@ export default function RutinaPage({
   routines = [], sharedRoutines = [], pendingInvites = [],
   onNewRoutine, onSelectRoutine, onSelectSharedRoutine,
   onAcceptInvite, onRejectInvite,
-  onExport, onImport,
+  onExport, onImport, history = [],
   swipeGestures = true, getSwipeActionFor, swipeLeftAction = 'delete', swipeRightAction = 'edit',
   authSession
 }) {
@@ -273,8 +273,11 @@ export default function RutinaPage({
     }, 'image/png');
   }
   const rutinasDeHoy = useMemo(() => {
-    return (routines ?? []).filter(r => r.days?.includes(hoy));
-  }, [routines, hoy]);
+    const hoyStr = new Date().toDateString();
+    return (routines ?? []).filter(
+      r => r.days?.includes(hoy) && !history.some(h => h.routineId === r.id && new Date(h.date).toDateString() === hoyStr)
+    );
+  }, [routines, hoy, history]);
 
   const diasConRutina = useMemo(() => {
     const s = new Set();
