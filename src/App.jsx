@@ -916,6 +916,16 @@ export default function App() {
     });
   }
 
+  function showToast(title, type) {
+    if (type === 'error') {
+      sileo.error({ title });
+    } else if (type === 'warning') {
+      sileo.warning({ title });
+    } else {
+      sileo.success({ title });
+    }
+  }
+
   function saveDraft() {
     const d = editorDraft;
 
