@@ -11,6 +11,7 @@ const ejerciciosLocal = [
     { id: "0006", nombre: "Tríceps con soga (Polea)", gif: "/gifs/triceps-con-soga.gif", parteDelCuerpo: "Triceps", subMusculos: [], equipamiento: "Polea" },
     { id: "0007", nombre: "Tríceps a un brazo (Polea)", subMusculos: [], gif: "/gifs/triceps-una-mano.gif", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
     { id: "0066", nombre: "Patada de triceps (Polea)", subMusculos: [], gif: "/gifs/patada-polea.jpg", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
+    { id: "0068", nombre: "Extensión Katana (Polea)", subMusculos: [], gif: "/gifs/katana.gif", parteDelCuerpo: "Triceps", equipamiento: "Polea" },
 
     /* biceps */
     { id: "0008", nombre: "Curl Z (Barra)", gif: "/gifs/curl-z.gif", parteDelCuerpo: "Biceps", equipamiento: "Barra", subMusculos: [] },
